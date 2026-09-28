@@ -2,7 +2,11 @@
 // Serveur : collecte des cotes et résultats, modèle de Poisson, consensus du marché.
 // Le calcul de la value et des mises se fait côté navigateur (curseurs en direct).
 
-export type Result = { date: number; home: string; away: string; hg: number; ag: number };
+export type Result = {
+  date: number; home: string; away: string; hg: number; ag: number;
+  neutral?: boolean; // terrain neutre (tournois de sélections)
+  weight?: number;   // importance du match (ex. 0,5 pour un amical)
+};
 export type OddsRow = {
   eventId: string; commence: string; homeTeam: string; awayTeam: string;
   bookmaker: string; market: "h2h" | "totals"; outcome: string; point: number | null; price: number;
@@ -22,7 +26,8 @@ export function fitRatings(results: Result[], halfLifeDays = 180, prior = 3, ite
   const n = teams.length;
   const h = results.map((r) => idx.get(r.home)!);
   const a = results.map((r) => idx.get(r.away)!);
-  const w = results.map((r) => 0.5 ** (Math.max(0, (ref - r.date) / 86400000) / halfLifeDays));
+  const w = results.map((r) => (r.weight ?? 1) * 0.5 ** (Math.max(0, (ref - r.date) / 86400000) / halfLifeDays));
+  const isHome = results.map((r) => (r.neutral ? 0 : 1));
   const hg = results.map((r) => r.hg);
   const ag = results.map((r) => r.ag);
   const sum = (f: (k: number) => number) => w.reduce((s, _, k) => s + f(k), 0);
@@ -31,6 +36,7 @@ export function fitRatings(results: Result[], halfLifeDays = 180, prior = 3, ite
   let def = new Array(n).fill(1);
   let mu = sum((k) => w[k] * (hg[k] + ag[k])) / (2 * sum((k) => w[k]));
   let home = 1;
+  const hf = (k: number) => (isHome[k] ? home : 1); // avantage du terrain, sauf terrain neutre
   const norm = (v: number[]) => { const m = v.reduce((s, x) => s + x, 0) / v.length; return v.map((x) => x / m); };
 
   for (let it = 0; it < iterations; it++) {
@@ -38,17 +44,18 @@ export function fitRatings(results: Result[], halfLifeDays = 180, prior = 3, ite
     const sc = new Array(n).fill(0), esc = new Array(n).fill(0);
     for (let k = 0; k < w.length; k++) {
       sc[h[k]] += w[k] * hg[k]; sc[a[k]] += w[k] * ag[k];
-      esc[h[k]] += w[k] * mu * home * def[a[k]]; esc[a[k]] += w[k] * mu * def[h[k]];
+      esc[h[k]] += w[k] * mu * hf(k) * def[a[k]]; esc[a[k]] += w[k] * mu * def[h[k]];
     }
     att = norm(sc.map((s, i) => (s + prior * mu) / (esc[i] + prior * mu)));
     const co = new Array(n).fill(0), eco = new Array(n).fill(0);
     for (let k = 0; k < w.length; k++) {
       co[a[k]] += w[k] * hg[k]; co[h[k]] += w[k] * ag[k];
-      eco[a[k]] += w[k] * mu * home * att[h[k]]; eco[h[k]] += w[k] * mu * att[a[k]];
+      eco[a[k]] += w[k] * mu * hf(k) * att[h[k]]; eco[h[k]] += w[k] * mu * att[a[k]];
     }
     def = norm(co.map((s, i) => (s + prior * mu) / (eco[i] + prior * mu)));
     mu = sum((k) => w[k] * ag[k]) / sum((k) => w[k] * att[a[k]] * def[h[k]]);
-    home = sum((k) => w[k] * hg[k]) / sum((k) => w[k] * mu * att[h[k]] * def[a[k]]);
+    const homeGames = sum((k) => w[k] * isHome[k]);
+    if (homeGames > 0) home = sum((k) => w[k] * isHome[k] * hg[k]) / sum((k) => w[k] * isHome[k] * mu * att[h[k]] * def[a[k]]);
     if (Math.max(...att.map((x, i) => Math.abs(x - prev[i]))) < 1e-7) break;
   }
   const weight = new Array(n).fill(0);
@@ -81,9 +88,9 @@ export function marketProbs(m: number[][], line = 2.5) {
   return { home, draw, away, over, under: 1 - over, btts_yes: btts };
 }
 
-export function predict(r: Ratings, home: string, away: string, line = 2.5) {
+export function predict(r: Ratings, home: string, away: string, line = 2.5, neutral = false) {
   const i = r.teams.indexOf(home), j = r.teams.indexOf(away);
-  const lh = r.mu * r.homeAdv * r.attack[i] * r.defense[j];
+  const lh = r.mu * (neutral ? 1 : r.homeAdv) * r.attack[i] * r.defense[j];
   const la = r.mu * r.attack[j] * r.defense[i];
   const m = scoreMatrix(lh, la);
   let best = [0, 0], bp = -1;
@@ -179,7 +186,7 @@ export function matchTeam(name: string, known: string[]): string | null {
 
 // ------------------------------------------------------------------ analyse d'un championnat
 
-export function analyseLeague(league: string, results: Result[], odds: OddsRow[], halfLifeDays: number) {
+export function analyseLeague(league: string, results: Result[], odds: OddsRow[], halfLifeDays: number, neutral = false) {
   const r = fitRatings(results, halfLifeDays);
   const warnings: string[] = [];
   const matches: Record<string, unknown>[] = [];
@@ -199,8 +206,8 @@ export function analyseLeague(league: string, results: Result[], odds: OddsRow[]
       continue;
     }
     const lines = new Set([2.5, ...odds.filter((o) => o.eventId === ev.eventId && o.point != null).map((o) => o.point!)]);
-    for (const line of lines) modelProbs.set(`${ev.eventId}|${line}`, predict(r, home, away, line) as never);
-    const p = predict(r, home, away, 2.5);
+    for (const line of lines) modelProbs.set(`${ev.eventId}|${line}`, predict(r, home, away, line, neutral) as never);
+    const p = predict(r, home, away, 2.5, neutral);
     modelProbs.set(`${ev.eventId}|h2h`, p as never);
     const reli = Math.min(rel(home), rel(away));
     reliability.set(ev.eventId, reli);

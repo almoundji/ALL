@@ -63,3 +63,18 @@ test("fixtures football-data : matchs à venir et cotes par bookmaker", async ()
   assert.equal(by.F1.length, 3 + 2); // bourse Betfair (BFE) exclue
   assert.equal(by.F1[0].commence, "2026-10-03T19:00:00.000Z"); // 20:00 heure de Londres (BST)
 });
+
+test("sélections : terrain neutre et amicaux", async () => {
+  const { parseIntlCsv } = await import("../netlify/lib/data.mts");
+  const csv = "date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+    + "2025-06-01,France,Spain,1,1,Friendly,Paris,France,FALSE\n"
+    + "2025-07-01,Senegal,Egypt,2,0,African Cup of Nations,Rabat,Morocco,TRUE\n"
+    + "2019-07-01,Senegal,Algeria,0,1,African Cup of Nations,Cairo,Egypt,TRUE\n"
+    + "2026-11-01,Senegal,Mali,NA,NA,Friendly,Dakar,Senegal,FALSE\n";
+  const r = parseIntlCsv(csv, Date.parse("2022-01-01"));
+  assert.equal(r.length, 2);
+  assert.deepEqual([r[0].weight, r[0].neutral, r[1].weight, r[1].neutral], [0.5, false, 1, true]);
+  const rt = fitRatings(r);
+  const p = predict(rt, "Senegal", "Egypt", 2.5, true);
+  assert.ok(Math.abs(p.home + p.draw + p.away - 1) < 1e-9);
+});

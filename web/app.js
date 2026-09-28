@@ -2,7 +2,8 @@
 
 const $ = (s) => document.querySelector(s);
 const DEFAULTS = {
-  demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)"],
+  demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)",
+    "Ligue des nations (UEFA)", "Qualif. Coupe du monde (Europe)", "Qualif. Coupe du monde (Am. Sud)", "Coupe d'Afrique des nations"],
   modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
   bankroll: 100, minStake: 10, comboBook: "Betclic (FR)", comboStake: 2, comboLegs: 3, comboRisk: "equilibre", comboPeriod: "weekend", comboFill: "fill", kelly: 0.25, maxStake: 0.05,
 };
@@ -13,10 +14,10 @@ let data = null;
 let picks = [];
 
 function load() {
-  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings2") || "{}") }; }
+  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings3") || "{}") }; }
   catch { return { ...DEFAULTS }; }
 }
-function save() { try { localStorage.setItem("vb-settings2", JSON.stringify(settings)); } catch {} }
+function save() { try { localStorage.setItem("vb-settings3", JSON.stringify(settings)); } catch {} }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const pct = (x, d = 0) => (x == null || Number.isNaN(x) ? "–" : `${(x * 100).toFixed(d)} %`);
@@ -86,8 +87,11 @@ $("#open-side").addEventListener("click", () => $(".sidebar").classList.add("ope
 $("#close-side").addEventListener("click", () => $(".sidebar").classList.remove("open"));
 
 function renderLeagues(all) {
-  $("#leagues").innerHTML = all.map((l) => `<label><input type="checkbox" value="${esc(l)}" ${settings.leagues.includes(l) ? "checked" : ""}
-    ${data?.source !== "odds-api" ? "disabled" : ""}> ${esc(l)}</label>`).join("");
+  const intl = new Set(data?.intlLeagues ?? []);
+  const box = (l) => `<label><input type="checkbox" value="${esc(l)}" ${settings.leagues.includes(l) ? "checked" : ""}
+    ${data?.source !== "odds-api" ? "disabled" : ""}> ${esc(l)}</label>`;
+  $("#leagues").innerHTML = `<h3>Championnats</h3>${all.filter((l) => !intl.has(l)).map(box).join("")}`
+    + (intl.size ? `<h3 style="margin-top:.8rem">Sélections nationales</h3>${all.filter((l) => intl.has(l)).map(box).join("")}` : "");
   $("#leagues").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
     settings.leagues = [...$("#leagues").querySelectorAll("input:checked")].map((x) => x.value); save();
   }));

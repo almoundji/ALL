@@ -1,7 +1,8 @@
 // Collecte : résultats football-data.co.uk, cotes The Odds API, données démo.
 import { marketProbs, scoreMatrix, type OddsRow, type Result } from "./engine.mts";
 
-export const LEAGUES: Record<string, { fd: string; odds: string }> = {
+// fd : code football-data.co.uk des résultats ; intl : sélections nationales ; neutral : phase finale sur terrain neutre.
+export const LEAGUES: Record<string, { fd?: string; odds: string; intl?: boolean; neutral?: boolean }> = {
   "Premier League (ANG)": { fd: "E0", odds: "soccer_epl" },
   "Championship (ANG)": { fd: "E1", odds: "soccer_efl_champ" },
   "League One (ANG)": { fd: "E2", odds: "soccer_england_league1" },
@@ -20,7 +21,41 @@ export const LEAGUES: Record<string, { fd: string; odds: string }> = {
   "Premiership (ECO)": { fd: "SC0", odds: "soccer_spl" },
   "Süper Lig (TUR)": { fd: "T1", odds: "soccer_turkey_super_league" },
   "Super League (GRE)": { fd: "G1", odds: "soccer_greece_super_league" },
+  "Ligue des nations (UEFA)": { intl: true, odds: "soccer_uefa_nations_league" },
+  "Qualif. Coupe du monde (Europe)": { intl: true, odds: "soccer_fifa_world_cup_qualifiers_europe" },
+  "Qualif. Coupe du monde (Am. Sud)": { intl: true, odds: "soccer_fifa_world_cup_qualifiers_south_america" },
+  "Qualif. Euro (UEFA)": { intl: true, odds: "soccer_uefa_euro_qualification" },
+  "Coupe d'Afrique des nations": { intl: true, neutral: true, odds: "soccer_africa_cup_of_nations" },
+  "Copa América": { intl: true, neutral: true, odds: "soccer_conmebol_copa_america" },
+  "Gold Cup (CONCACAF)": { intl: true, neutral: true, odds: "soccer_concacaf_gold_cup" },
+  "Coupe du monde": { intl: true, neutral: true, odds: "soccer_fifa_world_cup" },
+  "Euro (UEFA)": { intl: true, neutral: true, odds: "soccer_uefa_european_championship" },
 };
+
+// Résultats de toutes les sélections nationales (base publique, mise à jour après chaque trêve).
+const INTL_URL = "https://raw.githubusercontent.com/martj42/international_results/master/results.csv";
+
+export function parseIntlCsv(text: string, since: number): Result[] {
+  const out: Result[] = [];
+  for (const line of text.split(/\r?\n/).slice(1)) {
+    const f = line.split(",");
+    if (f.length < 9 || f[3] === "NA" || f[3] === "") continue;
+    const date = Date.parse(f[0]);
+    if (!(date >= since)) continue;
+    out.push({
+      date, home: f[1], away: f[2], hg: Number(f[3]), ag: Number(f[4]),
+      neutral: f[f.length - 1].trim().toUpperCase() === "TRUE",
+      weight: f[5] === "Friendly" ? 0.5 : 1, // amicaux : rotations, enjeu faible
+    });
+  }
+  return out;
+}
+
+export async function loadIntlResults(): Promise<Result[]> {
+  const res = await fetch(INTL_URL);
+  if (!res.ok) throw new Error(`résultats internationaux : ${res.status}`);
+  return parseIntlCsv(await res.text(), Date.now() - 4 * 365 * 86400000);
+}
 
 export function seasonCodes(today = new Date(), n = 2): string[] {
   const start = today.getUTCMonth() >= 6 ? today.getUTCFullYear() : today.getUTCFullYear() - 1;
