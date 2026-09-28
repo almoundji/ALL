@@ -58,7 +58,8 @@ export default async (req: Request) => {
       const results: Result[] = fd === "intl" ? await cached("results:intl", 6 * 3600e3, loadIntlResults)
         : fd ? await cached(`results:${fd}`, 6 * 3600e3, () => loadResults(fd)) : demoData().results;
       // Les sélections jouent peu : on regarde deux fois plus loin dans le passé.
-      const r = analyseLeague(league, results, odds, fd === "intl" ? halfLife * 2 : halfLife, LEAGUES[league]?.neutral);
+      const r = analyseLeague(league, results, odds, fd === "intl" ? halfLife * 2 : halfLife,
+        { neutral: LEAGUES[league]?.neutral, intl: fd === "intl" });
       out.outcomes.push(...r.outcomes); out.matches.push(...r.matches);
       out.ratings.push(r.ratings); out.warnings.push(...r.warnings);
     } catch (e) {

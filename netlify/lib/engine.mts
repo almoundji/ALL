@@ -186,15 +186,18 @@ export function matchTeam(name: string, known: string[]): string | null {
 
 // ------------------------------------------------------------------ analyse d'un championnat
 
-export function analyseLeague(league: string, results: Result[], odds: OddsRow[], halfLifeDays: number, neutral = false) {
+export function analyseLeague(league: string, results: Result[], odds: OddsRow[], halfLifeDays: number,
+  { neutral = false, intl = false }: { neutral?: boolean; intl?: boolean } = {}) {
   const r = fitRatings(results, halfLifeDays);
   const warnings: string[] = [];
   const matches: Record<string, unknown>[] = [];
   const modelProbs = new Map<string, Record<string, number>>();
   const reliability = new Map<string, number>();
   // Fiabilité du modèle selon l'historique pondéré de l'équipe la moins connue :
-  // 0 sous ~8 matchs pondérés (promu, nouvelle équipe), 1 au-delà de ~16.
-  const rel = (team: string) => Math.min(1, Math.max(0, (r.weight[r.teams.indexOf(team)] - 8) / 8));
+  // Clubs : 0 sous ~8 matchs pondérés (promu, nouvelle équipe), 1 au-delà de ~16.
+  // Sélections : elles jouent ~10 matchs par an, 0 sous 3 et 1 au-delà de 10.
+  const [relMin, relSpan] = intl ? [3, 7] : [8, 8];
+  const rel = (team: string) => Math.min(1, Math.max(0, (r.weight[r.teams.indexOf(team)] - relMin) / relSpan));
   const events = [...new Map(odds.map((o) => [o.eventId, o])).values()];
   for (const ev of events) {
     const home = matchTeam(ev.homeTeam, r.teams), away = matchTeam(ev.awayTeam, r.teams);
