@@ -5,7 +5,7 @@ const DEFAULTS = {
   demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)",
     "Ligue des nations (UEFA)", "Qualif. Coupe du monde (Europe)", "Qualif. Coupe du monde (Am. Sud)", "Coupe d'Afrique des nations"],
   modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
-  bankroll: 100, minStake: 10, comboBook: "Betclic (FR)", comboStake: 2, comboLegs: 3, comboRisk: "equilibre", comboPeriod: "weekend", comboFill: "fill", kelly: 0.25, maxStake: 0.05,
+  bankroll: 100, minStake: 10, comboBook: "Betclic (FR)", comboStake: 2, comboLegs: 3, comboRisk: "equilibre", comboPeriod: "weekend", comboFill: "fill", comboScope: "all", kelly: 0.25, maxStake: 0.05,
 };
 const LABELS = { home: "Victoire {h}", draw: "Match nul", away: "Victoire {a}", over: "Plus de {p} buts", under: "Moins de {p} buts" };
 
@@ -75,7 +75,7 @@ $("#bankroll").addEventListener("input", (e) => { settings.bankroll = Math.max(1
 $("#minStake").value = settings.minStake;
 $("#minStake").addEventListener("input", (e) => { settings.minStake = Math.max(0, Number(e.target.value) || 0); save(); render(); });
 $("#combo-legs").innerHTML = Array.from({ length: 19 }, (_, i) => `<option>${i + 2}</option>`).join("");
-for (const [id, key, num] of [["#combo-fill", "comboFill"], ["#combo-book", "comboBook"], ["#combo-stake", "comboStake", true], ["#combo-legs", "comboLegs", true],
+for (const [id, key, num] of [["#combo-scope", "comboScope"], ["#combo-fill", "comboFill"], ["#combo-book", "comboBook"], ["#combo-stake", "comboStake", true], ["#combo-legs", "comboLegs", true],
   ["#combo-risk", "comboRisk"], ["#combo-period", "comboPeriod"]]) {
   $(id).value = settings[key];
   $(id).addEventListener("change", (e) => { settings[key] = num ? Math.max(0.5, Number(e.target.value) || 1) : e.target.value; save(); render(); });
@@ -292,6 +292,10 @@ const RISK = { prudent: [0.55, 1.2, 1.9], equilibre: [0.42, 1.4, 2.6], audacieux
 // Fenêtre du prochain week-end (heure locale) : vendredi 18h → dimanche soir, ou un seul jour.
 function comboWindow(matches, period) {
   if (period === "all") return null;
+  if (period === "next3" || period === "next7") {
+    const now = new Date();
+    return [now, new Date(now.getTime() + (period === "next3" ? 3 : 7) * 86400000)];
+  }
   const isWeekend = (d) => [6, 0].includes(d.getDay()) || (d.getDay() === 5 && d.getHours() >= 18);
   const first = matches.map((m) => new Date(m.commence)).filter((d) => isWeekend(d) && d > new Date())
     .sort((a, b) => a - b)[0];
@@ -315,10 +319,13 @@ function renderCombo(all) {
   const [minProb, minOdds, maxOdds] = RISK[settings.comboRisk];
   const win = comboWindow(data.matches, settings.comboPeriod);
   const book = settings.comboBook;
+  const intlSet = new Set(data.intlLeagues ?? []);
   // Candidats : pari coté chez ce bookmaker, dont la cote est au moins égale à la cote juste estimée.
   const legs = all.map((o) => ({ ...o, price: o.prices?.[book] }))
     .filter((o) => o.price && o.prob >= minProb && o.price >= minOdds && o.price <= maxOdds)
     .filter((o) => !win || (new Date(o.commence) >= win[0] && new Date(o.commence) < win[1]))
+    .filter((o) => new Date(o.commence) > new Date()) // pas de match déjà commencé
+    .filter((o) => settings.comboScope === "all" || (intlSet.has(o.league) === (settings.comboScope === "intl")))
     .map((o) => ({ ...o, bookEdge: o.prob * o.price - 1 }))
     .filter((o) => settings.comboFill === "fill" || o.bookEdge >= 0)
     // D'abord les paris value, puis ceux dont la cote est la plus proche de la cote juste.
@@ -332,8 +339,10 @@ function renderCombo(all) {
   const nNoValue = chosen.filter((o) => o.bookEdge < 0).length;
 
   const day = (d) => d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-  const period = !win ? "sur tous les matchs à venir"
-    : win[1] - win[0] <= 86400000 ? `du ${day(win[0])}` : `du ${day(win[0])} au ${day(new Date(win[1] - 1))}`;
+  const scope = { all: "", clubs: " (clubs)", intl: " (sélections nationales)" }[settings.comboScope];
+  const period = (["next3", "next7"].includes(settings.comboPeriod) ? `sur les ${settings.comboPeriod.slice(4)} prochains jours`
+    : !win ? "sur tous les matchs à venir"
+    : win[1] - win[0] <= 86400000 ? `du ${day(win[0])}` : `du ${day(win[0])} au ${day(new Date(win[1] - 1))}`) + scope;
   if (chosen.length < 2) {
     $("#combo").innerHTML = `<div class="empty">Pas assez de paris intéressants chez ${esc(book)} ${period} pour ce niveau de risque
       (il faut une cote ${esc(book)} au moins égale à la cote juste). Essaie un autre bookmaker, un autre niveau de risque ou « Tous les matchs ».</div>`;
