@@ -13,7 +13,23 @@ Tableau de bord qui :
 Championnats : Premier League, Championship, Ligue 1, Ligue 2, Liga, Bundesliga,
 Serie A, Eredivisie, Liga Portugal.
 
-## Installation
+## Version en ligne (Netlify)
+
+Le dossier `web/` (interface) et `netlify/functions/` (API) forment la version déployée
+sur Netlify, avec une page de connexion. Le moteur Python (`betdash/`) reste utilisable en local.
+
+| Variable d'environnement Netlify | Rôle |
+| --- | --- |
+| `APP_USERNAME` / `APP_PASSWORD` | identifiants de connexion |
+| `SESSION_SECRET` | clé de signature du cookie de session (longue chaîne aléatoire) |
+| `ODDS_API_KEY` | clé The Odds API ; sans elle, le site reste en mode démo |
+
+Changer le mot de passe : modifier `APP_PASSWORD` dans *Project configuration → Environment
+variables*, puis redéployer. Changer `SESSION_SECRET` déconnecte toutes les sessions.
+
+Tests du moteur TypeScript : `npm test`
+
+## Installation (version Python locale)
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows : .venv\Scripts\activate
@@ -57,7 +73,10 @@ Tests : `pip install pytest && pytest`
 ## Structure
 
 ```
-app.py               tableau de bord Streamlit
+web/                 interface en ligne (connexion + tableau de bord)
+netlify/functions/   API : /api/session (connexion), /api/analyse (données)
+netlify/lib/         moteur TypeScript (modèle, consensus, collecte)
+app.py               tableau de bord Streamlit (local)
 betdash/config.py    championnats et correspondance des noms d'équipes
 betdash/data.py      téléchargement des résultats et des cotes, données démo
 betdash/model.py     modèle de buts (forces des équipes -> probabilités)

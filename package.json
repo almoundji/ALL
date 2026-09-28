@@ -1,0 +1,12 @@
+{
+  "name": "value-bets-foot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --test tests/engine.test.mts"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.0.0"
+  }
+}

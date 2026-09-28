@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Value Bets Foot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Connexion -->
+<main id="login-view" class="login" hidden>
+  <form id="login-form" class="card login-card">
+    <h1>⚽ Value Bets Foot</h1>
+    <p class="muted">Espace privé — connecte-toi pour voir les paris du jour.</p>
+    <label>Identifiant <input name="username" autocomplete="username" required autofocus></label>
+    <label>Mot de passe <input name="password" type="password" autocomplete="current-password" required></label>
+    <p id="login-error" class="error" role="alert"></p>
+    <button type="submit" class="primary">Se connecter</button>
+  </form>
+</main>
+
+<!-- Tableau de bord -->
+<div id="app-view" class="layout" hidden>
+  <aside class="sidebar">
+    <div class="side-head">
+      <strong>⚙️ Réglages</strong>
+      <button id="close-side" class="icon only-mobile" aria-label="Fermer">✕</button>
+    </div>
+
+    <section>
+      <h3>Données</h3>
+      <label class="switch"><input type="checkbox" id="demo"> Mode démo (données simulées)</label>
+      <p id="key-hint" class="hint"></p>
+      <div id="leagues" class="checks"></div>
+      <button id="reload" class="primary wide">🔄 Actualiser les cotes</button>
+    </section>
+
+    <section>
+      <h3>Stratégie</h3>
+      <label>Poids du modèle vs marché <output for="modelWeight"></output>
+        <input type="range" id="modelWeight" min="0" max="1" step="0.05"></label>
+      <p class="hint">0 = consensus des bookmakers seul, 1 = modèle seul. Le marché est dur à battre.</p>
+      <label>Value minimale <output for="minEdge"></output>
+        <input type="range" id="minEdge" min="0" max="0.2" step="0.01"></label>
+      <label>Cote minimale <output for="minOdds"></output>
+        <input type="range" id="minOdds" min="1.01" max="3" step="0.05"></label>
+      <label>Cote maximale <output for="maxOdds"></output>
+        <input type="range" id="maxOdds" min="1.5" max="15" step="0.1"></label>
+      <label>Demi-vie de la forme (jours) <output for="halfLife"></output>
+        <input type="range" id="halfLife" min="30" max="720" step="30"></label>
+    </section>
+
+    <section>
+      <h3>Bankroll</h3>
+      <label>Bankroll (€) <input type="number" id="bankroll" min="1" step="10"></label>
+      <label>Fraction de Kelly <output for="kelly"></output>
+        <input type="range" id="kelly" min="0.05" max="1" step="0.05"></label>
+      <label>Mise max (% bankroll) <output for="maxStake"></output>
+        <input type="range" id="maxStake" min="0.01" max="0.1" step="0.01"></label>
+    </section>
+
+    <button id="logout" class="ghost wide">Se déconnecter</button>
+  </aside>
+
+  <main class="content">
+    <header class="top">
+      <button id="open-side" class="icon only-mobile" aria-label="Réglages">☰</button>
+      <div>
+        <h1>⚽ Value Bets Football</h1>
+        <p class="muted">Cotes de dizaines de bookmakers comparées à un modèle statistique.</p>
+      </div>
+    </header>
+
+    <div class="warning">⚠️ Aucun modèle ne garantit un gain : même un pari « value » perd souvent.
+      Mise uniquement ce que tu peux perdre. Aide : Joueurs Info Service 09 74 75 13 13.</div>
+
+    <div class="kpis">
+      <div class="kpi"><span>Matchs analysés</span><b id="k-matches">–</b></div>
+      <div class="kpi"><span>Value bets</span><b id="k-picks">–</b></div>
+      <div class="kpi"><span>Mise totale conseillée</span><b id="k-stake">–</b></div>
+      <div class="kpi"><span>Crédits API restants</span><b id="k-credits">–</b></div>
+    </div>
+
+    <div id="warnings" class="notes"></div>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="picks" aria-selected="true">🎯 Paris conseillés</button>
+      <button role="tab" data-tab="matches">📅 Tous les matchs</button>
+      <button role="tab" data-tab="ratings">📊 Force des équipes</button>
+      <button role="tab" data-tab="method">📖 Méthode</button>
+    </nav>
+
+    <div id="loading" class="loading" hidden>Collecte des cotes et calcul des probabilités…</div>
+
+    <section id="tab-picks" class="tab">
+      <div id="picks"></div>
+      <p class="hint"><b>Value</b> = proba retenue × cote − 1 : gain moyen attendu par euro misé.
+        <b>Cote juste</b> = cote à partir de laquelle le pari devient rentable. La confiance monte quand
+        modèle et marché sont d'accord et que le marché est liquide.</p>
+      <button id="export" class="ghost">Exporter en CSV</button>
+    </section>
+
+    <section id="tab-matches" class="tab" hidden>
+      <div id="matches"></div>
+      <h2>Détail des cotes d'un match</h2>
+      <select id="match-select"></select>
+      <div id="match-detail"></div>
+    </section>
+
+    <section id="tab-ratings" class="tab" hidden><div id="ratings"></div></section>
+
+    <section id="tab-method" class="tab prose" hidden>
+      <p><b>1. Collecte.</b> Les cotes 1N2 et plus/moins de buts de dizaines de bookmakers européens
+        viennent de <a href="https://the-odds-api.com" target="_blank" rel="noopener">The Odds API</a>.
+        Les résultats des deux dernières saisons viennent de
+        <a href="https://www.football-data.co.uk" target="_blank" rel="noopener">football-data.co.uk</a>.</p>
+      <p><b>2. Modèle statistique.</b> Chaque équipe reçoit une force offensive et défensive (modèle de
+        Poisson / Dixon-Coles), les matchs récents pesant plus lourd. On en déduit les buts attendus,
+        la probabilité de chaque score, puis de chaque pari.</p>
+      <p><b>3. Consensus du marché.</b> Pour chaque bookmaker on retire sa marge, puis on fait la moyenne :
+        c'est une estimation très fiable, car elle agrège l'avis de tout le marché.</p>
+      <p><b>4. Value.</b> La probabilité retenue mélange modèle et marché. Un pari est signalé si
+        <i>probabilité × meilleure cote − 1</i> dépasse le seuil choisi.</p>
+      <p><b>5. Mise.</b> Critère de Kelly fractionné et plafonné.</p>
+      <h3>Limites à connaître</h3>
+      <ul>
+        <li>Une « value » apparente vient souvent d'une info que le modèle ignore (blessures, rotation,
+          motivation). Vérifie l'actualité avant de parier.</li>
+        <li>Les promus sans historique sont évalués sur le marché seul.</li>
+        <li>Les bookmakers limitent souvent les comptes gagnants.</li>
+        <li>Ne juge une stratégie que sur des centaines de paris.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>
