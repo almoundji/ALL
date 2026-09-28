@@ -30,6 +30,7 @@ test("appariement des noms d'équipes", () => {
   assert.equal(matchTeam("Paris Saint Germain", known), "Paris SG");
   assert.equal(matchTeam("RC Lens", known), "Lens");
   assert.equal(matchTeam("Olympique Marseille", known), "Marseille");
+  assert.equal(matchTeam("Atlético Madrid", known), "Ath Madrid");
   assert.equal(matchTeam("Unknown Town", known), null);
 });
 

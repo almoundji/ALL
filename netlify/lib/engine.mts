@@ -143,7 +143,8 @@ const ALIASES: Record<string, string> = {
   "bayer leverkusen": "Leverkusen", "eintracht frankfurt": "Ein Frankfurt", "1. fc koln": "FC Koln",
   "fc koln": "FC Koln", "inter milan": "Inter", "ac milan": "Milan", "as roma": "Roma",
   "hellas verona": "Verona", "sporting lisbon": "Sp Lisbon", "sporting cp": "Sp Lisbon",
-  "fc porto": "Porto", "sc braga": "Sp Braga",
+  "fc porto": "Porto", "sc braga": "Sp Braga", "vitoria sc": "Guimaraes", "vitoria guimaraes": "Guimaraes",
+  "fortuna sittard": "For Sittard", "go ahead eagles": "Go Ahead Eagles", "nec nijmegen": "Nijmegen",
 };
 
 const norm = (s: string) =>
@@ -162,7 +163,7 @@ function similarity(a: string, b: string): number {
 }
 
 export function matchTeam(name: string, known: string[]): string | null {
-  const alias = ALIASES[name.toLowerCase()];
+  const alias = ALIASES[name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()];
   if (alias && known.includes(alias)) return alias;
   if (known.includes(name)) return name;
   const target = norm(name);
