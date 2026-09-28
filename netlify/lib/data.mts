@@ -4,13 +4,22 @@ import { marketProbs, scoreMatrix, type OddsRow, type Result } from "./engine.mt
 export const LEAGUES: Record<string, { fd: string; odds: string }> = {
   "Premier League (ANG)": { fd: "E0", odds: "soccer_epl" },
   "Championship (ANG)": { fd: "E1", odds: "soccer_efl_champ" },
+  "League One (ANG)": { fd: "E2", odds: "soccer_england_league1" },
+  "League Two (ANG)": { fd: "E3", odds: "soccer_england_league2" },
   "Ligue 1 (FRA)": { fd: "F1", odds: "soccer_france_ligue_one" },
   "Ligue 2 (FRA)": { fd: "F2", odds: "soccer_france_ligue_two" },
   "La Liga (ESP)": { fd: "SP1", odds: "soccer_spain_la_liga" },
+  "Segunda (ESP)": { fd: "SP2", odds: "soccer_spain_segunda_division" },
   "Bundesliga (ALL)": { fd: "D1", odds: "soccer_germany_bundesliga" },
+  "2. Bundesliga (ALL)": { fd: "D2", odds: "soccer_germany_bundesliga2" },
   "Serie A (ITA)": { fd: "I1", odds: "soccer_italy_serie_a" },
+  "Serie B (ITA)": { fd: "I2", odds: "soccer_italy_serie_b" },
   "Eredivisie (P-B)": { fd: "N1", odds: "soccer_netherlands_eredivisie" },
   "Liga Portugal (POR)": { fd: "P1", odds: "soccer_portugal_primeira_liga" },
+  "Pro League (BEL)": { fd: "B1", odds: "soccer_belgium_first_div" },
+  "Premiership (ECO)": { fd: "SC0", odds: "soccer_spl" },
+  "Süper Lig (TUR)": { fd: "T1", odds: "soccer_turkey_super_league" },
+  "Super League (GRE)": { fd: "G1", odds: "soccer_greece_super_league" },
 };
 
 export function seasonCodes(today = new Date(), n = 2): string[] {

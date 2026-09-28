@@ -2,7 +2,7 @@
 
 const $ = (s) => document.querySelector(s);
 const DEFAULTS = {
-  demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)"],
+  demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)"],
   modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
   bankroll: 100, kelly: 0.25, maxStake: 0.05,
 };
@@ -13,10 +13,10 @@ let data = null;
 let picks = [];
 
 function load() {
-  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings") || "{}") }; }
+  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings2") || "{}") }; }
   catch { return { ...DEFAULTS }; }
 }
-function save() { try { localStorage.setItem("vb-settings", JSON.stringify(settings)); } catch {} }
+function save() { try { localStorage.setItem("vb-settings2", JSON.stringify(settings)); } catch {} }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const pct = (x, d = 0) => (x == null || Number.isNaN(x) ? "–" : `${(x * 100).toFixed(d)} %`);
