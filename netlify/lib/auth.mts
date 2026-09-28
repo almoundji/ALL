@@ -20,6 +20,8 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(h(a), h(b));
 }
 
+export const credentialsConfigured = () => Boolean(env("APP_USERNAME") && env("APP_PASSWORD") && env("SESSION_SECRET"));
+
 export function checkCredentials(user: string, password: string): boolean {
   const u = env("APP_USERNAME"), p = env("APP_PASSWORD");
   if (!u || !p) return false;
