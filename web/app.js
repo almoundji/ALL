@@ -285,15 +285,20 @@ function renderTop(picks) {
 
 const RISK = { prudent: [0.55, 1.2, 1.9], equilibre: [0.42, 1.4, 2.6], audacieux: [0.3, 1.8, 4.5] }; // [proba min, cote min, cote max]
 
-// Fenêtre du prochain week-end (vendredi 00h → lundi 23h59, heure locale) contenant des matchs.
-function nextWeekend(matches) {
-  const first = matches.map((m) => new Date(m.commence)).filter((d) => [5, 6, 0, 1].includes(d.getDay()) && d > new Date())
+// Fenêtre du prochain week-end (heure locale) : vendredi 18h → dimanche soir, ou un seul jour.
+function comboWindow(matches, period) {
+  if (period === "all") return null;
+  const isWeekend = (d) => [6, 0].includes(d.getDay()) || (d.getDay() === 5 && d.getHours() >= 18);
+  const first = matches.map((m) => new Date(m.commence)).filter((d) => isWeekend(d) && d > new Date())
     .sort((a, b) => a - b)[0];
-  if (!first) return null;
-  const start = new Date(first);
-  start.setDate(start.getDate() - ((start.getDay() + 2) % 7)); // recule au vendredi
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start); end.setDate(end.getDate() + 4);
+  if (!first) return [new Date(0), new Date(0)];
+  const saturday = new Date(first);
+  saturday.setDate(saturday.getDate() + ({ 5: 1, 6: 0, 0: -1 })[saturday.getDay()]);
+  saturday.setHours(0, 0, 0, 0);
+  const start = new Date(saturday), end = new Date(saturday);
+  if (period === "sunday") start.setDate(start.getDate() + 1);
+  if (period === "weekend") start.setHours(-6); // vendredi 18h
+  end.setDate(end.getDate() + (period === "saturday" ? 1 : 2));
   return [start, end];
 }
 
@@ -304,7 +309,7 @@ function renderCombo(all) {
   sel.innerHTML = books.map((b) => `<option ${b === settings.comboBook ? "selected" : ""}>${esc(b)}</option>`).join("");
 
   const [minProb, minOdds, maxOdds] = RISK[settings.comboRisk];
-  const win = settings.comboPeriod === "weekend" ? nextWeekend(data.matches) : null;
+  const win = comboWindow(data.matches, settings.comboPeriod);
   const book = settings.comboBook;
   // Candidats : pari coté chez ce bookmaker, dont la cote est au moins égale à la cote juste estimée.
   const legs = all.map((o) => ({ ...o, price: o.prices?.[book] }))
@@ -322,7 +327,9 @@ function renderCombo(all) {
   chosen.sort((a, b) => a.commence.localeCompare(b.commence));
   const nNoValue = chosen.filter((o) => o.bookEdge < 0).length;
 
-  const period = win ? `du ${win[0].toLocaleDateString("fr-FR")} au ${new Date(win[1] - 1).toLocaleDateString("fr-FR")}` : "sur tous les matchs à venir";
+  const day = (d) => d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const period = !win ? "sur tous les matchs à venir"
+    : win[1] - win[0] <= 86400000 ? `du ${day(win[0])}` : `du ${day(win[0])} au ${day(new Date(win[1] - 1))}`;
   if (chosen.length < 2) {
     $("#combo").innerHTML = `<div class="empty">Pas assez de paris intéressants chez ${esc(book)} ${period} pour ce niveau de risque
       (il faut une cote ${esc(book)} au moins égale à la cote juste). Essaie un autre bookmaker, un autre niveau de risque ou « Tous les matchs ».</div>`;
