@@ -56,6 +56,8 @@
     <section>
       <h3>Bankroll</h3>
       <label>Bankroll (€) <input type="number" id="bankroll" min="1" step="10"></label>
+      <label>Mise minimale par pari (€) <input type="number" id="minStake" min="0" step="1"></label>
+      <p id="stake-warning" class="hint error" hidden></p>
       <label>Fraction de Kelly <output for="kelly"></output>
         <input type="range" id="kelly" min="0.05" max="1" step="0.05"></label>
       <label>Mise max (% bankroll) <output for="maxStake"></output>

@@ -4,7 +4,7 @@ const $ = (s) => document.querySelector(s);
 const DEFAULTS = {
   demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)"],
   modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
-  bankroll: 100, kelly: 0.25, maxStake: 0.05,
+  bankroll: 100, minStake: 10, kelly: 0.25, maxStake: 0.05,
 };
 const LABELS = { home: "Victoire {h}", draw: "Match nul", away: "Victoire {a}", over: "Plus de {p} buts", under: "Moins de {p} buts" };
 
@@ -71,6 +71,8 @@ for (const [id, fmt] of Object.entries(sliders)) {
 }
 $("#bankroll").value = settings.bankroll;
 $("#bankroll").addEventListener("input", (e) => { settings.bankroll = Math.max(1, Number(e.target.value) || 1); save(); render(); });
+$("#minStake").value = settings.minStake;
+$("#minStake").addEventListener("input", (e) => { settings.minStake = Math.max(0, Number(e.target.value) || 0); save(); render(); });
 $("#demo").checked = settings.demo;
 $("#demo").addEventListener("change", (e) => { settings.demo = e.target.checked; save(); refresh(); });
 $("#reload").addEventListener("click", () => refresh(true));
@@ -124,7 +126,9 @@ function evaluate(o) {
   const modelEdge = o.modelProb == null ? null : o.modelProb * o.bestOdds - 1;
   const marketEdge = o.marketProb * o.bestOdds - 1;
   const kelly = Math.max(0, edge / (o.bestOdds - 1));
-  const stakePct = Math.min(kelly * s.kelly, s.maxStake);
+  // Mise Kelly plafonnée, puis relevée au minimum choisi (si le pari a de la value).
+  const kellyPct = Math.min(kelly * s.kelly, s.maxStake);
+  const stakePct = kellyPct > 0 ? Math.max(kellyPct, s.minStake / s.bankroll) : 0;
   let confidence = 1;
   if (modelEdge != null && modelEdge > 0 && (o.reliability ?? 1) >= 0.5) confidence++;
   if (marketEdge > 0) confidence++;
@@ -153,6 +157,11 @@ function render() {
   if (!data) return;
   const all = data.outcomes.map(evaluate);
   picks = selectPicks(all);
+
+  const minPct = settings.minStake / settings.bankroll;
+  $("#stake-warning").hidden = minPct <= settings.maxStake;
+  $("#stake-warning").textContent = `Attention : ${settings.minStake} € représente ${pct(minPct)} de ta bankroll par pari, au-dessus du plafond de ${pct(settings.maxStake)}. `
+    + `Pour rester prudent avec des mises de ${settings.minStake} €, il faudrait une bankroll d'environ ${Math.ceil(settings.minStake / settings.maxStake)} €.`;
 
   $("#k-matches").textContent = data.matches.length;
   $("#k-picks").textContent = picks.length;
