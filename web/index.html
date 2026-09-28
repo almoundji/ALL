@@ -42,7 +42,8 @@
       <h3>Stratégie</h3>
       <label>Poids du modèle vs marché <output for="modelWeight"></output>
         <input type="range" id="modelWeight" min="0" max="1" step="0.05"></label>
-      <p class="hint">0 = consensus des bookmakers seul, 1 = modèle seul. Le marché est dur à battre.</p>
+      <p class="hint">0 = consensus des bookmakers seul (recommandé), 1 = modèle seul. Sur 5 saisons testées,
+        ajouter le modèle a fait perdre de l'argent : il reste affiché à titre indicatif.</p>
       <label>Value minimale <output for="minEdge"></output>
         <input type="range" id="minEdge" min="0" max="0.2" step="0.01"></label>
       <label>Cote minimale <output for="minOdds"></output>
@@ -166,6 +167,15 @@
       <p><b>4. Value.</b> La probabilité retenue mélange modèle et marché. Un pari est signalé si
         <i>probabilité × meilleure cote − 1</i> dépasse le seuil choisi.</p>
       <p><b>5. Mise.</b> Critère de Kelly fractionné et plafonné.</p>
+      <h3>Backtest sur 5 saisons (2021-2026, 9 championnats, 16 478 matchs)</h3>
+      <ul>
+        <li>Le modèle statistique seul prédit <b>moins bien</b> que le consensus des bookmakers ; le mélanger au marché
+          a fait perdre de l'argent (ancien réglage 30 % / 3 % : −6 % par euro misé, 0 saison gagnante sur 5).</li>
+        <li>Ce qui fonctionne : comparer les bookmakers entre eux. Parier quand la meilleure cote dépasse d'au moins 5 %
+          la cote juste du marché a rapporté <b>+6 % par euro misé</b>, 4 saisons gagnantes sur 5, et battu la cote de
+          clôture de 4,6 % en moyenne (le signe d'un avantage réel).</li>
+        <li>D'où les réglages par défaut : poids du modèle 0, value minimale 5 %. Ces chiffres passés ne garantissent rien.</li>
+      </ul>
       <h3>Limites à connaître</h3>
       <ul>
         <li>Une « value » apparente vient souvent d'une info que le modèle ignore (blessures, rotation,

@@ -4,7 +4,8 @@ const $ = (s) => document.querySelector(s);
 const DEFAULTS = {
   demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)",
     "Ligue des nations (UEFA)", "Qualif. Coupe du monde (Europe)", "Qualif. Coupe du monde (Am. Sud)", "Coupe d'Afrique des nations"],
-  modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
+  // Poids du modèle et value minimale validés par le backtest (backtest/README.md).
+  modelWeight: 0, minEdge: 0.05, minOdds: 1.3, maxOdds: 6, halfLife: 180,
   bankroll: 100, minStake: 10, comboBook: "Betclic (FR)", comboStake: 2, comboLegs: 3, comboRisk: "equilibre", comboPeriod: "weekend", comboFill: "fill", comboScope: "all", kelly: 0.25, maxStake: 0.05,
 };
 const LABELS = { home: "Victoire {h}", draw: "Match nul", away: "Victoire {a}", over: "Plus de {p} buts", under: "Moins de {p} buts" };
@@ -14,10 +15,10 @@ let data = null;
 let picks = [];
 
 function load() {
-  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings3") || "{}") }; }
+  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("vb-settings4") || "{}") }; }
   catch { return { ...DEFAULTS }; }
 }
-function save() { try { localStorage.setItem("vb-settings3", JSON.stringify(settings)); } catch {} }
+function save() { try { localStorage.setItem("vb-settings4", JSON.stringify(settings)); } catch {} }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const pct = (x, d = 0) => (x == null || Number.isNaN(x) ? "–" : `${(x * 100).toFixed(d)} %`);

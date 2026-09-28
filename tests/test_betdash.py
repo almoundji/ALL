@@ -82,7 +82,7 @@ def test_season_codes():
 
 
 def test_demo_pipeline_end_to_end():
-    res = run([], Settings(), demo=True)
+    res = run([], Settings(model_weight=0.3, min_edge=0.03), demo=True)
     assert not res.warnings
     assert len(res.matches) == 9
     assert not res.picks.empty

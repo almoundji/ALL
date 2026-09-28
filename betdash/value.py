@@ -24,8 +24,8 @@ OUTCOME_LABELS = {
 
 @dataclass
 class Settings:
-    model_weight: float = 0.3   # 0 = marché seul, 1 = modèle seul
-    min_edge: float = 0.03      # value minimale (3 %)
+    model_weight: float = 0.0   # 0 = marché seul (validé par le backtest), 1 = modèle seul
+    min_edge: float = 0.05      # value minimale (5 %)
     min_odds: float = 1.30
     max_odds: float = 6.0
     min_bookmakers: int = 3
