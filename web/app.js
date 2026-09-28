@@ -117,14 +117,16 @@ async function refresh(force = false) {
 
 function evaluate(o) {
   const s = settings;
-  const prob = o.modelProb == null ? o.marketProb : s.modelWeight * o.modelProb + (1 - s.modelWeight) * o.marketProb;
+  // Le poids du modèle est réduit quand une équipe a peu d'historique (promu…).
+  const w = s.modelWeight * (o.reliability ?? 1);
+  const prob = o.modelProb == null ? o.marketProb : w * o.modelProb + (1 - w) * o.marketProb;
   const edge = prob * o.bestOdds - 1;
   const modelEdge = o.modelProb == null ? null : o.modelProb * o.bestOdds - 1;
   const marketEdge = o.marketProb * o.bestOdds - 1;
   const kelly = Math.max(0, edge / (o.bestOdds - 1));
   const stakePct = Math.min(kelly * s.kelly, s.maxStake);
   let confidence = 1;
-  if (modelEdge != null && modelEdge > 0) confidence++;
+  if (modelEdge != null && modelEdge > 0 && (o.reliability ?? 1) >= 0.5) confidence++;
   if (marketEdge > 0) confidence++;
   if (edge > 0.06) confidence++;
   if (o.nBookmakers >= 8 && o.bestOdds <= 3.5) confidence++;
@@ -183,10 +185,12 @@ function render() {
   const matches = [...data.matches].sort((a, b) => a.commence.localeCompare(b.commence));
   $("#matches").innerHTML = table(
     [["Date"], ["Championnat"], ["Match"], ["1", "num"], ["N", "num"], ["2", "num"], ["+2.5", "num"],
-     ["Les 2 marquent", "num"], ["xG dom.", "num"], ["xG ext.", "num"], ["Score probable", "num"]],
+     ["Les 2 marquent", "num"], ["xG dom.", "num"], ["xG ext.", "num"], ["Score probable", "num"], ["Fiabilité modèle", "num"]],
     matches.map((m) => [date(m.commence), esc(m.league), `${esc(m.homeTeam)} – ${esc(m.awayTeam)}`, pct(m.home), pct(m.draw),
-      pct(m.away), pct(m.over), pct(m.btts_yes), m.xg_home?.toFixed(2) ?? "–", m.xg_away?.toFixed(2) ?? "–", esc(m.likely_score ?? "–")]),
-  ) + `<p class="hint">Probabilités du modèle statistique seul. xG = buts attendus.</p>`;
+      pct(m.away), pct(m.over), pct(m.btts_yes), m.xg_home?.toFixed(2) ?? "–", m.xg_away?.toFixed(2) ?? "–", esc(m.likely_score ?? "–"),
+      m.reliability == null ? "–" : m.reliability >= 1 ? "✓" : `<span class="neg">${pct(m.reliability)}</span>`]),
+  ) + `<p class="hint">Probabilités du modèle statistique seul. xG = buts attendus. Fiabilité &lt; 100 % : une équipe a peu
+      d'historique dans ce championnat (promu…), le site s'appuie alors davantage sur les cotes du marché.</p>`;
 
   const sel = $("#match-select");
   const current = sel.value;

@@ -96,7 +96,7 @@ export function predict(r: Ratings, home: string, away: string, line = 2.5) {
 export type Outcome = {
   eventId: string; market: string; outcome: string; point: number | null;
   marketProb: number; avgOdds: number; nBookmakers: number; bestOdds: number; bestBookmaker: string;
-  modelProb: number | null; commence: string; homeTeam: string; awayTeam: string; league?: string;
+  modelProb: number | null; reliability?: number; commence: string; homeTeam: string; awayTeam: string; league?: string;
 };
 
 export function consensus(odds: OddsRow[]): Outcome[] {
@@ -182,6 +182,10 @@ export function analyseLeague(league: string, results: Result[], odds: OddsRow[]
   const warnings: string[] = [];
   const matches: Record<string, unknown>[] = [];
   const modelProbs = new Map<string, Record<string, number>>();
+  const reliability = new Map<string, number>();
+  // Fiabilité du modèle selon l'historique pondéré de l'équipe la moins connue :
+  // 0 sous ~8 matchs (promu, nouvelle équipe), 1 au-delà de ~25.
+  const rel = (team: string) => Math.min(1, Math.max(0, (r.weight[r.teams.indexOf(team)] - 8) / 17));
   const events = [...new Map(odds.map((o) => [o.eventId, o])).values()];
   for (const ev of events) {
     const home = matchTeam(ev.homeTeam, r.teams), away = matchTeam(ev.awayTeam, r.teams);
@@ -196,11 +200,13 @@ export function analyseLeague(league: string, results: Result[], odds: OddsRow[]
     for (const line of lines) modelProbs.set(`${ev.eventId}|${line}`, predict(r, home, away, line) as never);
     const p = predict(r, home, away, 2.5);
     modelProbs.set(`${ev.eventId}|h2h`, p as never);
-    matches.push({ ...row, ...p });
+    const reli = Math.min(rel(home), rel(away));
+    reliability.set(ev.eventId, reli);
+    matches.push({ ...row, ...p, reliability: reli });
   }
   const outcomes = consensus(odds).map((o) => {
     const p = modelProbs.get(`${o.eventId}|${o.market === "h2h" ? "h2h" : o.point}`);
-    return { ...o, league, modelProb: p ? p[o.outcome] ?? null : null };
+    return { ...o, league, modelProb: p ? p[o.outcome] ?? null : null, reliability: reliability.get(o.eventId) ?? 0 };
   });
   const ratings = r.teams.map((t, i) => ({
     team: t, attack: r.attack[i], defense: r.defense[i], strength: r.attack[i] / r.defense[i], weight: r.weight[i],
