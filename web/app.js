@@ -79,7 +79,7 @@ $("#close-side").addEventListener("click", () => $(".sidebar").classList.remove(
 
 function renderLeagues(all) {
   $("#leagues").innerHTML = all.map((l) => `<label><input type="checkbox" value="${esc(l)}" ${settings.leagues.includes(l) ? "checked" : ""}
-    ${data?.demo ? "disabled" : ""}> ${esc(l)}</label>`).join("");
+    ${data?.source !== "odds-api" ? "disabled" : ""}> ${esc(l)}</label>`).join("");
   $("#leagues").querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
     settings.leagues = [...$("#leagues").querySelectorAll("input:checked")].map((x) => x.value); save();
   }));
@@ -102,10 +102,11 @@ async function refresh(force = false) {
     data = await res.json();
     renderLeagues(data.leagues);
     $("#demo").checked = data.demo;
-    $("#demo").disabled = !data.apiKeyConfigured;
-    $("#key-hint").textContent = data.apiKeyConfigured
-      ? (data.demo ? "Données simulées." : "Cotes réelles (cache 15 min, ~4 crédits par championnat).")
-      : "Aucune clé The Odds API configurée sur Netlify : mode démo forcé.";
+    $("#key-hint").textContent = {
+      demo: "Données simulées (championnat fictif).",
+      "odds-api": "Cotes en direct via The Odds API (cache 15 min, ~4 crédits par championnat coché).",
+      "football-data": "Source gratuite football-data.co.uk : tous les championnats dont les prochains matchs sont publiés (7 bookmakers). Les cases ci-dessous servent avec une clé The Odds API.",
+    }[data.source];
     render();
   } catch (e) {
     if (e.message !== "non connecté") $("#warnings").textContent = `Erreur : ${e.message}`;
@@ -154,7 +155,7 @@ function render() {
   $("#k-matches").textContent = data.matches.length;
   $("#k-picks").textContent = picks.length;
   $("#k-stake").textContent = `${picks.reduce((s, p) => s + p.stake, 0).toFixed(2)} €`;
-  $("#k-credits").textContent = data.creditsRemaining ?? (data.demo ? "démo" : "–");
+  $("#k-credits").textContent = data.creditsRemaining ?? ({ demo: "démo", "football-data": "gratuit" }[data.source] ?? "–");
   $("#warnings").innerHTML = data.warnings.map((w) => `ℹ️ ${esc(w)}`).join("<br>");
 
   $("#picks").innerHTML = picks.length ? table(
@@ -177,6 +178,8 @@ function render() {
       </div></article>`).join("")}</div>`
   : `<div class="empty">Aucun pari ne passe les filtres actuels. Élargis la plage de cotes ou baisse la value minimale.</div>`;
 
+  renderTop(picks);
+
   const matches = [...data.matches].sort((a, b) => a.commence.localeCompare(b.commence));
   $("#matches").innerHTML = table(
     [["Date"], ["Championnat"], ["Match"], ["1", "num"], ["N", "num"], ["2", "num"], ["+2.5", "num"],
@@ -198,6 +201,64 @@ function render() {
     `<p class="hint">Attaque &gt; 1 : marque plus que la moyenne. Défense &lt; 1 : encaisse moins.
       Avantage du terrain ×${r.homeAdv.toFixed(2)} ; ${r.mu.toFixed(2)} but(s) par équipe en moyenne.</p></details>`).join("")
     || `<div class="empty">Aucune donnée.</div>`;
+}
+
+// Probabilité de chaque bilan possible (paris supposés indépendants : un seul pari par match).
+function forecast(bets) {
+  let dist = new Map([[0, 1]]);
+  for (const b of bets) {
+    const next = new Map();
+    for (const [gain, p] of dist) {
+      const win = Math.round((gain + b.stake * (b.bestOdds - 1)) * 100) / 100;
+      const lose = Math.round((gain - b.stake) * 100) / 100;
+      next.set(win, (next.get(win) ?? 0) + p * b.prob);
+      next.set(lose, (next.get(lose) ?? 0) + p * (1 - b.prob));
+    }
+    dist = next;
+  }
+  let pProfit = 0;
+  for (const [g, p] of dist) if (g > 0) pProfit += p;
+  return {
+    stake: bets.reduce((s, b) => s + b.stake, 0),
+    expected: bets.reduce((s, b) => s + b.stake * b.edge, 0),
+    best: bets.reduce((s, b) => s + b.stake * (b.bestOdds - 1), 0),
+    worst: -bets.reduce((s, b) => s + b.stake, 0),
+    pProfit,
+    pAllLost: bets.reduce((s, b) => s * (1 - b.prob), 1),
+  };
+}
+
+const euro = (x) => `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(2)} €`;
+
+function renderTop(picks) {
+  const seen = new Set();
+  const top = picks.filter((p) => !seen.has(p.eventId) && seen.add(p.eventId)).slice(0, 5);
+  $("#top").hidden = !top.length;
+  if (!top.length) return;
+  $("#top-cards").innerHTML = top.map((p, i) => `<article class="top-card">
+    <span class="rank">#${i + 1}</span>
+    <div class="muted" style="font-size:.8rem">${date(p.commence)} · ${esc(p.league)}</div>
+    <div>${esc(p.homeTeam)} – ${esc(p.awayTeam)}</div>
+    <div class="bet">${esc(p.label)}</div>
+    <span class="stars">${"★".repeat(p.confidence)}${"☆".repeat(5 - p.confidence)}</span>
+    <dl>
+      <dt>Cote</dt><dd><b>${odd(p.bestOdds)}</b> · ${esc(p.bestBookmaker)}</dd>
+      <dt>Chance de gagner</dt><dd>${pct(p.prob)}</dd>
+      <dt>Mise conseillée</dt><dd>${p.stake.toFixed(2)} €</dd>
+      <dt>Gain si gagné</dt><dd class="pos">${euro(p.stake * (p.bestOdds - 1))}</dd>
+      <dt>Gain moyen attendu</dt><dd>${euro(p.stake * p.edge)}</dd>
+    </dl></article>`).join("");
+  const f = forecast(top);
+  $("#forecast").innerHTML = `<strong>📈 Prévision de gain si tu joues ces ${top.length} paris</strong>
+    <div class="grid" style="margin-top:.6rem">
+      <div><span>Mise totale</span><b>${f.stake.toFixed(2)} €</b></div>
+      <div><span>Gain moyen attendu</span><b class="${f.expected >= 0 ? "pos" : "neg"}">${euro(f.expected)}</b></div>
+      <div><span>Chance de finir gagnant</span><b>${pct(f.pProfit)}</b></div>
+      <div><span>Meilleur cas (tout gagné)</span><b class="pos">${euro(f.best)}</b></div>
+      <div><span>Pire cas (tout perdu, ${pct(f.pAllLost)})</span><b class="neg">${euro(f.worst)}</b></div>
+    </div>
+    <p>Le « gain moyen attendu » est une moyenne sur un très grand nombre de paris semblables, pas ce que tu
+      gagneras cette fois-ci. Il repose sur les probabilités estimées : si le modèle se trompe, il est faux.</p>`;
 }
 
 function renderDetail(all) {

@@ -81,6 +81,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pick .bet { font-size: 1.05rem; margin: .2rem 0 .5rem; }
 .pick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; }
 .pick-grid span, .pick-grid small { display: block; color: var(--muted); font-size: .75rem; }
+.top5 h2 { margin-top: .5rem; }
+.top-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .7rem; }
+.top-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .8rem 1rem; position: relative; }
+.top-card .rank { position: absolute; top: .6rem; right: .8rem; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+.top-card .bet { margin: .3rem 0 .4rem; }
+.top-card > .muted { padding-right: 2.4rem; }
+.top-card dl { display: grid; grid-template-columns: auto 1fr; gap: .15rem .6rem; margin: .4rem 0 0; font-size: .85rem; }
+.top-card dt { color: var(--muted); } .top-card dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.forecast { margin: .8rem 0 1.2rem; background: var(--accent-soft); border-radius: var(--radius); padding: .9rem 1rem; }
+.forecast .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+.forecast span { display: block; font-size: .8rem; color: var(--muted); } .forecast b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.forecast p { margin: .6rem 0 0; font-size: .82rem; color: var(--muted); }
 details { margin-bottom: .8rem; } summary { cursor: pointer; font-weight: 600; padding: .4rem 0; }
 
 @media (max-width: 860px) {

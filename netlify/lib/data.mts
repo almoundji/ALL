@@ -22,7 +22,7 @@ export function seasonCodes(today = new Date(), n = 2): string[] {
 export function parseResultsCsv(text: string): Result[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
   if (!lines.length) return [];
-  const head = lines[0].replace(/^﻿/, "").split(",");
+  const head = lines[0].replace(/^(\uFEFF|\u00EF\u00BB\u00BF)/, "").split(",");
   const col = (name: string) => head.indexOf(name);
   const [d, h, a, hg, ag] = ["Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG"].map(col);
   if ([d, h, a, hg, ag].some((c) => c < 0)) return [];
@@ -136,4 +136,70 @@ export function demoData(seed = 7, now = Date.now()): { results: Result[]; odds:
     }
   }
   return { results, odds };
+}
+
+// ------------------------------------------------------------------ source gratuite : fixtures football-data
+
+// Toutes les divisions couvertes par football-data.co.uk (résultats + prochains matchs cotés).
+export const FD_DIVISIONS: Record<string, string> = {
+  E0: "Premier League (ANG)", E1: "Championship (ANG)", E2: "League One (ANG)", E3: "League Two (ANG)",
+  EC: "National League (ANG)", SC0: "Premiership (ECO)", SC1: "Championship (ECO)", SC2: "League One (ECO)",
+  SC3: "League Two (ECO)", D1: "Bundesliga (ALL)", D2: "2. Bundesliga (ALL)", I1: "Serie A (ITA)",
+  I2: "Serie B (ITA)", SP1: "La Liga (ESP)", SP2: "Segunda (ESP)", F1: "Ligue 1 (FRA)", F2: "Ligue 2 (FRA)",
+  N1: "Eredivisie (P-B)", B1: "Pro League (BEL)", P1: "Liga Portugal (POR)", T1: "Süper Lig (TUR)", G1: "Super League (GRE)",
+};
+
+// Colonnes de cotes du fichier fixtures : préfixe -> bookmaker.
+const FD_BOOKS: Record<string, string> = {
+  B365: "Bet365", BFD: "Betfred", BV: "BetVictor", BW: "Bwin", PP: "Paddy Power", SKB: "Sky Bet", BFE: "Betfair Exchange",
+};
+
+// Heure de Londres -> instant UTC (gère l'heure d'été).
+function londonToUtc(y: number, mo: number, d: number, h: number, mi: number): Date {
+  const guess = Date.UTC(y, mo - 1, d, h, mi);
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    .formatToParts(new Date(guess));
+  const lh = Number(parts.find((p) => p.type === "hour")!.value), lm = Number(parts.find((p) => p.type === "minute")!.value);
+  const offsetMin = ((lh * 60 + lm) - (h * 60 + mi) + 1440) % 1440; // 0 ou 60
+  return new Date(guess - (offsetMin > 720 ? offsetMin - 1440 : offsetMin) * 60000);
+}
+
+export function parseFixturesCsv(text: string, now = Date.now()): Record<string, OddsRow[]> {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+  if (!lines.length) return {};
+  const head = lines[0].replace(/^(\uFEFF|\u00EF\u00BB\u00BF)/, "").split(",");
+  const col = new Map(head.map((h, i) => [h, i]));
+  const byDiv: Record<string, OddsRow[]> = {};
+  for (const line of lines.slice(1)) {
+    const f = line.split(",");
+    const get = (k: string) => f[col.get(k) ?? -1] ?? "";
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(get("Date"));
+    if (!m || !get("HomeTeam") || !get("AwayTeam")) continue;
+    const [hh, mm] = (get("Time") || "15:00").split(":").map(Number);
+    const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+    const kickoff = londonToUtc(year, Number(m[2]), Number(m[1]), hh, mm);
+    if (kickoff.getTime() <= now) continue; // uniquement les matchs à venir
+    const div = get("Div");
+    const base = {
+      eventId: `${div}-${get("Date")}-${get("HomeTeam")}-${get("AwayTeam")}`, commence: kickoff.toISOString(),
+      homeTeam: get("HomeTeam"), awayTeam: get("AwayTeam"),
+    };
+    const rows = (byDiv[div] ??= []);
+    for (const [pre, name] of Object.entries(FD_BOOKS)) {
+      const trio = [["home", "H"], ["draw", "D"], ["away", "A"]].map(([o, s]) => [o, Number(get(pre + s))] as const);
+      if (trio.every(([, p]) => p > 1)) for (const [o, p] of trio) rows.push({ ...base, bookmaker: name, market: "h2h", outcome: o, point: null, price: p });
+      const over = Number(get(`${pre}>2.5`)), under = Number(get(`${pre}<2.5`));
+      if (over > 1 && under > 1) {
+        rows.push({ ...base, bookmaker: name, market: "totals", outcome: "over", point: 2.5, price: over });
+        rows.push({ ...base, bookmaker: name, market: "totals", outcome: "under", point: 2.5, price: under });
+      }
+    }
+  }
+  return byDiv;
+}
+
+export async function loadFixtures(): Promise<Record<string, OddsRow[]>> {
+  const res = await fetch("https://www.football-data.co.uk/fixtures.csv");
+  if (!res.ok) throw new Error(`football-data fixtures : ${res.status}`);
+  return parseFixturesCsv(new TextDecoder("latin1").decode(await res.arrayBuffer()));
 }

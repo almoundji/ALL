@@ -50,3 +50,14 @@ test("analyse démo complète", () => {
   assert.equal(a.outcomes.length, 9 * 5);
   assert.ok(a.outcomes.every((o) => o.modelProb !== null && o.nBookmakers === 7));
 });
+
+test("fixtures football-data : matchs à venir et cotes par bookmaker", async () => {
+  const { parseFixturesCsv } = await import("../netlify/lib/data.mts");
+  const csv = "﻿Div,Date,Time,HomeTeam,AwayTeam,B365H,B365D,B365A,BFEH,BFED,BFEA,B365>2.5,B365<2.5\n"
+    + "F1,03/10/2026,20:00,Lens,Marseille,2.1,3.4,3.5,2.2,3.5,3.6,1.9,1.9\n"
+    + "F1,01/09/2026,20:00,Lyon,Nice,2.0,3.3,3.8,,,,,\n";
+  const by = parseFixturesCsv(csv, Date.parse("2026-09-28T12:00:00Z"));
+  assert.deepEqual(Object.keys(by), ["F1"]);
+  assert.equal(by.F1.length, 3 + 3 + 2);
+  assert.equal(by.F1[0].commence, "2026-10-03T19:00:00.000Z"); // 20:00 heure de Londres (BST)
+});
