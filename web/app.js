@@ -4,7 +4,7 @@ const $ = (s) => document.querySelector(s);
 const DEFAULTS = {
   demo: false, leagues: ["Premier League (ANG)", "Ligue 1 (FRA)", "La Liga (ESP)", "Bundesliga (ALL)", "Serie A (ITA)", "Championship (ANG)", "Ligue 2 (FRA)", "Eredivisie (P-B)", "Liga Portugal (POR)"],
   modelWeight: 0.3, minEdge: 0.03, minOdds: 1.3, maxOdds: 6, halfLife: 180,
-  bankroll: 100, minStake: 10, kelly: 0.25, maxStake: 0.05,
+  bankroll: 100, minStake: 10, comboBook: "Betclic (FR)", comboStake: 2, comboLegs: 3, comboRisk: "equilibre", comboPeriod: "weekend", kelly: 0.25, maxStake: 0.05,
 };
 const LABELS = { home: "Victoire {h}", draw: "Match nul", away: "Victoire {a}", over: "Plus de {p} buts", under: "Moins de {p} buts" };
 
@@ -73,6 +73,11 @@ $("#bankroll").value = settings.bankroll;
 $("#bankroll").addEventListener("input", (e) => { settings.bankroll = Math.max(1, Number(e.target.value) || 1); save(); render(); });
 $("#minStake").value = settings.minStake;
 $("#minStake").addEventListener("input", (e) => { settings.minStake = Math.max(0, Number(e.target.value) || 0); save(); render(); });
+for (const [id, key, num] of [["#combo-book", "comboBook"], ["#combo-stake", "comboStake", true], ["#combo-legs", "comboLegs", true],
+  ["#combo-risk", "comboRisk"], ["#combo-period", "comboPeriod"]]) {
+  $(id).value = settings[key];
+  $(id).addEventListener("change", (e) => { settings[key] = num ? Math.max(0.5, Number(e.target.value) || 1) : e.target.value; save(); render(); });
+}
 $("#demo").checked = settings.demo;
 $("#demo").addEventListener("change", (e) => { settings.demo = e.target.checked; save(); refresh(); });
 $("#reload").addEventListener("click", () => refresh(true));
@@ -190,6 +195,7 @@ function render() {
   : `<div class="empty">Aucun pari ne passe les filtres actuels. Élargis la plage de cotes ou baisse la value minimale.</div>`;
 
   renderTop(picks);
+  renderCombo(all);
 
   const matches = [...data.matches].sort((a, b) => a.commence.localeCompare(b.commence));
   $("#matches").innerHTML = table(
@@ -272,6 +278,71 @@ function renderTop(picks) {
     </div>
     <p>Le « gain moyen attendu » est une moyenne sur un très grand nombre de paris semblables, pas ce que tu
       gagneras cette fois-ci. Il repose sur les probabilités estimées : si le modèle se trompe, il est faux.</p>`;
+}
+
+// ------------------------------------------------------------------ combiné
+
+const RISK = { prudent: [0.55, 1.2, 1.9], equilibre: [0.42, 1.4, 2.6], audacieux: [0.3, 1.8, 4.5] }; // [proba min, cote min, cote max]
+
+// Fenêtre du prochain week-end (vendredi 00h → lundi 23h59, heure locale) contenant des matchs.
+function nextWeekend(matches) {
+  const first = matches.map((m) => new Date(m.commence)).filter((d) => [5, 6, 0, 1].includes(d.getDay()) && d > new Date())
+    .sort((a, b) => a - b)[0];
+  if (!first) return null;
+  const start = new Date(first);
+  start.setDate(start.getDate() - ((start.getDay() + 2) % 7)); // recule au vendredi
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start); end.setDate(end.getDate() + 4);
+  return [start, end];
+}
+
+function renderCombo(all) {
+  const books = [...new Set(all.flatMap((o) => Object.keys(o.prices || {})))].sort();
+  const sel = $("#combo-book");
+  if (!books.includes(settings.comboBook) && books.length) settings.comboBook = books.find((b) => /betclic/i.test(b)) || books[0];
+  sel.innerHTML = books.map((b) => `<option ${b === settings.comboBook ? "selected" : ""}>${esc(b)}</option>`).join("");
+
+  const [minProb, minOdds, maxOdds] = RISK[settings.comboRisk];
+  const win = settings.comboPeriod === "weekend" ? nextWeekend(data.matches) : null;
+  const book = settings.comboBook;
+  // Candidats : pari coté chez ce bookmaker, dont la cote est au moins égale à la cote juste estimée.
+  const legs = all.map((o) => ({ ...o, price: o.prices?.[book] }))
+    .filter((o) => o.price && o.prob >= minProb && o.price >= minOdds && o.price <= maxOdds)
+    .filter((o) => !win || (new Date(o.commence) >= win[0] && new Date(o.commence) < win[1]))
+    .map((o) => ({ ...o, bookEdge: o.prob * o.price - 1 }))
+    .filter((o) => o.bookEdge >= 0)
+    .sort((a, b) => b.bookEdge - a.bookEdge);
+  const chosen = [];
+  for (const o of legs) {
+    if (chosen.length >= settings.comboLegs) break;
+    if (!chosen.some((c) => c.eventId === o.eventId)) chosen.push(o); // un seul pari par match
+  }
+
+  const period = win ? `du ${win[0].toLocaleDateString("fr-FR")} au ${new Date(win[1] - 1).toLocaleDateString("fr-FR")}` : "sur tous les matchs à venir";
+  if (chosen.length < 2) {
+    $("#combo").innerHTML = `<div class="empty">Pas assez de paris intéressants chez ${esc(book)} ${period} pour ce niveau de risque
+      (il faut une cote ${esc(book)} au moins égale à la cote juste). Essaie un autre bookmaker, un autre niveau de risque ou « Tous les matchs ».</div>`;
+    return;
+  }
+  const odds = chosen.reduce((m, o) => m * o.price, 1);
+  const prob = chosen.reduce((m, o) => m * o.prob, 1);
+  const stake = settings.comboStake;
+  const ev = stake * (prob * odds - 1);
+  const partial = chosen.length < settings.comboLegs ? `<p class="hint">Seulement ${chosen.length} paris trouvés qui respectent tes critères (demandé : ${settings.comboLegs}).</p>` : "";
+  $("#combo").innerHTML = `<p class="hint">Combiné ${esc(book)} ${period}. Tous les paris doivent être gagnés.</p>${partial}` +
+    table([["Date"], ["Match"], ["Pari"], [`Cote ${esc(book)}`, "num"], ["Cote juste", "num"], ["Chance", "num"], ["Value", "num"]],
+      chosen.map((o) => [date(o.commence), `${esc(o.homeTeam)} – ${esc(o.awayTeam)}`, `<span class="bet">${esc(o.label)}</span>`,
+        odd(o.price), odd(o.fairOdds), pct(o.prob), signed(o.bookEdge)])) +
+    `<div class="forecast combo-summary"><strong>🎲 Ton combiné</strong>
+      <div class="grid" style="margin-top:.6rem">
+        <div><span>Cote totale</span><b>${odds.toFixed(2)}</b></div>
+        <div><span>Mise</span><b>${stake.toFixed(2)} €</b></div>
+        <div><span>Gain si tout passe</span><b class="pos">${euro(stake * (odds - 1))}</b></div>
+        <div><span>Chance de gagner</span><b>${pct(prob, 1)}</b><span>environ 1 fois sur ${Math.max(1, Math.round(1 / prob))}</span></div>
+        <div><span>Gain moyen attendu</span><b class="${ev >= 0 ? "pos" : "neg"}">${euro(ev)}</b></div>
+      </div>
+      <p>Un combiné gagne rarement : il faut répéter ce type de pari de nombreuses fois pour que le gain moyen se réalise.
+        Garde des petites mises. Chaque match ajouté multiplie la cote mais divise la chance de gagner.</p></div>`;
 }
 
 function renderDetail(all) {

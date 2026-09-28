@@ -96,6 +96,7 @@ export function predict(r: Ratings, home: string, away: string, line = 2.5) {
 export type Outcome = {
   eventId: string; market: string; outcome: string; point: number | null;
   marketProb: number; avgOdds: number; nBookmakers: number; bestOdds: number; bestBookmaker: string;
+  prices: Record<string, number>; // cote de chaque bookmaker
   modelProb: number | null; reliability?: number; commence: string; homeTeam: string; awayTeam: string; league?: string;
 };
 
@@ -125,6 +126,7 @@ export function consensus(odds: OddsRow[]): Outcome[] {
       marketProb: fair.reduce((s, x) => s + x, 0) / fair.length,
       avgOdds: rows.reduce((s, r) => s + r.price, 0) / rows.length,
       nBookmakers: books.size, bestOdds: best.price, bestBookmaker: best.bookmaker,
+      prices: Object.fromEntries(rows.map((r) => [r.bookmaker, r.price])),
       modelProb: null, commence: r0.commence, homeTeam: r0.homeTeam, awayTeam: r0.awayTeam,
     };
   });
