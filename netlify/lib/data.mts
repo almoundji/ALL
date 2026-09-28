@@ -72,6 +72,8 @@ export function parseOdds(events: any[]): OddsRow[] {
   const rows: OddsRow[] = [];
   for (const ev of events) {
     for (const bk of ev.bookmakers ?? []) {
+      // Bourses de paris exclues : leurs cotes s'entendent avant commission sur les gains.
+      if (/_ex(_|$)|matchbook|smarkets/i.test(bk.key ?? "")) continue;
       for (const mk of bk.markets ?? []) {
         if (mk.key !== "h2h" && mk.key !== "totals") continue;
         for (const o of mk.outcomes ?? []) {
@@ -160,7 +162,7 @@ export const FD_DIVISIONS: Record<string, string> = {
 
 // Colonnes de cotes du fichier fixtures : préfixe -> bookmaker.
 const FD_BOOKS: Record<string, string> = {
-  B365: "Bet365", BFD: "Betfred", BV: "BetVictor", BW: "Bwin", PP: "Paddy Power", SKB: "Sky Bet", BFE: "Betfair Exchange",
+  B365: "Bet365", BFD: "Betfred", BV: "BetVictor", BW: "Bwin", PP: "Paddy Power", SKB: "Sky Bet",
 };
 
 // Heure de Londres -> instant UTC (gère l'heure d'été).

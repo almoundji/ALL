@@ -184,8 +184,8 @@ export function analyseLeague(league: string, results: Result[], odds: OddsRow[]
   const modelProbs = new Map<string, Record<string, number>>();
   const reliability = new Map<string, number>();
   // Fiabilité du modèle selon l'historique pondéré de l'équipe la moins connue :
-  // 0 sous ~8 matchs (promu, nouvelle équipe), 1 au-delà de ~25.
-  const rel = (team: string) => Math.min(1, Math.max(0, (r.weight[r.teams.indexOf(team)] - 8) / 17));
+  // 0 sous ~8 matchs pondérés (promu, nouvelle équipe), 1 au-delà de ~16.
+  const rel = (team: string) => Math.min(1, Math.max(0, (r.weight[r.teams.indexOf(team)] - 8) / 8));
   const events = [...new Map(odds.map((o) => [o.eventId, o])).values()];
   for (const ev of events) {
     const home = matchTeam(ev.homeTeam, r.teams), away = matchTeam(ev.awayTeam, r.teams);
