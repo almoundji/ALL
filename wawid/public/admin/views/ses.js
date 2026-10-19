@@ -55,34 +55,36 @@ export async function renderUsers(el, ctx, _rest, query) {
     actions: `<button class="btn btn-primary" id="add">${icon("plus")} Nouvel utilisateur</button>` })}
   <section class="card" id="t"></section>
   <section class="card" style="margin-top:16px"><div class="card-head"><h3>Matrice des droits</h3></div><div class="table-wrap"><table class="table"><thead><tr><th>Droit</th>${Object.values(roles).map((r) => `<th>${esc(r.label)}</th>`).join("")}</tr></thead><tbody>
-    ${[["read", "Consultation"], ["control", "Contrôle guichet"], ["alerts", "Traitement des alertes"], ["cases", "Dossiers"], ["watchlist", "Listes de surveillance"], ["rules", "Règles de ciblage"], ["apis", "APIS"], ["evisa", "Décisions e-Visa"], ["gates", "Pilotage eGates"], ["users", "Utilisateurs"], ["system", "Paramètres système"]].map(([p, l]) => `<tr><td>${l}</td>${Object.values(roles).map((r) => `<td>${r.perms.includes(p) ? `<span class="status good">Oui</span>` : '<span class="muted">—</span>'}</td>`).join("")}</tr>`).join("")}
+    ${[["read", "Consultation"], ["control", "Contrôle guichet"], ["alerts", "Traitement des alertes"], ["cases", "Dossiers"], ["watchlist", "Listes de surveillance"], ["rules", "Règles de ciblage"], ["apis", "APIS"], ["evisa", "Décisions e-Visa"], ["gates", "Pilotage eGates"], ["users", "Utilisateurs"], ["system", "Paramètres système"], ["finance", "Redevance (finances)"], ["carrier", "Plateforme compagnies (sa compagnie)"]].map(([p, l]) => `<tr><td>${l}</td>${Object.values(roles).map((r) => `<td>${r.perms.includes(p) ? `<span class="status good">Oui</span>` : '<span class="muted">—</span>'}</td>`).join("")}</tr>`).join("")}
   </tbody></table></div></section>`;
   const bindEdit = (t) => t.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => editUser(b.dataset.edit)));
   mountTable(el.querySelector("#t"), {
     rows: users, onRender: bindEdit,
     columns: [
       { key: "name", label: "Nom", render: (u) => `<div class="cell-title">${esc(u.name)}</div><div class="cell-sub mono">${esc(u.username)}</div>` },
-      { key: "role", label: "Rôle", render: (u) => esc(u.roleLabel) },
+      { key: "role", label: "Rôle", render: (u) => `${esc(u.roleLabel)}<div class="cell-sub">${u.platform === "compagnies" ? `Plateforme compagnies · ${esc(u.carrierName || "")}` : "Espace DPAF"}</div>` },
       { key: "posteId", label: "Poste", render: (u) => esc(ctx.poste(u.posteId)) },
       { key: "lastLogin", label: "Dernière connexion", render: (u) => (u.lastLogin ? ago(u.lastLogin) : "Jamais") },
       { key: "active", label: "État", render: (u) => `${u.active ? '<span class="status good">Actif</span>' : '<span class="status">Désactivé</span>'} <button class="btn btn-sm btn-ghost" data-edit="${u.id}">Modifier</button>` },
     ],
   });
   const roleOpts = (sel) => Object.entries(roles).map(([k, r]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${esc(r.label)}</option>`).join("");
+  const airlineField = (sel) => `<label class="field" style="grid-column:1/-1"><span>Compagnie aérienne (comptes « Compagnie aérienne » uniquement)</span><select class="select" name="carrier"><option value="">—</option>${Object.entries(ctx.data.airlines || {}).map(([k, n]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${esc(n)} (${k})</option>`).join("")}</select></label>`;
   const posteOpts = (sel) => ctx.data.postes.map((p) => `<option value="${p.id}" ${p.id === sel ? "selected" : ""}>${esc(p.name)}</option>`).join("");
   if (query?.new) { history.replaceState(null, "", "#/utilisateurs"); setTimeout(() => el.querySelector("#add").click(), 0); }
   el.querySelector("#add").onclick = async () => {
-    const { value, form } = await dialog({ title: "Nouvel utilisateur", body: `<div class="form-grid"><label class="field"><span>Nom complet</span><input class="input" name="name"></label><label class="field"><span>Identifiant</span><input class="input" name="username" autocomplete="off"></label><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts("agent")}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts("AIBD")}</select></label><label class="field" style="grid-column:1/-1"><span>Mot de passe initial (10 caractères min.)</span><input class="input" name="password" type="password" autocomplete="new-password"></label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Créer", cls: "btn-primary", value: "ok" }] });
+    const { value, form } = await dialog({ title: "Nouvel utilisateur", body: `<div class="form-grid"><label class="field"><span>Nom complet</span><input class="input" name="name"></label><label class="field"><span>Identifiant</span><input class="input" name="username" autocomplete="off"></label><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts("agent")}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts("AIBD")}</select></label>${airlineField("")}<label class="field" style="grid-column:1/-1"><span>Mot de passe initial (10 caractères min.)</span><input class="input" name="password" type="password" autocomplete="new-password"></label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Créer", cls: "btn-primary", value: "ok" }] });
     if (!value) return;
     try { await api("/api/users", { method: "POST", body: Object.fromEntries(new FormData(form)) }); toast("Utilisateur créé"); renderUsers(el, ctx); } catch (e) { toast(e.message, "critical"); }
   };
   async function editUser(id) {
     {
     const u = users.find((x) => x.id === id);
-    const { value, form } = await dialog({ title: `Modifier ${u.username}`, body: `<div class="form-grid"><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts(u.role)}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts(u.posteId)}</select></label><label class="field" style="grid-column:1/-1"><span>Nouveau mot de passe (laisser vide pour conserver)</span><input class="input" name="password" type="password" autocomplete="new-password"></label><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""}> Compte actif</label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "ok" }] });
+    const { value, form } = await dialog({ title: `Modifier ${u.username}`, body: `<div class="form-grid"><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts(u.role)}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts(u.posteId)}</select></label>${airlineField(u.carrier || "")}<label class="field" style="grid-column:1/-1"><span>Nouveau mot de passe (laisser vide pour conserver)</span><input class="input" name="password" type="password" autocomplete="new-password"></label><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""}> Compte actif</label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "ok" }] });
     if (!value) return;
     const f = new FormData(form);
     const body = { role: f.get("role"), posteId: f.get("posteId"), active: f.has("active") };
+    if (f.get("carrier")) body.carrier = f.get("carrier");
     if (f.get("password")) body.password = f.get("password");
     try { await api(`/api/users/${u.id}`, { method: "PATCH", body }); toast("Utilisateur mis à jour"); renderUsers(el, ctx); } catch (e) { toast(e.message, "critical"); }
     }

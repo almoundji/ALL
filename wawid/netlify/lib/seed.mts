@@ -312,16 +312,24 @@ export function generateSeed(now = new Date()): Seed {
       invoices.push({
         id: `RS-${month.replace("-", "")}-${code}`, month, carrier: code, carrierName: name, counted, exempt, billable, declared,
         rateUSD: 12, fx: fx[month], amountUSD, amountXOF, issuedAt: issued.toISOString(), dueAt: due.toISOString(),
-        payments: paid ? [{ at: paidAt, amount: paid, ref: `RGT-${Math.floor(rnd() * 1e8)}`, by: "Receveur général du Trésor" }] : [],
+        payments: paid ? [{ at: paidAt, amount: paid, ref: `VIR-${Math.floor(rnd() * 1e8)}`, by: `Opérations ${name}`, channel: "Compagnie (Virement)", status: "CONFIRME", checkedBy: "Service financier WawID", checkedAt: paidAt }] : [],
       });
     }
+  }
+  // Reversements à l'État (part de l'État des sommes encaissées), effectués le 15 du mois suivant l'encaissement.
+  const reversements: any[] = [];
+  const share = 0.75;
+  for (const month of Object.keys(fx).sort().slice(0, -2)) {
+    const collected = invoices.filter((i) => i.month === month).reduce((s, i) => s + i.payments.reduce((a: number, p: any) => a + p.amount, 0), 0);
+    const at = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) + 1, 15));
+    if (collected && at < now) reversements.push({ id: `REV-${month.replace("-", "")}`, month, at: at.toISOString(), amount: Math.round(collected * (1 - share)), ref: `VIR-TRESOR-${month.replace("-", "")}`, by: "Service financier WawID", beneficiary: "Receveur général du Trésor (DGCPT)" });
   }
 
   return {
     meta: { seededAt: now.toISOString(), version: 1 },
     settings: { visaExempt: VISA_EXEMPT, faceThreshold: 0.8, retentionDays: 1825, evisaFee: 50000, passFee: 15000,
-      redevance: { rateUSD: 12, operatorShare: 0.75, penaltyRate: 0.05, fx } },
-    invoices,
+      redevance: { rateUSD: 12, operatorShare: 0.75, penaltyRate: 0.05, fx, circuit: "OPERATEUR" } },
+    invoices, reversements,
     watchlist, rules, travelers: travelers.map(({ mrz, ...t }) => t), crossings, alerts, cases, evisas, gates, flights, passes, vehicles, devices, connectors,
     enrolments: [], carrierMessages: [],
   };

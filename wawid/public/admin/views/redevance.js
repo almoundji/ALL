@@ -2,25 +2,19 @@
 // assiette par compagnie, exonérations, factures en FCFA, pénalités, encaissements au Trésor,
 // rapprochement déclarations / comptage WawID, répartition et simulateur de modèle économique.
 import { locale } from "../../shared/i18n.js";
+import { PAYMENT_STATUS, REDEVANCE_DEFAULTS, invoiceState } from "../../shared/redevance.js";
 import { api, dialog, downloadCSV, esc, fmtDate, fmtNum, icon, toast } from "../../shared/ui.js";
 import { barChart, bindTooltips, legend, mountTable, pageHead } from "./common.js";
 
-const DEFAULTS = { rateUSD: 12, operatorShare: 0.75, penaltyRate: 0.05, fx: {} };
+const DEFAULTS = REDEVANCE_DEFAULTS;
 const EXEMPT = { equipage: "Équipage", billetsID: "Billets ID (personnel)", enfants: "Enfants 0-2 ans", transit: "Transit ≤ 24 h", deroutes: "Vols déroutés" };
-const TABS = [["synthese", "Synthèse"], ["factures", "Factures compagnies"], ["rapprochement", "Rapprochement"], ["repartition", "Répartition"], ["simulateur", "Simulateur de modèle"]];
+const TABS = [["synthese", "Synthèse"], ["factures", "Factures compagnies"], ["validations", "Paiements à valider"], ["reversements", "Reversements à l'État"], ["rapprochement", "Rapprochement"], ["repartition", "Répartition"], ["simulateur", "Simulateur de modèle"]];
+const operatorCircuit = (r) => (r.circuit || "OPERATEUR") === "OPERATEUR";
 const xof = (n) => `${fmtNum(Math.round(n))} FCFA`;
 const mds = (n) => (Math.abs(n) >= 1e9 ? `${fmtNum(n / 1e9, 2)} Mds` : `${fmtNum(n / 1e6, 1)} M`);
 const monthLabel = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(locale(), { month: "short", year: "numeric", timeZone: "UTC" });
 
-/** État d'une facture : payé, reste dû, mois de retard et pénalité (5 % par mois de retard sur le reste dû). */
-export function invoiceState(inv, r = DEFAULTS, now = new Date()) {
-  const paid = inv.payments.reduce((s, p) => s + p.amount, 0);
-  const due = Math.max(0, inv.amountXOF - paid);
-  const late = due > 0 && now > new Date(inv.dueAt) ? Math.ceil((now - new Date(inv.dueAt)) / (30 * 86400000)) : 0;
-  const penalty = Math.round(due * r.penaltyRate * late);
-  const status = due === 0 ? "PAYÉE" : late ? "EN RETARD" : paid ? "PARTIELLE" : "ÉMISE";
-  return { paid, due, late, penalty, status };
-}
+export { invoiceState };
 const STATUS = { "PAYÉE": "good", "PARTIELLE": "warning", "ÉMISE": "info", "EN RETARD": "critical" };
 
 export function render(el, ctx, _rest, query) {
@@ -28,9 +22,13 @@ export function render(el, ctx, _rest, query) {
   const r = { ...DEFAULTS, ...(d.settings.redevance || {}) };
   const invoices = (d.invoices || []).map((i) => ({ ...i, st: invoiceState(i, r) }));
   const tab = TABS.some(([k]) => k === query.tab) ? query.tab : "synthese";
-  el.innerHTML = `${pageHead({ title: "Redevance de sécurité", sub: "12 USD par passager embarqué ou débarqué sur vol commercial international, facturée en FCFA au taux IATA du mois, recouvrée par la DGCPT (décret 2012-519).", crumbs: [[null, "Finances"]],
+  const pendingCount = invoices.reduce((n, i) => n + i.payments.filter((p) => p.status === "DECLARE").length, 0);
+  el.innerHTML = `${pageHead({ title: "Redevance de sécurité", sub: operatorCircuit(r)
+      ? `${r.rateUSD} USD par passager embarqué ou débarqué sur vol commercial international, facturée en FCFA au taux IATA du mois. Les compagnies paient WawID, qui reverse la part de l'État au Trésor public.`
+      : `${r.rateUSD} USD par passager embarqué ou débarqué sur vol commercial international, facturée en FCFA au taux IATA du mois, recouvrée par la DGCPT (décret 2012-519).`, crumbs: [[null, "Finances"]],
     actions: `<button class="btn" id="csv">${icon("download")} Exporter</button>` })}
-  <nav class="space-tabs">${TABS.map(([k, l]) => `<button aria-selected="${k === tab}" data-tab="${k}">${l}</button>`).join("")}</nav>
+  ${operatorCircuit(r) ? `<div class="msg warning" style="margin-bottom:12px">${icon("alert")}<span><b>Circuit de recouvrement : compagnies → WawID → Trésor public.</b> <span>Ce circuit diffère du cadre en vigueur (décret 2012-519 : recouvrement par la DGCPT ; décision du 4 décembre 2012 : versement de la part opérateur par le Trésor). Il suppose un nouveau texte réglementaire et une convention de mandat d'encaissement avec l'État.</span></span></div>` : ""}
+  <nav class="space-tabs">${TABS.map(([k, l]) => `<button aria-selected="${k === tab}" data-tab="${k}">${l}${k === "validations" && pendingCount ? ` <span class="status warning">${pendingCount}</span>` : ""}</button>`).join("")}</nav>
   <div id="body"></div>`;
   el.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => (location.hash = `#/redevance?tab=${b.dataset.tab}`)));
   el.querySelector("#csv").onclick = () => downloadCSV("wawid-redevance.csv", invoices.map((i) => ({
@@ -38,7 +36,7 @@ export function render(el, ctx, _rest, query) {
     Déclarés: i.declared, "Taux USD/FCFA": i.fx, "Montant USD": i.amountUSD, "Montant FCFA": i.amountXOF, Payé: i.st.paid, "Reste dû": i.st.due, Pénalité: i.st.penalty, Statut: i.st.status,
   })));
   const body = el.querySelector("#body");
-  ({ synthese, factures, rapprochement, repartition, simulateur })[tab](body, ctx, invoices, r);
+  ({ synthese, factures, validations, reversements, rapprochement, repartition, simulateur })[tab](body, ctx, invoices, r);
   bindTooltips(el);
 }
 
@@ -51,7 +49,7 @@ function synthese(body, ctx, invoices, r) {
   body.innerHTML = `
   <div class="kpis">
     ${kpi("Facturé (6 mois)", mds(billed), "FCFA")}
-    ${kpi("Encaissé au Trésor", mds(paid), `${fmtNum((paid / billed) * 100 || 0, 1)} % du facturé`)}
+    ${kpi(operatorCircuit(r) ? "Encaissé par WawID" : "Encaissé au Trésor", mds(paid), `${fmtNum((paid / billed) * 100 || 0, 1)} % du facturé`)}
     ${kpi("Restant dû", mds(due), `${invoices.filter((i) => i.st.status === "EN RETARD").length} facture(s) en retard`, due ? "warning" : "")}
     ${kpi("Pénalités de retard", mds(penalties), `${Math.round(r.penaltyRate * 100)} % par mois de retard`, penalties ? "critical" : "")}
     ${kpi("Passagers non déclarés", fmtNum(gapPax), `≈ ${mds(gapXOF)} FCFA d'assiette manquante`, gapPax ? "critical" : "")}
@@ -68,7 +66,8 @@ function synthese(body, ctx, invoices, r) {
       <div><b>Mois M</b> — passages embarqués et débarqués (hors exonérations).</div>
       <div><b>Du 1er au 9 M+1</b> — collecte des statistiques passagers : déclarations des compagnies <i>et</i> comptage WawID (biométrie, API/PNR).</div>
       <div><b>Le 10 M+1</b> — émission des factures en FCFA au taux IATA du mois M.</div>
-      <div><b>Fin de M+1</b> — échéance ; reversement au Receveur général du Trésor.</div>
+      <div><b>Fin de M+1</b> — échéance ; ${operatorCircuit(r) ? "virement des compagnies au compte de collecte WawID, déclaré sur la plateforme des compagnies puis validé par WawID." : "reversement au Receveur général du Trésor."}</div>
+      ${operatorCircuit(r) ? `<div><b>Le 15 M+2</b> — reversement par WawID de la part de l'État (${Math.round((1 - r.operatorShare) * 100)} %) au Receveur général du Trésor.</div>` : ""}
       <div><b>Après échéance</b> — pénalité de ${Math.round(r.penaltyRate * 100)} % par mois de retard.</div>
     </div></section>
   </div>
@@ -106,7 +105,7 @@ function factures(body, ctx, invoices, r) {
       { key: "amountXOF", label: "Montant", num: true, render: (i) => `${xof(i.amountXOF)}<div class="cell-sub">${fmtNum(i.amountUSD)} USD × ${fmtNum(i.fx, 2)}</div>` },
       { key: "dueAt", label: "Échéance", render: (i) => fmtDate(i.dueAt) },
       { key: "due", label: "Reste dû", num: true, value: (i) => i.st.due, render: (i) => (i.st.due ? xof(i.st.due + i.st.penalty) : "0") },
-      { key: "status", label: "Statut", value: (i) => i.st.status, render: (i) => `<span class="status ${STATUS[i.st.status]}">${i.st.status}${i.st.late ? ` · ${i.st.late} mois` : ""}</span>` },
+      { key: "status", label: "Statut", value: (i) => i.st.status, render: (i) => `<span class="status ${STATUS[i.st.status]}">${i.st.status}${i.st.late ? ` · ${i.st.late} mois` : ""}</span>${i.st.pending ? `<div class="cell-sub">${xof(i.st.pending)} à valider</div>` : ""}` },
     ],
   });
   const apply = () => { const m = body.querySelector("#m").value, s = body.querySelector("#s").value; table.update(invoices.filter((i) => (!m || i.month === m) && (!s || i.st.status === s))); };
@@ -136,15 +135,88 @@ async function invoiceDialog(i, ctx, r) {
         <dt>Encaissé</dt><dd>${xof(i.st.paid)}</dd><dt>Reste dû</dt><dd>${xof(i.st.due)}</dd><dt>Pénalités</dt><dd>${xof(i.st.penalty)}</dd>
         <dt>Statut</dt><dd><span class="status ${STATUS[i.st.status]}">${i.st.status}</span></dd>
       </dl></div>
-      ${i.payments.length ? `<h4 style="margin:14px 0 6px">Encaissements</h4>${i.payments.map((p) => `<div class="factor"><span>${fmtDate(p.at)} · ${esc(p.ref)} · ${esc(p.by)}</span><b>${xof(p.amount)}</b></div>`).join("")}` : ""}
-      ${ctx.can("finance") && i.st.due ? `<h4 style="margin:14px 0 6px">Enregistrer un encaissement (quittance du Trésor)</h4><div class="form-grid"><label class="field"><span>Montant (FCFA)</span><input class="input" name="amount" type="number" min="1" value="${i.st.due + i.st.penalty}"></label><label class="field"><span>Référence de quittance</span><input class="input" name="ref"></label></div>` : ""}`,
+      ${i.payments.length ? `<h4 style="margin:14px 0 6px">Paiements</h4>${i.payments.map((p, k) => paymentLine(i, p, k, ctx)).join("")}` : ""}
+      ${ctx.can("finance") && i.st.due ? `<h4 style="margin:14px 0 6px">${operatorCircuit(r) ? "Enregistrer un encaissement (relevé du compte de collecte)" : "Enregistrer un encaissement (quittance du Trésor)"}</h4><div class="form-grid"><label class="field"><span>Montant (FCFA)</span><input class="input" name="amount" type="number" min="1" value="${i.st.due + i.st.penalty}"></label><label class="field"><span>Référence de quittance</span><input class="input" name="ref"></label></div>` : ""}`,
     actions: ctx.can("finance") && i.st.due ? [{ label: "Fermer", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "pay" }] : [{ label: "Fermer", value: null }],
+    onMount: (d) => bindPaymentActions(d, ctx),
   });
   if (value !== "pay") return;
   try {
     await api("/api/redevance/payments", { method: "POST", body: { invoiceId: i.id, amount: Number(form.amount.value), ref: form.ref.value } });
     await ctx.reload(); toast("Encaissement enregistré"); ctx.refresh();
   } catch (e) { toast(e.message, "critical"); }
+}
+
+// ---------- Paiements déclarés par les compagnies ----------
+const paymentActions = (i, p, k, ctx) => (p.status === "DECLARE" && ctx.can("finance")
+  ? `<span style="display:inline-flex;gap:6px"><button type="button" class="btn btn-sm btn-good" data-pay="${esc(i.id)}:${k}:CONFIRME">${icon("check")} Valider</button><button type="button" class="btn btn-sm btn-danger" data-pay="${esc(i.id)}:${k}:REJETE">${icon("x")} Rejeter</button></span>` : "");
+
+function paymentLine(i, p, k, ctx) {
+  const [tone, label] = PAYMENT_STATUS[p.status || "CONFIRME"];
+  const actions = paymentActions(i, p, k, ctx);
+  return `<div class="factor"><span>${fmtDate(p.at)} · <span class="mono">${esc(p.ref)}</span> · ${esc(p.channel || p.by)} <span class="status ${tone}">${label}</span>${p.reason ? `<br><span class="small muted">${esc(p.reason)}</span>` : ""}${p.checkedBy ? `<br><span class="small muted">${p.status === "REJETE" ? "Rejeté" : "Validé"} par ${esc(p.checkedBy)}</span>` : ""}</span><span style="display:inline-flex;align-items:center;gap:10px"><b>${xof(p.amount)}</b>${actions}</span></div>`;
+}
+
+function bindPaymentActions(root, ctx) {
+  root.querySelectorAll("[data-pay]").forEach((b) => (b.onclick = async () => {
+    const [invoiceId, index, decision] = b.dataset.pay.split(":");
+    let reason;
+    if (decision === "REJETE") {
+      reason = prompt("Motif du rejet", "Non retrouvé sur le relevé du compte de collecte");
+      if (reason === null) return;
+    }
+    try {
+      await api(`/api/redevance/payments/${encodeURIComponent(invoiceId)}/${index}`, { method: "PATCH", body: { decision, reason } });
+      root.closest?.("dialog")?.close();
+      await ctx.reload(); toast(decision === "CONFIRME" ? "Paiement validé" : "Paiement rejeté"); ctx.refresh();
+    } catch (e) { toast(e.message, "critical"); }
+  }));
+}
+
+function validations(body, ctx, invoices) {
+  const rows = invoices.flatMap((i) => i.payments.map((p, k) => ({ i, p, k })).filter(({ p }) => p.status === "DECLARE"));
+  body.innerHTML = `<div class="msg info" style="margin-bottom:16px">${icon("info")}<span>Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé du compte de collecte ; seuls les paiements validés soldent les factures.</span></div>
+  <section class="card">${rows.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Déclaré le</th><th>Compagnie</th><th>Facture</th><th>Référence</th><th>Mode</th><th class="num">Montant</th><th></th></tr></thead><tbody>
+    ${rows.map(({ i, p, k }) => `<tr><td>${fmtDate(p.at)}</td><td>${esc(i.carrierName)}</td><td class="mono">${esc(i.id)}</td><td class="mono">${esc(p.ref)}</td><td>${esc(p.channel || "")}</td><td class="num"><b>${xof(p.amount)}</b></td><td>${paymentActions(i, p, k, ctx)}</td></tr>`).join("")}
+  </tbody></table></div>` : `<div class="empty">${icon("checkCircle")}<p>Aucun paiement en attente de validation.</p></div>`}</section>`;
+  bindPaymentActions(body, ctx);
+}
+
+// ---------- Reversements à l'État ----------
+function reversements(body, ctx, invoices, r) {
+  const list = ctx.data.reversements || [];
+  const months = [...new Set(invoices.map((i) => i.month))].sort().reverse();
+  const rows = months.map((m) => {
+    const collected = invoices.filter((i) => i.month === m).reduce((s, i) => s + i.st.paid, 0);
+    const due = Math.round(collected * (1 - r.operatorShare));
+    const done = list.filter((x) => x.month === m).reduce((s, x) => s + x.amount, 0);
+    return { month: m, collected, due, done, rest: Math.max(0, due - done) };
+  });
+  const tot = rows.reduce((a, x) => ({ due: a.due + x.due, done: a.done + x.done, rest: a.rest + x.rest }), { due: 0, done: 0, rest: 0 });
+  body.innerHTML = `${operatorCircuit(r) ? "" : `<div class="msg info" style="margin-bottom:16px">${icon("info")}<span>Circuit actuel : les compagnies paient directement le Trésor ; aucun reversement n'est dû par WawID.</span></div>`}
+  <div class="kpis">
+    ${kpi(`Part de l'État due (${Math.round((1 - r.operatorShare) * 100)} %)`, mds(tot.due), "sur les encaissements validés")}
+    ${kpi("Reversé au Trésor", mds(tot.done), `${list.length} virement(s)`)}
+    ${kpi("Reste à reverser", mds(tot.rest), "", tot.rest ? "warning" : "")}
+  </div>
+  <section class="card"><div class="card-head"><h3>Par mois de facturation</h3></div><div class="table-wrap"><table class="table">
+    <thead><tr><th>Mois</th><th class="num">Encaissé (validé)</th><th class="num">Part de l'État</th><th class="num">Reversé</th><th class="num">Reste à reverser</th><th></th></tr></thead>
+    <tbody>${rows.map((x) => `<tr><td>${monthLabel(x.month)}</td><td class="num">${xof(x.collected)}</td><td class="num">${xof(x.due)}</td><td class="num">${xof(x.done)}</td><td class="num">${x.rest ? `<span class="status warning">${xof(x.rest)}</span>` : '<span class="status good">0</span>'}</td>
+      <td>${x.rest && ctx.can("finance") && operatorCircuit(r) ? `<button class="btn btn-sm" data-rev="${x.month}" data-amount="${x.rest}">${icon("send")} Enregistrer le reversement</button>` : ""}</td></tr>`).join("")}</tbody></table></div></section>
+  <section class="card" style="margin-top:16px"><div class="card-head"><h3>Virements au Receveur général du Trésor</h3></div>${list.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Mois</th><th>Référence</th><th>Bénéficiaire</th><th>Par</th><th class="num">Montant</th></tr></thead><tbody>
+    ${list.map((x) => `<tr><td>${fmtDate(x.at)}</td><td>${monthLabel(x.month)}</td><td class="mono">${esc(x.ref)}</td><td>${esc(x.beneficiary)}</td><td>${esc(x.by)}</td><td class="num">${xof(x.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="card-body muted">Aucun reversement enregistré.</div>`}</section>`;
+  body.querySelectorAll("[data-rev]").forEach((b) => (b.onclick = async () => {
+    const { value, form } = await dialog({ title: `Reversement à l'État — ${monthLabel(b.dataset.rev)}`, body: `<div class="form-grid">
+      <label class="field"><span>Montant (FCFA)</span><input class="input" type="number" name="amount" min="1" value="${b.dataset.amount}"></label>
+      <label class="field"><span>Référence du virement</span><input class="input" name="ref" required></label></div>
+      <p class="small muted">Bénéficiaire : Receveur général du Trésor (DGCPT).</p>`,
+      actions: [{ label: "Annuler", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "ok", validate: (f) => (f.ref.value.trim() ? null : "Référence du virement obligatoire") }] });
+    if (!value) return;
+    try {
+      await api("/api/redevance/reversements", { method: "POST", body: { month: b.dataset.rev, amount: Number(form.amount.value), ref: form.ref.value } });
+      await ctx.reload(); toast("Reversement enregistré"); ctx.refresh();
+    } catch (e) { toast(e.message, "critical"); }
+  }));
 }
 
 // ---------- Rapprochement ----------
@@ -170,10 +242,11 @@ function rapprochement(body, ctx, invoices) {
 function repartition(body, ctx, invoices, r) {
   const months = [...new Set(invoices.map((i) => i.month))].sort();
   const rows = months.map((m) => { const c = invoices.filter((i) => i.month === m).reduce((s, i) => s + i.st.paid, 0); return { month: m, collected: c, operator: c * r.operatorShare, state: c * (1 - r.operatorShare) }; });
+  const op = operatorCircuit(r);
   const tot = rows.reduce((a, x) => ({ collected: a.collected + x.collected, operator: a.operator + x.operator, state: a.state + x.state }), { collected: 0, operator: 0, state: 0 });
   body.innerHTML = `<div class="kpis">
     ${kpi("Encaissé (6 mois)", mds(tot.collected), "FCFA")}
-    ${kpi(`Part opérateur (${Math.round(r.operatorShare * 100)} %)`, mds(tot.operator), "versée mensuellement")}
+    ${kpi(`Part opérateur (${Math.round(r.operatorShare * 100)} %)`, mds(tot.operator), op ? "conservée par WawID" : "versée mensuellement par le Trésor")}
     ${kpi(`Part État (${Math.round((1 - r.operatorShare) * 100)} %)`, mds(tot.state), "Trésor public")}
   </div>
   <section class="card"><div class="card-head"><h3>Répartition mensuelle des encaissements</h3>${ctx.can("system") ? `<button class="btn btn-sm" id="share" style="margin-left:auto">${icon("settings")} Paramètres</button>` : ""}</div><div class="table-wrap"><table class="table">
@@ -185,11 +258,14 @@ function repartition(body, ctx, invoices, r) {
       <label class="field"><span>Taux (USD par passager)</span><input class="input" type="number" name="rateUSD" value="${r.rateUSD}"></label>
       <label class="field"><span>Part opérateur (%)</span><input class="input" type="number" name="share" min="0" max="100" value="${Math.round(r.operatorShare * 100)}"></label>
       <label class="field"><span>Pénalité mensuelle (%)</span><input class="input" type="number" name="pen" value="${Math.round(r.penaltyRate * 100)}"></label>
-      <label class="field"><span>Taux IATA du mois (FCFA / USD)</span><input class="input" type="number" step="0.01" name="fx" placeholder="ex. 605,40"></label></div>`,
+      <label class="field"><span>Taux IATA du mois (FCFA / USD)</span><input class="input" type="number" step="0.01" name="fx" placeholder="ex. 605,40"></label>
+      <label class="field" style="grid-column:1/-1"><span>Circuit de recouvrement</span><select class="select" name="circuit">
+        <option value="OPERATEUR" ${op ? "selected" : ""}>Compagnies → WawID → Trésor public (proposé)</option>
+        <option value="TRESOR" ${op ? "" : "selected"}>Compagnies → Trésor public (DGCPT, décret 2012-519)</option></select></label></div>`,
       actions: [{ label: "Annuler", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "ok" }] });
     if (!value) return;
     try {
-      await api("/api/redevance/settings", { method: "PATCH", body: { rateUSD: Number(form.rateUSD.value), operatorShare: Number(form.share.value) / 100, penaltyRate: Number(form.pen.value) / 100, fx: Number(form.fx.value), fxMonth: new Date().toISOString().slice(0, 7) } });
+      await api("/api/redevance/settings", { method: "PATCH", body: { rateUSD: Number(form.rateUSD.value), operatorShare: Number(form.share.value) / 100, penaltyRate: Number(form.pen.value) / 100, fx: Number(form.fx.value), fxMonth: new Date().toISOString().slice(0, 7), circuit: form.circuit.value } });
       await ctx.reload(); toast("Paramètres enregistrés"); ctx.refresh();
     } catch (e) { toast(e.message, "critical"); }
   });

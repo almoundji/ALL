@@ -19,7 +19,9 @@ createServer(async (req, res) => {
     res.end(Buffer.from(await response.arrayBuffer()));
     return;
   }
-  let file = normalize(join(ROOT, decodeURIComponent(url.pathname)));
+  // Même alias qu'en production (netlify.toml) : /dpaf/ sert l'espace DPAF.
+  const path = url.pathname.startsWith("/dpaf/") ? url.pathname.replace(/^\/dpaf\//, "/admin/") : url.pathname;
+  let file = normalize(join(ROOT, decodeURIComponent(path)));
   if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
   if (url.pathname.endsWith("/")) file = join(file, "index.html");
   try {
@@ -28,4 +30,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end("Introuvable");
   }
-}).listen(PORT, () => console.log(`WawID : http://localhost:${PORT}  (admin : /admin/  ·  eGate : /gate/)`));
+}).listen(PORT, () => console.log(`WawID : http://localhost:${PORT}  (DPAF : /dpaf/  ·  compagnies : /compagnies/  ·  eGate : /gate/  ·  app : /app/)`));

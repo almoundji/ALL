@@ -18,7 +18,6 @@ function shell(page, html) {
     <a class="btn btn-ghost btn-sm p-agents" href="app/" title="Application mobile">${icon("download")} <span>Application mobile</span></a>
     <a class="btn btn-ghost btn-sm p-agents" href="aide/" title="Aide">${icon("file")} <span>Aide</span></a>
     ${langSwitch()}
-    <a class="btn btn-dark btn-sm p-agents" href="admin/" title="Espace agents">${icon("lock")}<span>Espace agents</span></a>
   </nav></header>
   <main class="p-main">${html}</main>
   <footer class="p-foot">WawID — gestion des identités et des frontières · une solution WAW Telecom · Données protégées conformément à la loi n° 2008-12 (CDP).</footer>`;

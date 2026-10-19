@@ -17,14 +17,14 @@ async function render() {
   app.innerHTML = `
   <header class="p-nav"><nav class="p-nav-bar">
     <a class="brand" href="../"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">${WORDMARK}</span><br><span class="brand-sub">${L === "en" ? "Help center" : "Centre d'aide"}</span></span></a>
-    <div class="p-links"><a href="../">${L === "en" ? "Traveler portal" : "Portail voyageur"}</a><a href="../admin/">${L === "en" ? "Officer space" : "Espace agents"}</a></div>
+    <div class="p-links"><a href="../">${L === "en" ? "Traveler portal" : "Portail voyageur"}</a><a href="../app/">${L === "en" ? "Mobile app" : "Application mobile"}</a></div>
     ${langSwitch()}
   </nav></header>
   <main class="p-main">
     <div class="help-layout" data-no-i18n>
       <aside class="card help-nav">
         ${sections.map((s) => `<div class="help-group">${esc(s.group[L])}</div>${s.pages.map((p) => `<a href="#${p.slug}" class="${p.slug === slug ? "on" : ""}">${esc(p[L])}</a>`).join("")}`).join("")}
-        ${internal ? "" : `<p class="small muted" style="margin:14px 8px 0">${icon("lock")} ${L === "en" ? "Officers: sign in to the back office for the full documentation." : "Agents : connectez-vous au back-office pour la documentation complète."}</p>`}
+        ${internal ? "" : `<p class="small muted" style="margin:14px 8px 0">${icon("lock")} ${L === "en" ? "DPAF officers: the full documentation is available in the DPAF space." : "Agents de la DPAF : la documentation complète est disponible dans l'espace DPAF."}</p>`}
       </aside>
       <article class="card help-doc">${toc.length > 2 ? `<nav class="help-toc"><b>${L === "en" ? "On this page" : "Sur cette page"}</b>${toc.map((h) => `<a href="#${slug}" data-anchor="${h.id}" class="lvl${h.level}">${esc(h.text)}</a>`).join("")}</nav>` : ""}<div class="md">${html}</div></article>
     </div>

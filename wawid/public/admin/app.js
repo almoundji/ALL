@@ -52,11 +52,12 @@ const APPS = [
 
   { space: "e-Visa & voyageurs", id: "evisa", path: "evisa", title: "e-Visa", sub: "Instruction des demandes", icon: "file", perm: "read", view: evisa, kpi: (d) => [d.evisas.filter((v) => ["SOUMISE", "EN_EXAMEN"].includes(v.status)).length, "demandes à instruire"], tone: "warning" },
   { space: "e-Visa & voyageurs", id: "wawpass", path: "wawpass", title: "WawPass & enrôlements", sub: "Taxe de sécurité, eGate", icon: "creditCard", perm: "read", view: evisa, fn: "renderPasses", kpi: (d) => [d.passes.filter((p) => !p.used).length, "reçus valides"] },
-  { space: "e-Visa & voyageurs", id: "portail", href: "../", external: true, title: "Portail voyageur", sub: "Site public", icon: "globe", perm: "read" },
   { space: "e-Visa & voyageurs", id: "kiosque", href: "../gate/", external: true, title: "Kiosque eGate", sub: "Écran des portes", icon: "gate", perm: "read" },
 
   { space: "Finances", id: "redevance", path: "redevance", title: "Redevance de sécurité", sub: "Synthèse 6 mois", icon: "creditCard", perm: "finance", view: redevance, kpi: (d) => [Math.round((d.invoices || []).reduce((s, i) => s + i.amountXOF, 0) / 1e9 * 10) / 10, "Mds FCFA facturés"] },
   { space: "Finances", id: "rs-factures", href: "#/redevance?tab=factures", title: "Factures compagnies", sub: "Échéances et encaissements", icon: "file", perm: "finance", kpi: (d) => [(d.invoices || []).filter((i) => redevance.invoiceState(i, d.settings.redevance).status === "EN RETARD").length, "factures en retard"], tone: "critical" },
+  { space: "Finances", id: "rs-valid", href: "#/redevance?tab=validations", title: "Paiements à valider", sub: "Déclarés par les compagnies", icon: "checkCircle", perm: "finance", kpi: (d) => [(d.invoices || []).reduce((n, i) => n + i.payments.filter((p) => p.status === "DECLARE").length, 0), "paiements déclarés"], tone: "warning" },
+  { space: "Finances", id: "rs-rev", href: "#/redevance?tab=reversements", title: "Reversements à l'État", sub: "Part de l'État au Trésor public", icon: "send", perm: "finance", kpi: (d) => [(d.reversements || []).length, "virements au Trésor"] },
   { space: "Finances", id: "rs-rappro", href: "#/redevance?tab=rapprochement", title: "Rapprochement", sub: "Déclarations / comptage WawID", icon: "shieldCheck", perm: "finance", kpi: (d) => [(d.invoices || []).reduce((s, i) => s + Math.max(0, i.billable - i.declared), 0), "passagers non déclarés"], tone: "warning" },
   { space: "Finances", id: "rs-repart", href: "#/redevance?tab=repartition", title: "Répartition", sub: "Part opérateur / part État", icon: "chart", perm: "finance", kpi: (d) => [Math.round((d.settings.redevance?.operatorShare ?? 0.75) * 100), "% part opérateur"] },
   { space: "Finances", id: "rs-simu", href: "#/redevance?tab=simulateur", title: "Simulateur de modèle", sub: "Contrat actuel vs WawID", icon: "kanban", perm: "finance" },
@@ -80,11 +81,11 @@ function renderLogin(error = "") {
   root.innerHTML = `
   <main class="login">
     <section class="login-art">
-      <a class="brand" href="../" style="color:#fff"><span class="brand-logo">${LOGO}</span><span><span class="brand-name" style="color:#fff">${WORDMARK}</span><br><span class="brand-sub" style="color:#9fb3c8">Identité & frontières</span></span></a>
+      <a class="brand" href="./" style="color:#fff"><span class="brand-logo">${LOGO}</span><span><span class="brand-name" style="color:#fff">${WORDMARK}</span><br><span class="brand-sub" style="color:#9fb3c8">Espace DPAF</span></span></a>
       <div style="position:relative;z-index:1">
         <span class="pill-dark" style="background:rgba(255,255,255,.08)">${icon("zap")} BCS · TMS · APIS · e-VISA</span>
-        <h1 style="margin-top:18px">WawID<br><span style="color:var(--accent)">Back-office</span> sécurisé</h1>
-        <p style="color:#ccc;max-width:440px">Contrôle aux frontières, eGates & ABC, renseignement et autorisations de voyage dans une seule console.</p>
+        <h1 style="margin-top:18px">WawID<br><span style="color:var(--accent)">Espace DPAF</span></h1>
+        <p style="color:#ccc;max-width:440px">Police de l'Air et des Frontières, renseignement, Trésor et administration : contrôle aux frontières, eGates & ABC, renseignement, autorisations de voyage et redevance dans une seule console.</p>
       </div>
       <div class="rings" aria-hidden="true"></div>
     </section>
@@ -96,7 +97,6 @@ function renderLogin(error = "") {
         <label class="field"><span>Mot de passe</span><input class="input" name="password" type="password" autocomplete="current-password" required></label>
         ${error ? `<div class="msg critical" role="alert">${icon("alert")}<span>${esc(error)}</span></div>` : ""}
         <button class="btn btn-primary btn-lg" type="submit">${icon("logIn")} Se connecter</button>
-        <a class="small muted" href="../">← Portail voyageur</a>
       </form>
     </section>
   </main>`;
@@ -105,7 +105,7 @@ function renderLogin(error = "") {
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      const { user } = await api("/api/session", { method: "POST", body: { username: f.get("username"), password: f.get("password") } });
+      const { user } = await api("/api/session", { method: "POST", body: { username: f.get("username"), password: f.get("password"), platform: "dpaf" } });
       ctx.me = user;
       await start();
     } catch (err) { renderLogin(err.message); }
@@ -138,7 +138,6 @@ function renderShell() {
         <div style="position:relative"><button class="avatar" id="me" title="${esc(ctx.me.name)}">${esc(initials)}</button><div class="popover" id="me-pop" hidden style="width:280px">
           <div style="padding:16px"><b>${esc(ctx.me.name)}</b><div class="small muted">${esc(ctx.me.roleLabel)} · ${esc(ctx.poste(ctx.me.posteId))}</div></div>
           <a class="popover-item" href="../gate/" target="_blank">${icon("gate")} Ouvrir le kiosque eGate</a>
-          <a class="popover-item" href="../" target="_blank">${icon("globe")} Portail voyageur</a>
           <button class="popover-item" id="logout">${icon("logOut")} Se déconnecter</button>
         </div></div>
       </div>
@@ -262,6 +261,12 @@ async function route() {
 }
 
 async function start() {
+  // Plateformes dissociées : une session ouverte sur la plateforme des compagnies n'ouvre pas l'espace DPAF.
+  if (ctx.me?.platform && ctx.me.platform !== "dpaf") {
+    await api("/api/session", { method: "DELETE" }).catch(() => {});
+    ctx.me = null;
+    return renderLogin("Ce compte est un compte compagnie : connectez-vous sur la plateforme des compagnies aériennes.");
+  }
   await ctx.reload();
   renderShell();
   addEventListener("hashchange", route);

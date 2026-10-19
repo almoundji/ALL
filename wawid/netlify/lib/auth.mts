@@ -20,7 +20,14 @@ export const ROLES: Record<string, { label: string; perms: string[] }> = {
   superviseur: { label: "Superviseur", perms: ["read", "control", "alerts", "cases", "watchlist", "rules", "apis", "evisa", "gates"] },
   tresor: { label: "Agent du Trésor (redevance)", perms: ["read", "finance"] },
   admin: { label: "Administrateur", perms: ["read", "control", "alerts", "cases", "watchlist", "rules", "apis", "evisa", "gates", "users", "system", "finance"] },
+  // Plateforme des compagnies aériennes : accès limité aux données de SA compagnie (champ carrier du compte).
+  compagnie: { label: "Compagnie aérienne", perms: ["carrier"] },
 };
+
+/** Plateforme d'accès d'un rôle : les comptes compagnie n'ouvrent pas l'espace DPAF, et inversement. */
+export const platformOf = (role: string) => (role === "compagnie" ? "compagnies" : "dpaf");
+
+export const AIRLINES: Record<string, string> = { HC: "Air Sénégal", AF: "Air France", TK: "Turkish Airlines", AT: "Royal Air Maroc", IB: "Iberia", SN: "Brussels Airlines", ET: "Ethiopian", EK: "Emirates", DL: "Delta", TP: "TAP" };
 
 export const hashPassword = (password: string, salt = randomBytes(16).toString("hex")) =>
   ({ salt, hash: scryptSync(password, salt, 32).toString("hex") });
@@ -33,11 +40,12 @@ function passwordMatches(user: any, password: string) {
 /** Crée les comptes initiaux à partir des variables d'environnement si aucun compte n'existe. */
 async function bootstrapUsers(): Promise<any[]> {
   const users = (await load<any[]>("users")) || [];
-  if (users.length) return users;
+  if (users.length) return ensureCarrierDemo(users);
   const adminPwd = env("WAWID_ADMIN_PASSWORD") || ((globalThis as any).Netlify ? undefined : "admin");
   if (!adminPwd) return [];
   const mk = (username: string, name: string, role: string, pwd: string, posteId = "AIBD") =>
     ({ id: `U-${username}`, username, name, role, posteId, active: true, createdAt: new Date().toISOString(), lastLogin: null, ...hashPassword(pwd) });
+
   const created = [mk("admin", "Administrateur WawID", "admin", adminPwd)];
   const demo = env("WAWID_DEMO_PASSWORD") || ((globalThis as any).Netlify ? undefined : "demo");
   if (demo) created.push(
@@ -45,10 +53,23 @@ async function bootstrapUsers(): Promise<any[]> {
     mk("tresor", "Ibrahima Kane", "tresor", demo),
   );
   await save("users", created);
-  return created;
+  return ensureCarrierDemo(created);
 }
 
-export const publicUser = ({ salt, hash, ...u }: any) => ({ ...u, roleLabel: ROLES[u.role]?.label, perms: ROLES[u.role]?.perms ?? [] });
+/** Comptes de démonstration de la plateforme compagnies (ajoutés aussi aux installations existantes). */
+async function ensureCarrierDemo(users: any[]): Promise<any[]> {
+  const demo = env("WAWID_DEMO_PASSWORD") || ((globalThis as any).Netlify ? undefined : "demo");
+  if (!demo || users.some((u) => u.role === "compagnie")) return users;
+  const now = new Date().toISOString();
+  for (const [username, code, name] of [["airsenegal", "HC", "Opérations Air Sénégal"], ["airfrance", "AF", "Opérations Air France"]]) {
+    if (!users.some((u) => u.username === username))
+      users.push({ id: `U-${username}`, username, name, role: "compagnie", carrier: code, posteId: "AIBD", active: true, createdAt: now, lastLogin: null, ...hashPassword(demo) });
+  }
+  await save("users", users);
+  return users;
+}
+
+export const publicUser = ({ salt, hash, ...u }: any) => ({ ...u, roleLabel: ROLES[u.role]?.label, perms: ROLES[u.role]?.perms ?? [], platform: platformOf(u.role), carrierName: u.carrier ? AIRLINES[u.carrier] || u.carrier : undefined });
 
 export async function login(username: string, password: string) {
   const users = await bootstrapUsers();

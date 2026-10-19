@@ -4,7 +4,7 @@ import {
   COUNTRIES, DEFAULT_GATE_CONFIG, POSTES, ageAt, alertType, assessRisk, gateDecision, normName, parseMRZ, severityOf,
 } from "../../public/shared/engine.js";
 import {
-  ROLES, carrierFromKey, clearCookie, currentUser, gateKeyValid, hashPassword, json, login, publicUser, sessionCookie, signToken, verifyToken,
+  AIRLINES, ROLES, carrierFromKey, clearCookie, currentUser, gateKeyValid, hashPassword, json, login, platformOf, publicUser, sessionCookie, signToken, verifyToken,
 } from "../lib/auth.mts";
 import { detectFormat, parsePaxlst, parsePnr, pnrFactors, samples as carrierSamples } from "../lib/carrier.mts";
 import { decorate, externalHits, testConnector } from "../lib/connectors.mts";
@@ -163,14 +163,19 @@ on("DELETE", "/api/session", async (_r, _p, user) => {
   return json({ ok: true }, 200, { "set-cookie": clearCookie });
 });
 on("POST", "/api/session", async (req) => {
-  const { username = "", password = "" } = await body(req);
+  const { username = "", password = "", platform = "dpaf" } = await body(req);
   const user = await login(str(username, 60), String(password).slice(0, 200));
   if (!user) {
     await new Promise((r) => setTimeout(r, 700));
     await audit(str(username, 60) || "?", "ECHEC_CONNEXION", "back-office");
     return json({ error: "Identifiant ou mot de passe incorrect (ou comptes non initialisés)." }, 401);
   }
-  await audit(user.username, "CONNEXION", "back-office", ROLES[user.role]?.label);
+  // Plateformes dissociées : un compte compagnie n'ouvre pas l'espace DPAF, un agent n'ouvre pas l'espace compagnies.
+  if (platformOf(user.role) !== (platform === "compagnies" ? "compagnies" : "dpaf")) {
+    await audit(user.username, "ECHEC_CONNEXION", String(platform), "plateforme non autorisée pour ce compte");
+    return json({ error: platformOf(user.role) === "compagnies" ? "Ce compte est un compte compagnie : connectez-vous sur la plateforme des compagnies aériennes." : "Ce compte n'ouvre pas la plateforme des compagnies aériennes." }, 403);
+  }
+  await audit(user.username, "CONNEXION", platformOf(user.role) === "compagnies" ? "plateforme compagnies" : "espace DPAF", ROLES[user.role]?.label);
   return json({ user: publicUser(user) }, 200, { "set-cookie": sessionCookie(user.id) });
 });
 
@@ -320,7 +325,8 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
 // --- Back-office ---
 on("GET", "/api/data", async (_r, _p, user) => {
   need(user, "read");
-  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices"]);
+  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices", "reversements"]);
+  d.reversements ||= [];
   d.crossings = d.crossings.sort((a: any, b: any) => b.ts.localeCompare(a.ts)).slice(0, 4000);
   d.connectors = decorate(d.connectors);
   // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
@@ -331,7 +337,7 @@ on("GET", "/api/data", async (_r, _p, user) => {
   });
   d.evisas = d.evisas.map((v: any) => (v.status === "APPROUVEE" ? { ...v, token: signToken("EV", v.ref) } : v));
   d.passes = d.passes.map((p: any) => ({ ...p, token: signToken("WP", p.ref) }));
-  return json({ ...d, postes: POSTES, countries: COUNTRIES, roles: ROLES, me: user, serverTime: nowIso() });
+  return json({ ...d, postes: POSTES, countries: COUNTRIES, roles: ROLES, airlines: AIRLINES, me: user, serverTime: nowIso() });
 });
 
 on("POST", "/api/assess", async (req, _p, user) => {
@@ -547,14 +553,16 @@ on("POST", "/api/apis/manifest", async (req, _p, user) => {
 });
 
 // --- Documentation bilingue (pages publiques sans session, pages internes réservées aux agents) ---
+// Documentation interne (renseignement, score de risque, exploitation…) réservée à l'espace DPAF : jamais aux comptes compagnie.
+const docsInternal = (user: any) => Boolean(user) && user.platform === "dpaf";
 on("GET", "/api/docs", async (_r, _p, user) => {
-  const sections = DOCS.manifest.sections.map((s: any) => ({ ...s, pages: s.pages.filter((p: any) => p.public || user) })).filter((s: any) => s.pages.length);
-  return json({ sections, internal: Boolean(user) });
+  const sections = DOCS.manifest.sections.map((s: any) => ({ ...s, pages: s.pages.filter((p: any) => p.public || docsInternal(user)) })).filter((s: any) => s.pages.length);
+  return json({ sections, internal: docsInternal(user) });
 });
 on("GET", "/api/docs/:lang/:slug", async (_r, p, user) => {
   const lang = p.lang === "en" ? "en" : "fr";
   const page = DOCS.manifest.sections.flatMap((s: any) => s.pages).find((x: any) => x.slug === p.slug) ?? fail(404, "Page introuvable");
-  if (!page.public && !user) fail(401, "Page réservée aux agents connectés");
+  if (!page.public && !docsInternal(user)) fail(user ? 403 : 401, "Page réservée aux agents connectés");
   return json({ slug: page.slug, title: page[lang], markdown: DOCS.pages[lang][page.slug] });
 });
 
@@ -584,10 +592,43 @@ on("POST", "/api/redevance/payments", async (req, _p, user) => {
   const inv = invoices.find((i) => i.id === b.invoiceId) ?? fail(404, "Facture introuvable");
   const amount = Math.round(Number(b.amount));
   if (!Number.isFinite(amount) || amount <= 0) fail(400, "Montant invalide");
-  inv.payments.push({ at: nowIso(), amount, ref: str(b.ref, 40) || uid("RGT"), by: user.name });
+  inv.payments.push({ at: nowIso(), amount, ref: str(b.ref, 40) || uid("RGT"), by: user.name, channel: "Saisie back-office", status: "CONFIRME" });
   await save("invoices", invoices);
   await audit(user.username, "REDEVANCE_ENCAISSEMENT", inv.id, `${amount} FCFA`);
   return json(inv);
+});
+
+/** Validation (ou rejet) d'un paiement déclaré par une compagnie, après rapprochement avec le relevé du compte de collecte. */
+on("PATCH", "/api/redevance/payments/:invoiceId/:index", async (req, p, user) => {
+  need(user, "finance");
+  const b = await body(req);
+  const invoices = (await load<any[]>("invoices")) || [];
+  const inv = invoices.find((i) => i.id === p.invoiceId) ?? fail(404, "Facture introuvable");
+  const pay = inv.payments[Number(p.index)] ?? fail(404, "Paiement introuvable");
+  if (pay.status !== "DECLARE") fail(409, "Ce paiement a déjà été traité");
+  if (b.decision !== "CONFIRME" && b.decision !== "REJETE") fail(400, "Décision attendue : CONFIRME ou REJETE");
+  pay.status = b.decision;
+  pay.checkedBy = user.name;
+  pay.checkedAt = nowIso();
+  if (b.decision === "REJETE") pay.reason = str(b.reason, 200) || "Non retrouvé sur le relevé du compte de collecte";
+  await save("invoices", invoices);
+  await audit(user.username, b.decision === "CONFIRME" ? "REDEVANCE_PAIEMENT_CONFIRME" : "REDEVANCE_PAIEMENT_REJETE", inv.id, `${pay.amount} FCFA · ${pay.ref}`);
+  return json(inv);
+});
+
+/** Reversement au Trésor public de la part de l'État des sommes encaissées par WawID pour un mois. */
+on("POST", "/api/redevance/reversements", async (req, _p, user) => {
+  need(user, "finance");
+  const b = await body(req);
+  if (!/^\d{4}-\d{2}$/.test(String(b.month))) fail(400, "Mois attendu au format AAAA-MM");
+  const amount = Math.round(Number(b.amount));
+  if (!Number.isFinite(amount) || amount <= 0) fail(400, "Montant invalide");
+  const list = (await load<any[]>("reversements")) || [];
+  const r = { id: uid("REV"), month: String(b.month), at: nowIso(), amount, ref: str(b.ref, 40) || uid("VIR"), by: user.name, beneficiary: "Receveur général du Trésor (DGCPT)" };
+  list.unshift(r);
+  await save("reversements", list);
+  await audit(user.username, "REDEVANCE_REVERSEMENT_ETAT", r.id, `${b.month} · ${amount} FCFA`);
+  return json(r);
 });
 
 on("PATCH", "/api/redevance/settings", async (req, _p, user) => {
@@ -598,6 +639,7 @@ on("PATCH", "/api/redevance/settings", async (req, _p, user) => {
   r.rateUSD = bounded(b.rateUSD, 1, 100, r.rateUSD);
   r.operatorShare = bounded(b.operatorShare, 0, 1, r.operatorShare);
   r.penaltyRate = bounded(b.penaltyRate, 0, 0.5, r.penaltyRate);
+  if (b.circuit === "OPERATEUR" || b.circuit === "TRESOR") r.circuit = b.circuit;
   if (/^\d{4}-\d{2}$/.test(String(b.fxMonth)) && Number(b.fx) > 0) r.fx[b.fxMonth] = Number(b.fx);
   await save("settings", settings);
   await audit(user.username, "REDEVANCE_PARAMETRES", "redevance", `taux ${r.rateUSD} USD, part opérateur ${Math.round(r.operatorShare * 100)} %`);
@@ -606,7 +648,7 @@ on("PATCH", "/api/redevance/settings", async (req, _p, user) => {
 
 // --- Passerelle transporteurs API / PNR ---
 
-const AIRLINE_NAMES: Record<string, string> = { HC: "Air Sénégal", AF: "Air France", TK: "Turkish Airlines", AT: "Royal Air Maroc", IB: "Iberia", SN: "Brussels Airlines", ET: "Ethiopian", EK: "Emirates", DL: "Delta", TP: "TAP" };
+const AIRLINE_NAMES = AIRLINES;
 
 async function readCarrierBody(req: Request) {
   const text = await req.text();
@@ -687,10 +729,13 @@ async function ingestCarrierMessage(raw: string, declared: string | undefined, s
   }
   const status = errors.length ? "ACCEPTÉ AVEC AVERTISSEMENTS" : "ACCEPTÉ";
   await Promise.all([save("flights", d.flights.slice(0, 300)), save("alerts", d.alerts)]);
-  await log({ id: reference, receivedAt, source, format, carrier: msg.carrier, flight: flight.flight, flightId: flight.id, passengers: msg.passengers.length, flagged, status, errors, size: raw.length, completeness, onTime });
+  await log({ id: reference, receivedAt, source, format, carrier: msg.carrier, carrierName: AIRLINE_NAMES[msg.carrier] || msg.carrier, flight: flight.flight, flightId: flight.id, passengers: msg.passengers.length, flagged, status, errors, size: raw.length, completeness, onTime });
   await audit(actor, `APIS_${format}`, flight.id, `${flight.flight} · ${msg.passengers.length} passager(s) · ${flagged} signalé(s)`);
   return { status, reference, flightId: flight.id, flight: flight.flight, passengers: msg.passengers.length, flagged, completeness, onTime, errors };
 }
+
+/** Accusé de réception destiné à une compagnie : le résultat du pré-contrôle (passagers signalés) n'est jamais communiqué. */
+const carrierAck = ({ flagged, flightId, ...ack }: any) => ack;
 
 /** Point d'entrée machine-à-machine des compagnies aériennes (clé transporteur dans l'en-tête X-Carrier-Key). */
 on("POST", "/api/carrier/messages", async (req) => {
@@ -699,7 +744,7 @@ on("POST", "/api/carrier/messages", async (req) => {
   const { message, format } = await readCarrierBody(req);
   if (!message.trim()) fail(400, "Message vide");
   const ack = await ingestCarrierMessage(message, format, `Passerelle (${carrier})`, `Transporteur ${carrier}`, carrier);
-  return json(ack, ack.status === "REJETÉ" ? 422 : 202);
+  return json(carrierAck(ack), ack.status === "REJETÉ" ? 422 : 202);
 });
 /** Envoi depuis le back-office (dépôt manuel d'un message reçu hors passerelle, ou démonstration). */
 on("POST", "/api/apis/ingest", async (req, _p, user) => {
@@ -711,6 +756,79 @@ on("POST", "/api/apis/ingest", async (req, _p, user) => {
 on("GET", "/api/apis/samples", async (_r, _p, user) => {
   need(user, "read");
   return json(carrierSamples());
+});
+
+// --- Plateforme des compagnies aériennes (session d'un compte « compagnie », limitée à sa compagnie) ---
+
+function carrierOf(user: any): string {
+  need(user, "carrier");
+  return user.carrier || fail(403, "Compte compagnie sans code transporteur");
+}
+const ownFlight = (f: any, code: string) => f.flight.replace(/\s/g, "").startsWith(code);
+/** Vue « compagnie » d'un vol : qualité et délais des données transmises, sans aucun résultat de pré-contrôle. */
+function carrierFlight(f: any) {
+  const missing = (p: any) => ["docNo", "dob", "nat"].filter((k) => !p[k]);
+  return {
+    id: f.id, flight: f.flight, route: f.route, eta: f.eta, direction: f.direction, source: f.source, onTime: f.onTime !== false, receivedAt: f.receivedAt,
+    passengers: f.passengers.length,
+    completeness: f.passengers.length ? Math.round((f.passengers.filter((p: any) => !missing(p).length).length / f.passengers.length) * 100) : 0,
+  };
+}
+
+on("GET", "/api/compagnie/overview", async (_r, _p, user) => {
+  const code = carrierOf(user);
+  const d = await loadMany(["flights", "carrierMessages", "invoices", "settings"]);
+  const flights = d.flights.filter((f: any) => ownFlight(f, code)).sort((a: any, b: any) => b.eta.localeCompare(a.eta));
+  const messages = d.carrierMessages.filter((m: any) => m.carrier === code).map(carrierAck);
+  const r = d.settings?.redevance || {};
+  return json({
+    carrier: { code, name: AIRLINES[code] || code },
+    flights: flights.slice(0, 200).map(carrierFlight),
+    messages: messages.slice(0, 300),
+    invoices: (d.invoices || []).filter((i: any) => i.carrier === code).sort((a: any, b: any) => b.month.localeCompare(a.month)),
+    redevance: { rateUSD: r.rateUSD ?? 12, penaltyRate: r.penaltyRate ?? 0.05, circuit: r.circuit || "OPERATEUR",
+      beneficiary: (r.circuit || "OPERATEUR") === "OPERATEUR" ? "WawID — compte de collecte de la redevance de sécurité" : "Receveur général du Trésor (DGCPT)" },
+    serverTime: nowIso(),
+  });
+});
+
+on("GET", "/api/compagnie/flights/:id", async (_r, p, user) => {
+  const code = carrierOf(user);
+  const f = ((await load<any[]>("flights")) || []).find((x) => x.id === p.id && ownFlight(x, code)) ?? fail(404, "Vol introuvable");
+  const missing = (x: any) => ["docNo", "dob", "nat"].filter((k) => !x[k]);
+  return json({ ...carrierFlight(f), list: f.passengers.map((x: any) => ({ surname: x.surname, given: x.given, docNo: x.docNo || null, nat: x.nat || null, seat: x.seat, missing: missing(x) })) });
+});
+
+on("POST", "/api/compagnie/messages", async (req, _p, user) => {
+  const code = carrierOf(user);
+  const { message, format } = await readCarrierBody(req);
+  if (!message.trim()) fail(400, "Message vide");
+  const ack = await ingestCarrierMessage(message, format, `Portail compagnie (${user.name})`, user.username, code);
+  return json(carrierAck(ack), ack.status === "REJETÉ" ? 422 : 202);
+});
+
+on("GET", "/api/compagnie/samples", async (_r, _p, user) => {
+  const code = carrierOf(user);
+  const name = (AIRLINES[code] || code).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  const adapt = (t: string) => t.replace(/\bHC(?=[\d:+' ])/g, code).replace(/AIR SENEGAL/g, name);
+  const s = carrierSamples();
+  return json(Object.fromEntries(Object.entries(s).map(([k, v]) => [k, adapt(String(v))])));
+});
+
+/** Déclaration d'un paiement de redevance par la compagnie (virement au compte de collecte), à valider par WawID. */
+on("POST", "/api/compagnie/payments", async (req, _p, user) => {
+  const code = carrierOf(user);
+  const b = await body(req);
+  const invoices = (await load<any[]>("invoices")) || [];
+  const inv = invoices.find((i) => i.id === b.invoiceId && i.carrier === code) ?? fail(404, "Facture introuvable");
+  const amount = Math.round(Number(b.amount));
+  if (!Number.isFinite(amount) || amount <= 0) fail(400, "Montant invalide");
+  if (!str(b.ref, 40)) fail(400, "Référence du virement obligatoire");
+  const method = ["Virement", "SWIFT", "Mobile money", "Chèque"].includes(b.method) ? b.method : "Virement";
+  inv.payments.push({ at: nowIso(), amount, ref: str(b.ref, 40), by: user.name, channel: `Compagnie (${method})`, status: "DECLARE" });
+  await save("invoices", invoices);
+  await audit(user.username, "REDEVANCE_PAIEMENT_DECLARE", inv.id, `${amount} FCFA · ${str(b.ref, 40)}`);
+  return json(inv);
 });
 
 on("PATCH", "/api/connectors/:id", async (req, p, user) => {
@@ -744,7 +862,9 @@ on("POST", "/api/users", async (req, _p, user) => {
   if (!validRole(b.role)) fail(400, "Rôle invalide");
   const users = (await load<any[]>("users")) || [];
   if (users.some((u) => u.username === username)) fail(409, "Identifiant déjà utilisé");
-  const u = { id: uid("U"), username, name: str(b.name, 80) || username, role: b.role, posteId: str(b.posteId, 6) || "AIBD", active: true, createdAt: nowIso(), lastLogin: null, ...hashPassword(String(b.password)) };
+  if (b.role === "compagnie" && !Object.hasOwn(AIRLINES, String(b.carrier))) fail(400, "Compagnie aérienne obligatoire pour un compte compagnie");
+  const u: any = { id: uid("U"), username, name: str(b.name, 80) || username, role: b.role, posteId: str(b.posteId, 6) || "AIBD", active: true, createdAt: nowIso(), lastLogin: null, ...hashPassword(String(b.password)) };
+  if (b.role === "compagnie") u.carrier = String(b.carrier);
   users.push(u);
   await save("users", users);
   await audit(user.username, "UTILISATEUR_CREATION", username, b.role);
@@ -758,6 +878,9 @@ on("PATCH", "/api/users/:id", async (req, p, user) => {
   if (b.role !== undefined && !validRole(b.role)) fail(400, "Rôle invalide");
   if (u.id === user.id && (b.active === false || (b.role !== undefined && b.role !== "admin"))) fail(400, "Vous ne pouvez pas désactiver ou rétrograder votre propre compte");
   if (b.role !== undefined) u.role = b.role;
+  if (b.carrier !== undefined && Object.hasOwn(AIRLINES, String(b.carrier))) u.carrier = String(b.carrier);
+  if (u.role === "compagnie" && !u.carrier) fail(400, "Compagnie aérienne obligatoire pour un compte compagnie");
+  if (u.role !== "compagnie") delete u.carrier;
   if (typeof b.active === "boolean") u.active = b.active;
   if (b.posteId) u.posteId = str(b.posteId, 6);
   if (b.password) { if (String(b.password).length < 10) fail(400, "Mot de passe : 10 caractères minimum"); Object.assign(u, hashPassword(String(b.password))); }

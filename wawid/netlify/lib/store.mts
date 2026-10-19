@@ -18,7 +18,7 @@ export async function save(key: string, value: unknown): Promise<void> {
   await store().setJSON(key, value);
 }
 
-export const COLLECTIONS = ["settings", "watchlist", "rules", "travelers", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices"];
+export const COLLECTIONS = ["settings", "watchlist", "rules", "travelers", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices", "reversements"];
 
 let seeded = false;
 export async function ensureSeeded(force = false) {

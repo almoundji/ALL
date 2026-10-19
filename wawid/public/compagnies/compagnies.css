@@ -1,0 +1,30 @@
+/* Plateforme des compagnies aériennes. */
+.c-brand-sub { color: var(--accent); font-weight: 700; white-space: nowrap; }
+.c-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.c-kpi { padding: 16px 18px; display: grid; gap: 4px; }
+.c-kpi b { font: 300 clamp(22px, 5.4vw, 32px)/1.1 var(--display); color: var(--heading); overflow-wrap: anywhere; }
+.c-kpi span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.c-kpi small { color: var(--muted); font-size: 12px; }
+.c-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
+.c-stack { display: grid; gap: 16px; }
+.c-grid > * { min-width: 0; }
+.c-doc .md table { display: block; overflow-x: auto; }
+.c-doc .md pre { overflow-x: auto; }
+.c-head { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 6px 0 18px; }
+.c-head h1 { font: 800 28px var(--display); margin: 0; }
+.c-head p { margin: 4px 0 0; color: var(--ink-2); }
+.c-head .grow { flex: 1; min-width: 240px; }
+.c-code { font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; white-space: pre-wrap; word-break: break-all; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; max-height: 340px; overflow: auto; }
+.c-ack dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.c-ack dt { color: var(--ink-2); font-size: 13px; }
+.c-ack dd { margin: 0; font-weight: 600; }
+.c-bar { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.c-bar i { display: block; height: 100%; background: var(--brand); }
+.c-user { display: flex; align-items: center; gap: 10px; }
+.c-user .who { text-align: right; line-height: 1.2; }
+.c-user .who small { color: var(--muted); font-size: 12px; }
+.c-login { max-width: 440px; margin: 40px auto; padding: 28px; display: grid; gap: 16px; }
+.c-login h1 { font: 800 26px var(--display); margin: 0; }
+@media (max-width: 900px) { .c-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .c-kpis { grid-template-columns: 1fr; } }
+@media (max-width: 1360px) { .c-user .who { display: none; } }

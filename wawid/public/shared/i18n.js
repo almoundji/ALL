@@ -105,7 +105,7 @@ export async function initI18n(base = "") {
   document.documentElement.lang = lang();
   if (lang() !== "en") return;
   try {
-    const res = await fetch(`${base}shared/i18n/en.json?v=2`);
+    const res = await fetch(`${base}shared/i18n/en.json?v=4`);
     compile(await res.json());
   } catch { return; }
   const run = (nodes) => nodes.forEach(translateNode);

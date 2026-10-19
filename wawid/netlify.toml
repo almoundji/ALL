@@ -33,3 +33,20 @@
   [headers.values]
     Content-Type = "application/vnd.android.package-archive"
     Content-Disposition = "attachment; filename=WawID-eVisa-android.apk"
+
+[[headers]]
+  for = "/compagnies/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+# Plateformes dissociées : /dpaf/ (espace DPAF, alias de /admin/), /compagnies/ (compagnies aériennes),
+# / (voyageurs), /app/ (applications mobiles). En production, chacune peut recevoir son propre domaine.
+[[redirects]]
+  from = "/dpaf"
+  to = "/dpaf/"
+  status = 301
+
+[[redirects]]
+  from = "/dpaf/*"
+  to = "/admin/:splat"
+  status = 200

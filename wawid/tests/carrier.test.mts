@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { detectFormat, edifactSegments, parsePaxlst, parsePnr, samples } from "../netlify/lib/carrier.mts";
 import handler from "../netlify/functions/api.mts";
+import { load } from "../netlify/lib/store.mts";
 
 test("EDIFACT : séparateurs UNA et caractère d'échappement", () => {
   const segs = edifactSegments("UNA:+.? 'NAD+FL+++O?'NEIL:JOHN'DOC+P:110:111+AB?+12'");
@@ -53,10 +54,14 @@ test("passerelle : clé requise, ingestion API puis PNR fusionnées dans le mêm
   const api = await call("/api/carrier/messages", samples().PAXLST, key);
   assert.equal(api.status, 202);
   assert.equal(api.data.passengers, 3);
-  assert.ok(api.data.flagged >= 1, "Kabore (notice rouge) doit être signalé");
+  // Le pré-contrôle n'est jamais communiqué à la compagnie (risque d'alerter un passager signalé)…
+  assert.equal(api.data.flagged, undefined);
   const pnr = await call("/api/carrier/messages", samples().PNR, key);
   assert.equal(pnr.status, 202);
-  assert.ok(pnr.data.flagged >= 1, "réseau / liste noire / espèces doivent ressortir");
+  assert.equal(pnr.data.flagged, undefined);
+  // … mais il a bien lieu côté DPAF.
+  const flight = ((await load<any[]>("flights")) || []).find((f) => f.flight === "HC 404");
+  assert.ok(flight.passengers.some((p: any) => p.surname?.toUpperCase().startsWith("KABORE") && p.score >= 35), "Kabore (notice rouge) doit être signalé");
   const bad = await call("/api/carrier/messages", "n'importe quoi", key);
   assert.equal(bad.status, 422);
 });
