@@ -46,7 +46,7 @@ Chaque utilisateur a un rôle unique, qui détermine les tuiles visibles et les 
 | Listes de surveillance (ajout, modification) | — | Oui | Oui | Oui | — |
 | Règles de ciblage | — | Oui | Oui | Oui | — |
 | APIS (réception de messages, manifestes) | — | Oui | Oui | Oui | — |
-| Décisions e-Visa | — | Oui | Oui | Oui | — |
+| Décisions e-Visa et délégations | — | Oui | Oui | Oui | — |
 | Pilotage des eGates | — | — | Oui | Oui | — |
 | Redevance de sécurité (finances) | — | — | — | Oui | Oui |
 | Utilisateurs | — | — | — | Oui | — |
@@ -55,7 +55,7 @@ Chaque utilisateur a un rôle unique, qui détermine les tuiles visibles et les 
 En pratique :
 
 - **Agent de contrôle** : réalise les contrôles au guichet, consulte les passages et les eGates, prend en charge les alertes et ouvre des dossiers de contrôle secondaire.
-- **Analyste renseignement** : traite les alertes et les dossiers, alimente les listes de surveillance et les règles de ciblage, instruit les e-Visa et exploite les données APIS / PNR. Il ne réalise pas de contrôle guichet.
+- **Analyste renseignement** : traite les alertes et les dossiers, alimente les listes de surveillance et les règles de ciblage, instruit les e-Visa et les délégations et exploite les données APIS / PNR. Il ne réalise pas de contrôle guichet.
 - **Superviseur** : cumule les droits de l'agent et de l'analyste, et pilote à distance les eGates et kiosques ABC (ouverture, fermeture, maintenance, paramètres).
 - **Administrateur** : tous les droits, y compris la gestion des utilisateurs, les paramètres système et le module finances.
 - **Agent du Trésor** : consultation et module **Redevance de sécurité** (factures, validation des paiements déclarés par les compagnies, encaissements, reversements à l'État, rapprochement, répartition). Il n'a accès à aucune action de contrôle.
@@ -72,9 +72,9 @@ Les applications sont rangées par espace, présentés sous forme d'onglets : **
 
 ### Tuiles et indicateurs en direct
 
-Chaque tuile ouvre une application et affiche son titre, une description et, le plus souvent, un indicateur chiffré : par exemple **Tableau de bord** (passages sur 24 h), **eGates & ABC** (portes ouvertes sur le total), **Threat Monitor** (nouvelles alertes), **e-Visa** (demandes à instruire) ou **Factures compagnies** (factures en retard). Un indicateur non nul s'affiche en rouge (critique) ou en orange (attention) lorsque la tuile le prévoit. Les données sont actualisées automatiquement toutes les 30 secondes.
+Chaque tuile ouvre une application et affiche son titre, une description et, le plus souvent, un indicateur chiffré : par exemple **Tableau de bord** (passages sur 24 h), **eGates & ABC** (portes ouvertes sur le total), **Threat Monitor** (nouvelles alertes), **e-Visa** (demandes à instruire), **Délégations** (délégations à valider) ou **Factures compagnies** (factures en retard). Un indicateur non nul s'affiche en rouge (critique) ou en orange (attention) lorsque la tuile le prévoit. Les données sont actualisées automatiquement toutes les 30 secondes.
 
-Les tuiles à **bordure pointillée** sont des tuiles de création qui lancent directement une action : **Nouveau contrôle**, **Ajouter une entrée** (liste de surveillance), **Recevoir un message** (APIS / PNR), **Créer un utilisateur**. La tuile **Kiosque eGate** ouvre le kiosque dans un nouvel onglet.
+Les tuiles à **bordure pointillée** sont des tuiles de création qui lancent directement une action : **Nouveau contrôle**, **Ajouter une entrée** (liste de surveillance), **Recevoir un message** (APIS / PNR), **Enregistrer une délégation**, **Créer un utilisateur**. La tuile **Kiosque eGate** ouvre le kiosque dans un nouvel onglet.
 
 ### Personnaliser l'accueil
 
@@ -121,4 +121,4 @@ Le bouton **?** ouvre la page de cette documentation qui correspond à l'écran 
 
 ## Traçabilité et journal d'audit
 
-Toutes les actions sensibles sont enregistrées dans le **Journal d'audit** : connexions, échecs de connexion et déconnexions, décisions de passage, commandes envoyées aux eGates, vérifications d'anciens reçus WawPass, création de dossiers, modifications de listes et de règles, décisions e-Visa, gestion des utilisateurs, etc. Chaque entrée indique l'auteur, l'action, l'objet et l'heure. Les entrées sont chaînées par empreinte SHA-256 : toute modification ou suppression a posteriori rompt la chaîne et devient détectable. Le message de la page de connexion le rappelle : « Toutes les actions sont journalisées ».
+Toutes les actions sensibles sont enregistrées dans le **Journal d'audit** : connexions, échecs de connexion et déconnexions, décisions de passage, commandes envoyées aux eGates, vérifications d'anciens reçus WawPass, création de dossiers, modifications de listes et de règles, décisions e-Visa et délégations, gestion des utilisateurs, etc. Chaque entrée indique l'auteur, l'action, l'objet et l'heure. Les entrées sont chaînées par empreinte SHA-256 : toute modification ou suppression a posteriori rompt la chaîne et devient détectable. Le message de la page de connexion le rappelle : « Toutes les actions sont journalisées ».

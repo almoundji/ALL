@@ -9,6 +9,7 @@ Ce guide s'adresse aux voyageurs qui se rendent au Sénégal ou qui en partent. 
 | Suivi | Portail (onglet **Suivi**) ou app iPhone | Consulter l'état de la demande, répondre à l'administration, obtenir le QR code |
 | Redevance de sécurité | Page d'accueil du portail (carte **Redevance de sécurité**) | S'informer : la redevance est incluse dans le billet, rien à payer |
 | eGate | Portail (onglet **eGate**) | Se pré-enregistrer pour les portes automatiques |
+| Délégations | Portail (onglet **Délégations**) | Organisateurs : déclarer une délégation (visite officielle, compétition, conférence…) et suivre sa validation |
 
 Adresse du portail : `https://wawid-waw-telecom.netlify.app`
 
@@ -182,6 +183,30 @@ Complétez l'identité (nom, prénoms, e-mail, téléphone), le voyage (motif, a
 ### Suivi dans l'app
 
 Touchez **Suivre ma demande**, saisissez la référence et le numéro de passeport, puis **Consulter**. L'app affiche le statut, le numéro d'e-Visa, la date de validité, les messages de l'administration et, si la demande est approuvée, le **QR code à présenter à la frontière**. Pour répondre à une demande d'information, utilisez l'onglet **Suivi** du portail web.
+
+## Déclarer une délégation (organisateurs)
+
+Cette rubrique s'adresse aux **organisateurs** : ministères, ambassades, fédérations sportives, comités d'organisation. Elle permet d'annoncer en une seule fois un groupe qui se rend au Sénégal (visite officielle, compétition sportive, conférence ou sommet, événement culturel) pour que la Police de l'Air et des Frontières (DPAF) l'examine avant son arrivée.
+
+Déclarez la délégation **au moins 72 h avant l'arrivée** (recommandé).
+
+1. Ouvrez l'onglet **Délégations**, rubrique **Déclarer une délégation**.
+2. Renseignez le nom de la délégation, son type, l'événement, l'hôte ou l'organisateur au Sénégal, le pays de provenance, les dates d'arrivée et de départ, le point d'entrée et le vol.
+3. Indiquez le contact de l'organisateur : nom, **e-mail** (obligatoire, il sert au suivi) et téléphone.
+4. Saisissez les **membres**, une ligne par personne, au format `Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport`. Exemple : `Okafor;Grace;NGA;F;1998-05-12;A09981234;Athlète;ORDINAIRE`. La nationalité est un code à 3 lettres, la date de naissance s'écrit `AAAA-MM-JJ` et le type de passeport est `DIPLOMATIQUE`, `SERVICE` ou `ORDINAIRE`. Vous pouvez copier-coller les colonnes depuis Excel.
+5. Cochez la case de **consentement** : vous certifiez l'exactitude des informations et disposez du consentement des membres au traitement de leurs données (loi n° 2008-12).
+6. Cliquez sur **Déclarer la délégation**. Une référence commençant par `DL` s'affiche : **conservez-la**.
+
+Pour suivre la demande, utilisez la rubrique **Suivre une délégation** : saisissez la **référence** (DL…) et l'**e-mail du contact**, puis cliquez sur **Consulter**.
+
+| Statut | Signification |
+| --- | --- |
+| Soumise — en cours d'examen | La DPAF examine la délégation |
+| Validée | Délégation acceptée ; le suivi précise le régime d'entrée accordé |
+| Refusée | Délégation rejetée ; le motif est affiché |
+| Clôturée | Séjour terminé |
+
+Lorsque la délégation est validée avec une **autorisation collective d'entrée**, celle-ci vaut e-Visa pour chaque membre pendant le séjour : les membres présentent simplement leur passeport à l'arrivée. Sinon, chaque membre soumis à visa doit obtenir un e-Visa individuel. Dans tous les cas, chaque membre passe le contrôle frontière habituel au guichet.
 
 ## Données personnelles
 

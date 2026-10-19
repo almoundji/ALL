@@ -1,6 +1,6 @@
 # API reference (airlines, devices, connectors)
 
-This page describes the WawID interfaces open to third-party systems: the traveler portal and iPhone app, the airline gateway (API/PNR) and the airline platform routes, eGates and ABC kiosks, and the external connector contract.
+This page describes the WawID interfaces open to third-party systems: the traveler portal and iPhone app, delegation declarations by organizers, the airline gateway (API/PNR) and the airline platform routes, eGates and ABC kiosks, and the external connector contract.
 
 ## General
 
@@ -17,12 +17,12 @@ This page describes the WawID interfaces open to third-party systems: the travel
 
 | Family | Authentication | Intended for |
 | --- | --- | --- |
-| `/api/public/*` | None | Traveler portal, iPhone app |
+| `/api/public/*` | None | Traveler portal (including delegation declarations by organizers), iPhone app |
 | `/api/carrier/messages` | `X-Carrier-Key` header | Airlines (systems) |
 | `/api/compagnie/*` | Session of an **Airline** account (signed cookie, signed in with `platform: "compagnies"`) | Airline platform (`/compagnies/`) |
 | `/api/gate/*` | `X-Gate-Key` header | eGates, ABC kiosks |
 | `/api/docs`, `/api/docs/:lang/:slug` | None for public pages; DPAF space session for internal pages | Help center |
-| Other routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Officer session (signed cookie) | DPAF space only |
+| Other routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, `/api/delegations/…`, etc.) | Officer session (signed cookie) | DPAF space only |
 
 DPAF space routes are not documented here: they require an authenticated session and a role with the matching permission, and they are not an integration interface. An airline account has access to none of them (`403`), nor to the internal documentation pages (`403`; `401` without a session).
 
@@ -178,6 +178,78 @@ Checks: readable MRZ with valid check digits, `consent: true`, valid e-mail, age
 ```
 
 If the passport is already pre-enrolled: `{ "ref": "EN…", "status": "…", "already": true }`.
+
+## Public organizer API: delegations
+
+These two routes, with no authentication, serve the **Delegations** section of the traveler portal: an organizer (ministry, embassy, federation, organizing committee) declares a delegation there and then tracks the DPAF decision. See *Delegations: official visits, competitions, conferences*.
+
+### POST /api/public/delegations
+
+Declaring a delegation.
+
+```json
+{
+  "name": "Japan national judo team", "type": "COMPETITION",
+  "event": "Dakar international open", "host": "Senegalese judo federation",
+  "originCountry": "JPN", "arrival": "2026-11-12", "departure": "2026-11-22",
+  "posteId": "AIBD", "flight": "ET 909",
+  "contact": { "name": "Organizing committee", "email": "org@example.org", "phone": "+221770000000" },
+  "members": [
+    { "surname": "Tanaka", "given": "Hiro", "nat": "JPN", "sex": "M", "dob": "1990-02-03",
+      "docNo": "TK1234567", "role": "Athlete", "passportType": "ORDINAIRE" }
+  ],
+  "consent": true
+}
+```
+
+| Field | Check |
+| --- | --- |
+| `name` | Mandatory (160 characters at most) |
+| `type` | `VISITE_OFFICIELLE`, `COMPETITION`, `CONFERENCE`, `CULTUREL` or `AUTRE` (`AUTRE` for an unknown value) |
+| `arrival`, `departure` | Mandatory, `YYYY-MM-DD` format, departure on or after arrival |
+| `posteId` | Post identifier (`AIBD` by default) |
+| `contact.email` | Mandatory, valid address (used for tracking) |
+| `members` | 1 to 500 members; `surname`, `nat` (3-letter code) and `docNo` mandatory; `sex` `M` or `F`; `passportType` `DIPLOMATIQUE`, `SERVICE` or `ORDINAIRE` (`ORDINAIRE` by default); passport number unique within the delegation |
+| `consent` | `true` required (Law 2008-12) |
+
+`200` response:
+
+```json
+{ "ref": "DL260004", "status": "SOUMISE", "members": 1 }
+```
+
+`400` errors: missing consent, invalid e-mail, invalid name or dates, no member, incomplete member (the message names it), duplicate passport. Each member is pre-screened on receipt; the result is never returned.
+
+### POST /api/public/delegations/status
+
+Tracking a delegation. The reference **and** the contact e-mail must match (e-mail compared case-insensitively).
+
+```json
+{ "ref": "DL260004", "email": "org@example.org" }
+```
+
+`200` response:
+
+```json
+{
+  "ref": "DL260004", "name": "Japan national judo team", "status": "VALIDEE",
+  "arrival": "2026-11-12", "departure": "2026-11-22", "members": 15,
+  "collectiveAuthorization": true
+}
+```
+
+| `status` | Meaning |
+| --- | --- |
+| `SOUMISE` | Submitted, under review |
+| `VALIDEE` | Validated; `collectiveAuthorization` tells whether the collective entry authorization was granted |
+| `REFUSEE` | Refused; the `reason` field gives the reason |
+| `CLOTUREE` | Closed (stay over) |
+
+The response contains neither the member list nor any pre-screening result. `404` error (response deliberately delayed) if the reference/e-mail pair matches no delegation.
+
+### Internal routes (DPAF space)
+
+Delegations are processed through DPAF space session routes, which are not an integration interface: `POST /api/delegations` (registration, `evisa` permission) and `PATCH /api/delegations/:id` with an `action` among `valider`, `refuser`, `cloturer`, `ajouter`, `retirer` (`evisa` permission) and `arrivee` (member check-in, `control` permission). They are listed here for reference only; an airline account gets `403`.
 
 ## Carrier gateway: POST /api/carrier/messages
 
@@ -442,6 +514,7 @@ Constraints: HTTP 2xx response within **2.5 s** (otherwise the connector is repo
 | Carrier message | 2 MB (`413` above) |
 | Text fields | Truncated to their maximum length (e.g. 1,000 characters for a reply) |
 | External connector timeout | 2.5 s |
-| Failed e-Visa lookup | `404` response deliberately delayed |
+| Failed e-Visa or delegation lookup | `404` response deliberately delayed |
+| Delegation | 500 members per declaration |
 
 The demonstrator applies no per-client request quota. In production, a web application firewall (WAF) with rate limiting must protect the public routes and the carrier gateway.

@@ -9,6 +9,7 @@ This guide is for travelers going to or leaving Senegal. It describes the WawID 
 | Tracking | Portal (**Tracking** tab) or iPhone app | Check the application status, answer the administration, get the QR code |
 | Security fee | Portal home page (**Security fee** card) | Information: the fee is included in the ticket, nothing to pay |
 | eGate | Portal (**eGate** tab) | Pre-enroll for the automated gates |
+| Delegations | Portal (**Delegations** tab) | Organizers: declare a delegation (official visit, competition, conference…) and track its validation |
 
 Portal address: `https://wawid-waw-telecom.netlify.app`
 
@@ -184,6 +185,30 @@ Complete identity (surname, given names, e-mail, phone), trip (purpose, arrival,
 ### Tracking in the app
 
 Tap **Track my application**, enter the reference and passport number, then **Check**. The app shows the status, e-Visa number, expiry date, messages from the administration and, if approved, the **QR code to show at the border**. To answer a request for information, use the **Tracking** tab of the web portal.
+
+## Declaring a delegation (organizers)
+
+This section is for **organizers**: ministries, embassies, sports federations, organizing committees. It lets you announce, in one go, a group travelling to Senegal (official visit, sports competition, conference or summit, cultural event) so that the Air and Border Police (DPAF) can review it before arrival.
+
+Declare the delegation **at least 72 hours before arrival** (recommended).
+
+1. Open the **Delegations** tab, **Declare a delegation** section.
+2. Enter the delegation name, its type, the event, the host or organizer in Senegal, the country of origin, the arrival and departure dates, the point of entry and the flight.
+3. Enter the organizer's contact: name, **e-mail** (mandatory, used for tracking) and phone.
+4. Enter the **members**, one line per person, in the format `Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport` (surname; given names; nationality; sex; date of birth; passport number; role; passport type). Example: `Okafor;Grace;NGA;F;1998-05-12;A09981234;Athlete;ORDINAIRE`. Nationality is a 3-letter code, the date of birth is written `YYYY-MM-DD` and the passport type is `DIPLOMATIQUE`, `SERVICE` or `ORDINAIRE`. You can copy-paste the columns from Excel.
+5. Tick the **consent** box: you certify that the information is accurate and that members have consented to the processing of their data (Law 2008-12).
+6. Click **Declare the delegation**. A reference starting with `DL` is displayed: **keep it**.
+
+To follow the request, use the **Track a delegation** section: enter the **reference** (DL…) and the **contact e-mail**, then click **View**.
+
+| Status | Meaning |
+| --- | --- |
+| Submitted — under review | The DPAF is reviewing the delegation |
+| Validated | Delegation accepted; the tracking page states the entry regime granted |
+| Refused | Delegation rejected; the reason is displayed |
+| Closed | Stay over |
+
+When the delegation is validated with a **collective entry authorization**, it counts as an e-Visa for each member during the stay: members simply present their passports on arrival. Otherwise, each member who needs a visa must obtain an individual e-Visa. In every case, each member goes through the usual border check at the counter.
 
 ## Personal data
 

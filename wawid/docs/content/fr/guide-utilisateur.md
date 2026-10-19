@@ -50,7 +50,7 @@ Avant votre première vacation sur WawID, vérifiez les points suivants avec vot
 
 ### Ce que vous voyez
 
-Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle frontière** (Tableau de bord, Contrôle guichet, eGates & ABC, Passages, Recherche voyageur, Vérifier un QR, Véhicules (VRS), tuile **Nouveau contrôle**) et, dans **Renseignement**, le **Threat Monitor** et les **Dossiers**. Vous pouvez consulter les listes de surveillance et les règles, mais pas les modifier.
+Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle frontière** (Tableau de bord, Contrôle guichet, eGates & ABC, Passages, Recherche voyageur, Vérifier un QR, Véhicules (VRS), tuile **Nouveau contrôle**) et, dans **Renseignement**, le **Threat Monitor** et les **Dossiers**. Vous pouvez consulter les listes de surveillance et les règles, mais pas les modifier. Dans **e-Visa & voyageurs**, la tuile **Délégations** vous permet de consulter les délégations attendues et de pointer l'arrivée de leurs membres.
 
 ### Prise de service
 
@@ -86,6 +86,7 @@ Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle fro
 | Lecture de puce « (simulé) » sur un poste d'exploitation | Le panneau NFC porte la mention « (simulé) » | Le pont NFC du poste est arrêté ou mal configuré. Prévenez immédiatement le support technique ; en attendant, appliquez la consigne de mode dégradé du poste (contrôle visuel renforcé). |
 | Voyageur orienté par une eGate | Le voyageur se présente avec un message de la porte | Faites un contrôle normal. Le motif de l'orientation figure sur le passage eGate (canal **eGate / ABC**, motif préfixé « eGate : ») dans **Passages**. La plupart des orientations ont une cause simple (mineur, puce abîmée, éclairage, passeport expiré). |
 | Voyageur soumis à visa sans e-Visa | **Autorisation de voyage (e-Visa)** en Attention ou Alerte | Vérifiez si le voyageur a une référence `EV…` (recherche dans **Recherche voyageur** ou **e-Visa**). Sans autorisation valide, appliquez la réglementation en vigueur et les consignes du chef de poste. |
+| Membre d'une délégation | Bandeau bleu **Membre de la délégation DL…** au-dessus des vérifications, avec la fonction, le type de passeport et, le cas échéant, l'autorisation collective d'entrée | Contrôlez et décidez comme pour tout voyageur : le bandeau ne dispense d'aucune vérification. Cliquez ensuite sur **Voir la délégation** puis sur **Pointer** sur la ligne du membre. Pour une délégation VIP, suivez les consignes d'accueil protocolaire du poste. Voir *Délégations : visites officielles, compétitions, conférences*. |
 | QR e-Visa refusé | « QR code invalide ou falsifié » ou statut non approuvé | Un QR modifié est un faux document : contrôle secondaire. Un e-Visa non approuvé ou échu n'autorise pas l'entrée. |
 | Voyageur présentant un ancien reçu WawPass ou une demande de paiement de taxe | — | La redevance de sécurité est incluse dans le billet : aucun reçu n'est exigé du voyageur. Un ancien reçu WawPass n'a qu'une valeur historique (onglet **Historique WawPass** de **Pré-enrôlements eGate**). |
 | Caméra indisponible | Message d'absence de caméra ; capture simulée | Vérifiez le branchement et l'autorisation du navigateur. Ne validez pas de passage en production avec une capture simulée : prévenez le support. |
@@ -144,8 +145,9 @@ Le rôle **Analyste renseignement** donne accès à l'espace **Renseignement** (
 3. **Vols annoncés** : ouvrez les vols des prochaines heures, examinez les passagers signalés (score de 30 ou plus) et transmettez au chef de vacation la liste des passagers à contrôler à l'arrivée.
 4. **Conformité transporteurs** : repérez les compagnies **À relancer** (ponctualité inférieure à 95 % ou complétude inférieure à 98 %).
 5. **e-Visa**, onglet **À instruire** : instruisez les demandes (voir ci-dessous).
-6. **Listes de surveillance** et **Règles de ciblage** : mettez à jour les entrées et règles selon les instructions reçues, en renseignant toujours la **Référence** et le **Motif**.
-7. **Connecteurs** : en début de vacation, cliquez sur **Tester** pour les sources connectées.
+6. **Délégations** : traitez les délégations **à valider** et les alertes **Délégation (pré-contrôle)** associées (voir ci-dessous).
+7. **Listes de surveillance** et **Règles de ciblage** : mettez à jour les entrées et règles selon les instructions reçues, en renseignant toujours la **Référence** et le **Motif**.
+8. **Connecteurs** : en début de vacation, cliquez sur **Tester** pour les sources connectées.
 
 ### Instruire une demande d'e-Visa
 
@@ -154,6 +156,17 @@ Le rôle **Analyste renseignement** donne accès à l'espace **Renseignement** (
 3. Si une pièce manque, cliquez sur **Demander une information** et précisez la pièce attendue.
 4. Décidez : **Approuver** (numéro `SN-EV-…`, validité 90 jours, QR signé) ou **Refuser** avec un motif, communiqué au demandeur.
 
+### Instruire une délégation
+
+1. Ouvrez la tuile **Délégations** et filtrez sur le statut **Soumise** (ou utilisez **Enregistrer une délégation** pour saisir vous-même une délégation annoncée par un ministère ou une ambassade).
+2. Ouvrez la fiche : vérifiez les dates, le point d'entrée, la liste des membres et la colonne **Pré-contrôle**.
+3. Pour chaque membre signalé (score de 60 ou plus), traitez l'alerte **Délégation (pré-contrôle)** du Threat Monitor ; si le signalement est confirmé, retirez le membre (corbeille) ou refusez la délégation.
+4. Ajoutez si besoin les membres annoncés tardivement avec **Ajouter des membres** (format `Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport`).
+5. Cliquez sur **Valider** en laissant cochée l'**autorisation collective d'entrée** (elle vaut e-Visa pour chaque membre de 3 jours avant l'arrivée à 3 jours après le départ) ou en la décochant (e-Visa individuels requis), ou sur **Refuser** avec un motif, affiché à l'organisateur.
+6. Après le départ du groupe, cliquez sur **Clôturer**.
+
+Ne communiquez jamais le résultat du pré-contrôle à l'organisateur. Voir *Délégations : visites officielles, compétitions, conférences*.
+
 ### Situations courantes
 
 | Situation | Que faire |
@@ -161,6 +174,7 @@ Le rôle **Analyste renseignement** donne accès à l'espace **Renseignement** (
 | Correspondance confirmée sur un passager annoncé (APIS) | Ouvrez un dossier, informez le chef de vacation du poste d'arrivée avec le vol et le siège ; aucune information n'est renvoyée à la compagnie. |
 | Homonyme | Clôturez avec « Fausse alerte — homonyme » et précisez l'élément discriminant (date de naissance, nationalité). |
 | Réseau d'identités en e-Visa (coordonnées ou appareil partagés) | Recherchez les demandes liées dans l'onglet **Toutes**, demandez des pièces ou refusez avec motif, faites inscrire la coordonnée sur la liste noire. |
+| Membre de délégation signalé au pré-contrôle | Traitez l'alerte **Délégation (pré-contrôle)** comme toute alerte. Homonyme : clôturez avec « Fausse alerte — homonyme ». Signalement confirmé : retirez le membre tant que la délégation est **Soumise**, ou refusez-la, et prévenez le chef de poste du point d'entrée. |
 | Demande d'information sans réponse | La demande reste **Info. demandée** ; le demandeur répond depuis le portail. Suivez l'onglet **Info. demandée** et relancez selon la procédure du service. |
 | Message PAXLST arrivé en retard | Le vol porte la mention **transmission tardive** ; le pré-contrôle est quand même recalculé. Signalez les retards répétés pour relance de la compagnie (onglet **Conformité transporteurs**). |
 | Message rejeté par la passerelle | Ouvrez le message dans **Passerelle transporteurs** et lisez les erreurs (format inconnu, vol absent, vol d'une autre compagnie). Prévenez le correspondant technique de la compagnie. |
@@ -177,7 +191,7 @@ Le rôle **Superviseur** cumule les droits de l'agent et de l'analyste et le pil
 
 1. **Prise de poste** : ouvrez le **Tableau de bord** filtré sur votre poste, puis le **Threat Monitor** (alertes ouvertes) et **eGates & ABC** (état du parc).
 2. Répartissez les agents par guichet ; vérifiez que chacun est connecté avec son propre compte et le bon poste.
-3. Diffusez aux agents la liste des passagers signalés des vols attendus (préparée par l'analyste).
+3. Diffusez aux agents la liste des passagers signalés des vols attendus (préparée par l'analyste) et la liste des délégations attendues sur votre poste (tuile **Délégations**, bouton **Imprimer la liste** sur chaque fiche). Désignez si besoin un guichet dédié pour les délégations nombreuses ou VIP.
 4. **Pendant le service**, traitez les escalades : les recommandations « Refuser et retenir — escalade superviseur » et toute correspondance critique doivent vous être présentées avant validation.
 5. Contrôlez les décisions qui s'écartent de la recommandation (filtre **Décision** dans **Passages**) et la qualité des motifs saisis.
 6. Suivez les dossiers ouverts et assurez la continuité des entretiens (**Entretien structuré**).

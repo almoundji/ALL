@@ -17,7 +17,8 @@ The **Intelligence** space of the back office groups five apps: **Threat Monitor
 The Threat Monitor is the single view of all matches: counter crossings, eGates and APIS/PNR pre-screening. An alert is created automatically:
 
 - for a crossing (counter or eGate) whose risk score reaches **35** or whose decision is **Refused**;
-- for an announced passenger (API/PNR message or manifest) whose score reaches **35** — one open alert per passenger and per flight.
+- for an announced passenger (API/PNR message or manifest) whose score reaches **35** — one open alert per passenger and per flight;
+- for a delegation member whose pre-screening score reaches **60** when the delegation is registered or the member added (**Delegation (pre-screening)** type, see below).
 
 Alert severity depends on the score: **Critical** from 80, **High** from 60, **Medium** below. The type and title are derived from the risk factors (see *Understanding the risk score*).
 
@@ -33,7 +34,13 @@ The bell in the top bar shows the number of **New** alerts. Data refreshes every
 | **Closed** | Resolved alerts |
 | **All** | Every alert |
 
-The **All types** drop-down filters by type: **Lost / stolen document**, **Watchlist**, **Biometric fraud**, **Document fraud**, **Document expired**, **Targeting rule**, **No authorization**, **APIS / PNR**, **High risk**.
+The **All types** drop-down filters by type: **Lost / stolen document**, **Watchlist**, **Biometric fraud**, **Document fraud**, **Document expired**, **Targeting rule**, **No authorization**, **APIS / PNR**, **High risk**, **Delegation (pre-screening)**.
+
+### Delegation alerts
+
+A **Delegation (pre-screening)** alert (`DELEGATION`) flags a member of an announced delegation whose pre-screening (watchlists, targeting rules) reaches 60. It is not linked to any crossing: its title includes the delegation reference ("Délégation DL… : …"), and its history, opened by "Pré-contrôle délégations", gives the delegation name and the member's role. Open the delegation from the **Delegations** tile to see the member's factors (**Pre-screening** column).
+
+Handle it like any alert, **before the delegation is validated** if possible: namesake, doubt cleared, or removal of the member and refusal of the delegation according to instructions. The result is never disclosed to the organizer. See *Delegations: official visits, competitions, conferences*.
 
 ### Master-detail view
 

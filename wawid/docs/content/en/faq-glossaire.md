@@ -36,6 +36,16 @@ A referral does not prejudge anything. It happens for example if you are a minor
 
 You need an iPhone 7 or newer and a biometric passport. Check the MRZ (a single error blocks access to the chip), remove the case, place the closed passport on a non-metal surface, bring the top of the iPhone to it and hold still for 5 to 15 seconds. You can also continue without reading the chip.
 
+### Delegation organizers
+
+#### How do I declare a delegation?
+
+On the traveler portal, **Delegations** tab, **Declare a delegation** section. Ministries, embassies, sports federations and organizing committees use it to announce an official visit, a sports team, a conference or a cultural event, **at least 72 hours before arrival** (recommended). Members are entered one line per person (`Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport`), copy-pasted from Excel if needed. Keep the `DL…` reference: together with the contact e-mail, it lets you follow the decision under **Track a delegation**.
+
+#### Do members of a validated delegation need an e-Visa?
+
+Not if the DPAF granted a **collective entry authorization**: it counts as an e-Visa for each member during the stay. Otherwise, each member who needs a visa must obtain an individual e-Visa. In every case, each member goes through the usual counter check.
+
 ### Airlines
 
 #### Where do we sign in?
@@ -97,7 +107,9 @@ Sessions last 12 hours (one shift). Sign in again. If your account was deactivat
 | BAC (Basic Access Control) | Passport chip access protocol using keys derived from the MRZ. Gradually replaced by PACE. |
 | CDP | Personal Data Protection Commission, the Senegalese supervisory authority (Law 2008-12). |
 | Check digits | MRZ digits computed according to ICAO 9303 to detect reading or typing errors. |
+| Collective entry authorization | DPAF decision, taken when validating a delegation, that counts as an e-Visa for each of its members from 3 days before arrival to 3 days after departure. It does not exempt anyone from counter checks. |
 | CSCA / ICAO PKD | Root certificates of passport-issuing states; the ICAO PKD distributes them for passive authentication. |
+| Delegation | Group announced in advance (official visit, sports competition, conference, cultural event), registered by the DPAF or declared by the organizer on the portal (`DL…` reference). Its members are pre-screened, then the delegation is validated or refused. |
 | DG1, DG2 | Chip data groups: DG1 holds the MRZ, DG2 the holder's photo. |
 | DPAF space | WawID platform for border officers, analysts, supervisors, Treasury officers and administrators (`/dpaf/`), formerly called the back office. |
 | e-Visa | Travel authorization applied for and issued online, shown at the border as a signed QR code. |

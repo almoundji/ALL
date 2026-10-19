@@ -17,7 +17,8 @@ L'espace **Renseignement** du back-office regroupe cinq applications : **Threat 
 Le Threat Monitor est la vue unique de toutes les correspondances : passages au guichet, eGates et pré-contrôle APIS/PNR. Une alerte est créée automatiquement :
 
 - pour un passage (guichet ou eGate) dont le score de risque atteint **35** ou dont la décision est **Refusé** ;
-- pour un passager annoncé (message API/PNR ou manifeste) dont le score atteint **35** — une seule alerte non clôturée par passager et par vol.
+- pour un passager annoncé (message API/PNR ou manifeste) dont le score atteint **35** — une seule alerte non clôturée par passager et par vol ;
+- pour un membre de délégation dont le score de pré-contrôle atteint **60** à l'enregistrement de la délégation ou à son ajout (type **Délégation (pré-contrôle)**, voir ci-dessous).
 
 La gravité de l'alerte dépend du score : **Critique** à partir de 80, **Haute** à partir de 60, **Moyenne** en dessous. Le type et le titre sont déduits des facteurs de risque (voir *Comprendre le score de risque*).
 
@@ -33,7 +34,13 @@ La cloche de la barre supérieure affiche le nombre d'alertes **Nouvelles** ; le
 | **Clôturées** | Alertes résolues |
 | **Toutes** | L'ensemble des alertes |
 
-La liste déroulante **Tous les types** filtre par type : **Document perdu / volé**, **Liste de surveillance**, **Fraude biométrique**, **Fraude documentaire**, **Document expiré**, **Règle de ciblage**, **Sans autorisation**, **APIS / PNR**, **Risque élevé**.
+La liste déroulante **Tous les types** filtre par type : **Document perdu / volé**, **Liste de surveillance**, **Fraude biométrique**, **Fraude documentaire**, **Document expiré**, **Règle de ciblage**, **Sans autorisation**, **APIS / PNR**, **Risque élevé**, **Délégation (pré-contrôle)**.
+
+### Alertes de délégation
+
+Une alerte de type **Délégation (pré-contrôle)** (`DELEGATION`) signale un membre d'une délégation annoncée dont le pré-contrôle (listes de surveillance, règles de ciblage) atteint 60. Elle n'est liée à aucun passage : son titre reprend la référence de la délégation (« Délégation DL… : … »), et son historique, ouvert par « Pré-contrôle délégations », indique le nom de la délégation et la fonction du membre. Ouvrez la délégation dans la tuile **Délégations** pour voir les facteurs du membre (colonne **Pré-contrôle**).
+
+Traitez-la comme toute alerte, **avant la validation de la délégation** si possible : homonyme, levée de doute, ou retrait du membre et refus de la délégation selon les instructions. Le résultat n'est jamais communiqué à l'organisateur. Voir *Délégations : visites officielles, compétitions, conférences*.
 
 ### Vue maître-détail
 

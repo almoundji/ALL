@@ -46,7 +46,7 @@ Each user has a single role, which determines the visible tiles and the allowed 
 | Watchlists (add, edit) | — | Yes | Yes | Yes | — |
 | Targeting rules | — | Yes | Yes | Yes | — |
 | APIS (receive messages, manifests) | — | Yes | Yes | Yes | — |
-| e-Visa decisions | — | Yes | Yes | Yes | — |
+| e-Visa and delegation decisions | — | Yes | Yes | Yes | — |
 | eGate control | — | — | Yes | Yes | — |
 | Security fee (finance) | — | — | — | Yes | Yes |
 | Users | — | — | — | Yes | — |
@@ -55,7 +55,7 @@ Each user has a single role, which determines the visible tiles and the allowed 
 In practice:
 
 - **Border officer**: performs counter checks, views crossings and eGates, takes charge of alerts and opens secondary inspection cases.
-- **Intelligence analyst**: handles alerts and cases, maintains watchlists and targeting rules, processes e-Visa applications and works with APIS / PNR data. Analysts do not perform counter checks.
+- **Intelligence analyst**: handles alerts and cases, maintains watchlists and targeting rules, processes e-Visa applications and delegations and works with APIS / PNR data. Analysts do not perform counter checks.
 - **Supervisor**: has the rights of both the officer and the analyst, and controls eGates and ABC kiosks remotely (open, close, maintenance, settings).
 - **Administrator**: all rights, including user management, system settings and the finance module.
 - **Treasury officer**: read access and the **Security fee** module (invoices, validation of payments declared by airlines, collections, transfers to the State, reconciliation, revenue split). No control actions.
@@ -72,9 +72,9 @@ Applications are grouped into spaces, shown as tabs: **My home**, **Border contr
 
 ### Tiles and live indicators
 
-Each tile opens an application and shows its title, a short description and, usually, a figure: for example **Dashboard** (crossings in the last 24 h), **eGates & ABC** (open gates out of the total), **Threat Monitor** (new alerts), **e-Visa** (applications to process) or **Airline invoices** (overdue invoices). A non-zero figure is shown in red (critical) or orange (warning) when the tile is set up that way. Data refreshes automatically every 30 seconds.
+Each tile opens an application and shows its title, a short description and, usually, a figure: for example **Dashboard** (crossings in the last 24 h), **eGates & ABC** (open gates out of the total), **Threat Monitor** (new alerts), **e-Visa** (applications to process), **Delegations** (delegations to validate) or **Airline invoices** (overdue invoices). A non-zero figure is shown in red (critical) or orange (warning) when the tile is set up that way. Data refreshes automatically every 30 seconds.
 
-Tiles with a **dashed border** are create tiles that start an action directly: **New check**, **Add an entry** (watchlist), **Receive a message** (APIS / PNR), **Create a user**. The **eGate kiosk** tile opens the kiosk in a new tab.
+Tiles with a **dashed border** are create tiles that start an action directly: **New check**, **Add an entry** (watchlist), **Receive a message** (APIS / PNR), **Register a delegation**, **Create a user**. The **eGate kiosk** tile opens the kiosk in a new tab.
 
 ### Personalizing the home page
 
@@ -121,4 +121,4 @@ The **?** button opens the page of this documentation that matches the current s
 
 ## Traceability and audit log
 
-All sensitive actions are recorded in the **Audit log**: sign-ins, failed sign-ins and sign-outs, crossing decisions, commands sent to eGates, verifications of former WawPass receipts, case creation, watchlist and rule changes, e-Visa decisions, user management, and more. Each entry records the author, the action, the object and the time. Entries are chained with SHA-256 hashes: any later change or deletion breaks the chain and becomes detectable. The sign-in page reminds users of this: "All actions are logged".
+All sensitive actions are recorded in the **Audit log**: sign-ins, failed sign-ins and sign-outs, crossing decisions, commands sent to eGates, verifications of former WawPass receipts, case creation, watchlist and rule changes, e-Visa and delegation decisions, user management, and more. Each entry records the author, the action, the object and the time. Entries are chained with SHA-256 hashes: any later change or deletion breaks the chain and becomes detectable. The sign-in page reminds users of this: "All actions are logged".

@@ -88,7 +88,7 @@ WawID interroge les fichiers nationaux et internationaux et calcule le score de 
 | **Validité du document** | Date d'expiration. |
 | **Interpol SLTD — documents perdus / volés** | Numéro de document dans les signalements de documents perdus ou volés. |
 | **Interpol notices, FPR, WAPIS, POI** | Correspondance nominative (noms approchés, translittérations, date de naissance) dans les listes de surveillance. |
-| **Autorisation de voyage (e-Visa)** | e-Visa approuvé et valide pour ce document, ou « Dispense de visa ». Non exigé à la sortie. |
+| **Autorisation de voyage (e-Visa)** | e-Visa approuvé et valide pour ce document, autorisation collective d'une délégation validée (référence `DL…`), ou « Dispense de visa ». Non exigé à la sortie. |
 | **Correspondance faciale** | Score facial par rapport au seuil ; Attention si le score est juste au-dessus du seuil. |
 | **Détection du vivant et anti-deepfake (ISO 30107-3)** | Échec de vivacité ou attaque de présentation. |
 | **Réutilisation d'identité** | Même document déjà présenté sous une autre identité (Alerte), ou même identité présentée avec plusieurs documents sur 90 jours (Attention). |
@@ -96,6 +96,12 @@ WawID interroge les fichiers nationaux et internationaux et calcule le score de 
 | **Historique de voyage** | Nombre de passages sur 30 jours (Attention au-delà de 6). |
 
 Si une source externe est indisponible, un bandeau **Sources indisponibles** le signale : le contrôle est alors effectué sur la copie locale de la liste.
+
+### Membre d'une délégation
+
+Si le passeport figure dans une délégation **validée** et que la date du jour est comprise entre 3 jours avant l'arrivée et 3 jours après le départ, un bandeau bleu s'affiche au-dessus des vérifications : **Membre de la délégation DL…** (avec **(VIP — accueil protocolaire)** pour une délégation VIP), suivi du nom et du type de la délégation, de la fonction du membre, du type de passeport et, si elle a été accordée, de la mention **Autorisation collective d'entrée valide pendant le séjour.** Dans ce cas, la ligne **Autorisation de voyage (e-Visa)** est **OK** et affiche la référence de la délégation.
+
+Le bandeau est une information : toutes les vérifications et la décision restent obligatoires. Le lien **Voir la délégation** ouvre la fiche de la délégation, où le bouton **Pointer** enregistre l'arrivée du membre. Voir *Délégations : visites officielles, compétitions, conférences*.
 
 ### Évaluation du risque
 

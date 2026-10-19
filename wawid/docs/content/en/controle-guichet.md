@@ -88,7 +88,7 @@ WawID queries national and international files and computes the risk score. The 
 | **Document validity** | Expiry date. |
 | **Interpol SLTD — lost / stolen documents** | Document number against lost or stolen document reports. |
 | **Interpol notices, FPR, WAPIS, POI** | Name match (approximate names, transliterations, date of birth) in watchlists. |
-| **Travel authorization (e-Visa)** | Approved and valid e-Visa for this document, or "Visa exempt". Not required on exit. |
+| **Travel authorization (e-Visa)** | Approved and valid e-Visa for this document, collective authorization of a validated delegation (`DL…` reference), or "Visa exempt". Not required on exit. |
 | **Face match** | Face score against the threshold; Warning if the score is just above the threshold. |
 | **Liveness detection and anti-deepfake (ISO 30107-3)** | Liveness failure or presentation attack. |
 | **Identity reuse** | Same document already presented under another identity (Alert), or same identity presented with several documents within 90 days (Warning). |
@@ -96,6 +96,12 @@ WawID queries national and international files and computes the risk score. The 
 | **Travel history** | Number of crossings in the last 30 days (Warning above 6). |
 
 If an external source is unavailable, an **Unavailable sources** banner says so: the check then runs against the local copy of the list.
+
+### Delegation member
+
+If the passport belongs to a **validated** delegation and today is between 3 days before arrival and 3 days after departure, a blue banner appears above the checks: **Member of delegation DL…** (with **(VIP — protocol reception)** for a VIP delegation), followed by the delegation's name and type, the member's role, the passport type and, if granted, **Collective entry authorization valid during the stay.** In that case, the **Travel authorization (e-Visa)** line is **OK** and shows the delegation reference.
+
+The banner is for information only: all checks and the decision remain mandatory. The **View the delegation** link opens the delegation record, where the **Check in** button records the member's arrival. See *Delegations: official visits, competitions, conferences*.
 
 ### Risk assessment
 

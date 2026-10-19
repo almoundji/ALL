@@ -1,6 +1,6 @@
 # Référence API (compagnies, équipements, connecteurs)
 
-Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le portail voyageur et l'app iPhone, la passerelle des compagnies aériennes (API/PNR) et les routes de la plateforme des compagnies, les eGates et kiosques ABC, et le contrat des connecteurs externes.
+Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le portail voyageur et l'app iPhone, la déclaration de délégations par les organisateurs, la passerelle des compagnies aériennes (API/PNR) et les routes de la plateforme des compagnies, les eGates et kiosques ABC, et le contrat des connecteurs externes.
 
 ## Généralités
 
@@ -17,12 +17,12 @@ Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le por
 
 | Famille | Authentification | Public visé |
 | --- | --- | --- |
-| `/api/public/*` | Aucune | Portail voyageur, app iPhone |
+| `/api/public/*` | Aucune | Portail voyageur (y compris la déclaration de délégations par les organisateurs), app iPhone |
 | `/api/carrier/messages` | En-tête `X-Carrier-Key` | Compagnies aériennes (systèmes) |
 | `/api/compagnie/*` | Session d'un compte **Compagnie aérienne** (cookie signé, connexion avec `platform: "compagnies"`) | Plateforme des compagnies aériennes (`/compagnies/`) |
 | `/api/gate/*` | En-tête `X-Gate-Key` | eGates, kiosques ABC |
 | `/api/docs`, `/api/docs/:lang/:slug` | Aucune pour les pages publiques ; session de l'espace DPAF pour les pages internes | Centre d'aide |
-| Autres routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Session agent (cookie signé) | Espace DPAF uniquement |
+| Autres routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, `/api/delegations/…`, etc.) | Session agent (cookie signé) | Espace DPAF uniquement |
 
 Les routes de l'espace DPAF ne sont pas documentées ici : elles exigent une session authentifiée et un rôle disposant de la permission correspondante, et ne constituent pas une interface d'intégration. Un compte compagnie n'a accès à aucune d'entre elles (`403`), ni aux pages internes de la documentation (`403` ; `401` sans session).
 
@@ -178,6 +178,78 @@ Contrôles : MRZ lisible avec chiffres de contrôle valides, `consent: true`, e-
 ```
 
 Si le passeport est déjà pré-enrôlé : `{ "ref": "EN…", "status": "…", "already": true }`.
+
+## API publique organisateurs : délégations
+
+Ces deux routes, sans authentification, servent la rubrique **Délégations** du portail voyageur : un organisateur (ministère, ambassade, fédération, comité d'organisation) y déclare une délégation puis suit la décision de la DPAF. Voir *Délégations : visites officielles, compétitions, conférences*.
+
+### POST /api/public/delegations
+
+Déclaration d'une délégation.
+
+```json
+{
+  "name": "Équipe nationale de judo du Japon", "type": "COMPETITION",
+  "event": "Open international de Dakar", "host": "Fédération sénégalaise de judo",
+  "originCountry": "JPN", "arrival": "2026-11-12", "departure": "2026-11-22",
+  "posteId": "AIBD", "flight": "ET 909",
+  "contact": { "name": "Comité d'organisation", "email": "org@example.org", "phone": "+221770000000" },
+  "members": [
+    { "surname": "Tanaka", "given": "Hiro", "nat": "JPN", "sex": "M", "dob": "1990-02-03",
+      "docNo": "TK1234567", "role": "Athlète", "passportType": "ORDINAIRE" }
+  ],
+  "consent": true
+}
+```
+
+| Champ | Contrôle |
+| --- | --- |
+| `name` | Obligatoire (160 caractères au plus) |
+| `type` | `VISITE_OFFICIELLE`, `COMPETITION`, `CONFERENCE`, `CULTUREL` ou `AUTRE` (`AUTRE` si valeur inconnue) |
+| `arrival`, `departure` | Obligatoires, format `AAAA-MM-JJ`, départ postérieur ou égal à l'arrivée |
+| `posteId` | Identifiant de poste (`AIBD` par défaut) |
+| `contact.email` | Obligatoire, adresse valide (sert au suivi) |
+| `members` | 1 à 500 membres ; `surname`, `nat` (code à 3 lettres) et `docNo` obligatoires ; `sex` `M` ou `F` ; `passportType` `DIPLOMATIQUE`, `SERVICE` ou `ORDINAIRE` (`ORDINAIRE` par défaut) ; numéro de passeport unique dans la délégation |
+| `consent` | `true` obligatoire (loi n° 2008-12) |
+
+Réponse `200` :
+
+```json
+{ "ref": "DL260004", "status": "SOUMISE", "members": 1 }
+```
+
+Erreurs `400` : consentement absent, e-mail invalide, nom ou dates invalides, aucun membre, membre incomplet (le message le désigne), passeport en double. Chaque membre est pré-contrôlé à la réception ; le résultat n'est jamais renvoyé.
+
+### POST /api/public/delegations/status
+
+Suivi d'une délégation. La référence **et** l'e-mail du contact doivent correspondre (e-mail sans tenir compte de la casse).
+
+```json
+{ "ref": "DL260004", "email": "org@example.org" }
+```
+
+Réponse `200` :
+
+```json
+{
+  "ref": "DL260004", "name": "Équipe nationale de judo du Japon", "status": "VALIDEE",
+  "arrival": "2026-11-12", "departure": "2026-11-22", "members": 15,
+  "collectiveAuthorization": true
+}
+```
+
+| `status` | Signification |
+| --- | --- |
+| `SOUMISE` | Soumise, en cours d'examen |
+| `VALIDEE` | Validée ; `collectiveAuthorization` indique si l'autorisation collective d'entrée est accordée |
+| `REFUSEE` | Refusée ; le champ `reason` donne le motif |
+| `CLOTUREE` | Clôturée (séjour terminé) |
+
+La réponse ne contient ni la liste des membres ni le moindre résultat de pré-contrôle. Erreur `404` (réponse volontairement retardée) si le couple référence/e-mail ne correspond à aucune délégation.
+
+### Routes internes (espace DPAF)
+
+L'instruction des délégations passe par des routes de session de l'espace DPAF, qui ne constituent pas une interface d'intégration : `POST /api/delegations` (enregistrement, droit `evisa`) et `PATCH /api/delegations/:id` avec une `action` parmi `valider`, `refuser`, `cloturer`, `ajouter`, `retirer` (droit `evisa`) et `arrivee` (pointage d'un membre, droit `control`). Elles sont citées ici pour mémoire ; un compte compagnie reçoit `403`.
 
 ## Passerelle transporteurs : POST /api/carrier/messages
 
@@ -442,6 +514,7 @@ Contraintes : réponse HTTP 2xx en moins de **2,5 s** (sinon le connecteur est s
 | Message transporteur | 2 Mo (`413` au-delà) |
 | Champs texte | Tronqués à leur longueur maximale (ex. 1 000 caractères pour une réponse) |
 | Délai connecteur externe | 2,5 s |
-| Consultation e-Visa infructueuse | Réponse `404` volontairement retardée |
+| Consultation e-Visa ou délégation infructueuse | Réponse `404` volontairement retardée |
+| Délégation | 500 membres par déclaration |
 
 Le démonstrateur n'applique pas de quota de requêtes par client. En production, un pare-feu applicatif (WAF) avec limitation de débit doit protéger les routes publiques et la passerelle transporteurs.

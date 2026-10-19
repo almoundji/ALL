@@ -21,6 +21,7 @@
       { "slug": "apis-pnr", "public": false, "routes": ["apis"], "fr": "APIS et PNR", "en": "APIS and PNR" },
       { "slug": "plateforme-compagnies", "public": true, "routes": [], "fr": "Plateforme des compagnies aériennes", "en": "Airline platform" },
       { "slug": "evisa-wawpass", "public": false, "routes": ["evisa", "wawpass"], "fr": "e-Visa et pré-enrôlements eGate", "en": "e-Visa and eGate pre-enrollments" },
+      { "slug": "delegations", "public": false, "routes": ["delegations"], "fr": "Délégations : visites officielles, compétitions, conférences", "en": "Delegations: official visits, competitions, conferences" },
       { "slug": "finances-redevance", "public": false, "routes": ["redevance"], "fr": "Redevance de sécurité", "en": "Security fee" }
     ]},
     { "group": { "fr": "Administration et technique", "en": "Administration and technical" }, "pages": [

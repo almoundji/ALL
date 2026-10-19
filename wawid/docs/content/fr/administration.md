@@ -86,14 +86,14 @@ La matrice affichée sous le tableau reprend les droits de chaque rôle, y compr
 | Listes de surveillance (`watchlist`) | — | Oui | Oui | — | Oui | — |
 | Règles de ciblage (`rules`) | — | Oui | Oui | — | Oui | — |
 | APIS (`apis`) | — | Oui | Oui | — | Oui | — |
-| Décisions e-Visa (`evisa`) | — | Oui | Oui | — | Oui | — |
+| Décisions e-Visa et délégations (`evisa`) | — | Oui | Oui | — | Oui | — |
 | Pilotage eGates (`gates`) | — | — | Oui | — | Oui | — |
 | Utilisateurs (`users`) | — | — | — | — | Oui | — |
 | Paramètres système (`system`) | — | — | — | — | Oui | — |
 | Redevance (`finance`) | — | — | — | Oui | Oui | — |
 | Plateforme compagnies, sa compagnie (`carrier`) | — | — | — | — | — | Oui |
 
-Le droit **Consultation** donne accès en lecture aux tableaux de bord, passages, listes, règles, connecteurs, vols, e-Visa, supervision, journal d'audit et projet.
+Le droit **Consultation** donne accès en lecture aux tableaux de bord, passages, listes, règles, connecteurs, vols, e-Visa, délégations, supervision, journal d'audit et projet.
 
 ## Journal d'audit
 
@@ -119,6 +119,7 @@ Le tableau affiche les 1 000 dernières entrées, la plus récente en premier : 
 | Renseignement | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
 | Portail et e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT` (historique, plus émis), `WAWPASS_VALIDATION` (vérification d'un ancien reçu), `PREENROLEMENT` |
+| Délégations | `DELEGATION_CREATION` (espace DPAF ou portail organisateurs ; acteur : l'agent ou le nom du contact), `DELEGATION_VALIDER`, `DELEGATION_REFUSER`, `DELEGATION_CLOTURER`, `DELEGATION_ARRIVEE` (arrivée pointée), `DELEGATION_AJOUTER`, `DELEGATION_RETIRER` (objet : référence `DL…`) |
 | Redevance | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (déclaration par une compagnie), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 

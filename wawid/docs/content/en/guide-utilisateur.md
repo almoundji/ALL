@@ -50,7 +50,7 @@ Before your first shift on WawID, check the following with your post chief or th
 
 ### What you see
 
-With the **Border officer** role, the home page shows the **Border control** space (Dashboard, Counter check, eGates & ABC, Crossings, Traveler search, Verify a QR, Vehicles (VRS), **New check** tile) and, under **Intelligence**, the **Threat Monitor** and **Cases**. You can view watchlists and rules but not change them.
+With the **Border officer** role, the home page shows the **Border control** space (Dashboard, Counter check, eGates & ABC, Crossings, Traveler search, Verify a QR, Vehicles (VRS), **New check** tile) and, under **Intelligence**, the **Threat Monitor** and **Cases**. You can view watchlists and rules but not change them. Under **e-Visa & travelers**, the **Delegations** tile lets you view expected delegations and check in their members' arrival.
 
 ### Starting your shift
 
@@ -86,6 +86,7 @@ With the **Border officer** role, the home page shows the **Border control** spa
 | Chip reading "(simulated)" on an operational workstation | The NFC panel shows "(simulated)" | The workstation's NFC bridge is stopped or misconfigured. Notify technical support immediately; meanwhile, apply the post's degraded-mode instruction (enhanced visual check). |
 | Traveler referred by an eGate | The traveler arrives with a message from the gate | Perform a normal check. The referral reason is on the eGate crossing (**eGate / ABC** channel, reason prefixed with "eGate:") in **Crossings**. Most referrals have a simple cause (minor, damaged chip, lighting, expired passport). |
 | Traveler requiring a visa without an e-Visa | **Travel authorization (e-Visa)** in Warning or Alert | Check whether the traveler has an `EV…` reference (search in **Traveler search** or **e-Visa**). Without a valid authorization, apply the regulations in force and the post chief's instructions. |
+| Delegation member | Blue **Member of delegation DL…** banner above the checks, with the role, passport type and, where relevant, the collective entry authorization | Check and decide as for any traveler: the banner exempts no one from any check. Then click **View the delegation** and **Check in** on the member's row. For a VIP delegation, follow the post's protocol reception instructions. See *Delegations: official visits, competitions, conferences*. |
 | e-Visa QR rejected | "Invalid or forged QR code" or status not approved | A modified QR is a forged document: secondary inspection. An e-Visa that is not approved or has expired does not authorize entry. |
 | Traveler showing a former WawPass receipt or asked to pay a fee | — | The security fee is included in the ticket: no receipt is required from the traveler. A former WawPass receipt only has historical value (**WawPass history** tab of **eGate pre-enrollments**). |
 | Camera unavailable | Message that no camera is available; simulated capture | Check the connection and the browser permission. In production, do not confirm a crossing with a simulated capture: notify support. |
@@ -144,8 +145,9 @@ The **Intelligence analyst** role gives access to the **Intelligence** space (Th
 3. **Announced flights**: open flights due in the coming hours, review flagged passengers (score of 30 or more) and send the shift leader the list of passengers to check on arrival.
 4. **Carrier compliance**: identify airlines marked **Follow up** (punctuality below 95% or completeness below 98%).
 5. **e-Visa**, **To process** tab: process applications (see below).
-6. **Watchlists** and **Targeting rules**: update entries and rules according to instructions received, always filling in the **Reference** and the **Reason**.
-7. **Connectors**: at the start of the shift, click **Test** for connected sources.
+6. **Delegations**: process delegations **to validate** and the related **Delegation (pre-screening)** alerts (see below).
+7. **Watchlists** and **Targeting rules**: update entries and rules according to instructions received, always filling in the **Reference** and the **Reason**.
+8. **Connectors**: at the start of the shift, click **Test** for connected sources.
 
 ### Processing an e-Visa application
 
@@ -153,6 +155,17 @@ The **Intelligence analyst** role gives access to the **Intelligence** space (Th
 2. Review the automatic pre-screening, the **Chip (NFC)** field (**Passport authenticated**, **Verification failed** or **Not read**), the health declaration and the **Previous crossings**.
 3. If a document is missing, click **Request information** and specify the expected document.
 4. Decide: **Approve** (number `SN-EV-…`, 90-day validity, signed QR) or **Refuse** with a reason, which is sent to the applicant.
+
+### Processing a delegation
+
+1. Open the **Delegations** tile and filter on the **Submitted** status (or use **Register a delegation** to enter yourself a delegation announced by a ministry or an embassy).
+2. Open the record: check the dates, the point of entry, the member list and the **Pre-screening** column.
+3. For each flagged member (score of 60 or more), handle the **Delegation (pre-screening)** alert in the Threat Monitor; if the match is confirmed, remove the member (trash icon) or refuse the delegation.
+4. If needed, add members announced late with **Add members** (format `Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport`).
+5. Click **Validate**, leaving the **collective entry authorization** ticked (it counts as an e-Visa for each member from 3 days before arrival to 3 days after departure) or unticking it (individual e-Visas required), or **Refuse** with a reason, which is shown to the organizer.
+6. After the group has left, click **Close**.
+
+Never disclose the pre-screening result to the organizer. See *Delegations: official visits, competitions, conferences*.
 
 ### Common situations
 
@@ -162,6 +175,7 @@ The **Intelligence analyst** role gives access to the **Intelligence** space (Th
 | Namesake | Close with "False alert — namesake" and state the distinguishing element (date of birth, nationality). |
 | Identity network in e-Visa (shared contact details or device) | Search for linked applications in the **All** tab, request documents or refuse with a reason, and have the contact detail added to the blacklist. |
 | Information request with no answer | The application stays in **Info requested**; the applicant answers from the portal. Monitor the **Info requested** tab and follow up according to service procedure. |
+| Delegation member flagged at pre-screening | Handle the **Delegation (pre-screening)** alert like any alert. Namesake: close with "False alert — namesake". Confirmed match: remove the member while the delegation is **Submitted**, or refuse it, and inform the post chief at the point of entry. |
 | PAXLST message received late | The flight shows **late transmission**; pre-screening is still recalculated. Report repeated delays so the airline is reminded (**Carrier compliance** tab). |
 | Message rejected by the gateway | Open the message in **Carrier gateway** and read the errors (unknown format, missing flight, flight of another airline). Notify the airline's technical contact. |
 | Airline not connected | Upload its manifest with **CSV manifest** (format `seat;surname;given names;birth date;nationality;document;expiry`). |
@@ -177,7 +191,7 @@ The **Supervisor** role combines the officer's and the analyst's rights with eGa
 
 1. **Taking over**: open the **Dashboard** filtered on your post, then the **Threat Monitor** (open alerts) and **eGates & ABC** (fleet status).
 2. Assign officers to counters; check that each one is signed in with their own account and the right post.
-3. Share with officers the list of flagged passengers on expected flights (prepared by the analyst).
+3. Share with officers the list of flagged passengers on expected flights (prepared by the analyst) and the list of delegations expected at your post (**Delegations** tile, **Print the list** button on each record). If needed, assign a dedicated counter for large or VIP delegations.
 4. **During the shift**, handle escalations: "Refuse and hold — supervisor escalation" recommendations and any critical match must be presented to you before confirmation.
 5. Review decisions that differ from the recommendation (**Decision** filter in **Crossings**) and the quality of the reasons entered.
 6. Follow open cases and ensure continuity of interviews (**Structured interview**).

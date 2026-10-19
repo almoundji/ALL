@@ -36,6 +36,16 @@ Une orientation ne préjuge de rien : elle se produit par exemple si vous êtes 
 
 Il faut un iPhone 7 ou plus récent et un passeport biométrique. Vérifiez la MRZ (une seule erreur bloque l'accès à la puce), retirez la coque, posez le passeport fermé sur une surface non métallique, approchez le haut de l'iPhone et ne bougez plus pendant 5 à 15 secondes. Vous pouvez aussi continuer sans lecture de la puce.
 
+### Organisateurs de délégations
+
+#### Comment déclarer une délégation ?
+
+Sur le portail voyageur, onglet **Délégations**, rubrique **Déclarer une délégation**. Ministères, ambassades, fédérations sportives et comités d'organisation y annoncent une visite officielle, une équipe sportive, une conférence ou un événement culturel, **au moins 72 h avant l'arrivée** (recommandé). Les membres se saisissent une ligne par personne (`Nom;Prénoms;Nationalité;Sexe;Naissance;Passeport;Fonction;Type de passeport`), par copier-coller depuis Excel si besoin. Conservez la référence `DL…` : avec l'e-mail du contact, elle permet de suivre la décision dans **Suivre une délégation**.
+
+#### Les membres d'une délégation validée ont-ils besoin d'un e-Visa ?
+
+Pas si la DPAF a accordé une **autorisation collective d'entrée** : elle vaut e-Visa pour chaque membre pendant le séjour. Sinon, chaque membre soumis à visa doit obtenir un e-Visa individuel. Dans tous les cas, chaque membre passe le contrôle habituel au guichet.
+
 ### Compagnies aériennes
 
 #### Où nous connecter ?
@@ -94,11 +104,13 @@ Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte 
 | APIS | Système de traitement des données API : réception des manifestes et pré-contrôle des passagers annoncés. |
 | Authentification active (AA) / chip | Mécanisme prouvant que la puce n'a pas été clonée (clé privée stockée dans la puce, DG15/DG14). |
 | Authentification passive (PA) | Vérification de la signature numérique des données de la puce (EF.SOD) à l'aide des certificats de l'État émetteur (CSCA). Elle prouve que les données n'ont pas été modifiées. |
+| Autorisation collective d'entrée | Décision de la DPAF, prise à la validation d'une délégation, qui vaut e-Visa pour chacun de ses membres de 3 jours avant l'arrivée à 3 jours après le départ. Elle ne dispense pas des contrôles au guichet. |
 | BAC (Basic Access Control) | Protocole d'accès à la puce d'un passeport, utilisant des clés dérivées de la MRZ. Remplacé progressivement par PACE. |
 | CDP | Commission de protection des données personnelles, autorité sénégalaise de contrôle (loi n° 2008-12). |
 | Chiffres de contrôle | Chiffres de la MRZ calculés selon l'ICAO 9303 pour détecter les erreurs de lecture ou de saisie. |
 | CSCA / ICAO PKD | Certificats racines des États émetteurs de passeports ; le PKD de l'OACI les distribue pour l'authentification passive. |
 | DG1, DG2 | Groupes de données de la puce : DG1 contient la MRZ, DG2 la photo du titulaire. |
+| Délégation | Groupe annoncé à l'avance (visite officielle, compétition sportive, conférence, événement culturel), enregistré par la DPAF ou déclaré par l'organisateur sur le portail (référence `DL…`). Ses membres sont pré-contrôlés, puis la délégation est validée ou refusée. |
 | Détection du vivant (liveness) | Vérification qu'un visage présenté est celui d'une personne réelle et non une photo, un écran ou un masque. |
 | Espace DPAF | Plateforme WawID des agents, analystes, superviseurs, agents du Trésor et administrateurs (`/dpaf/`), anciennement appelée back-office. |
 | e-Visa | Autorisation de voyage demandée et délivrée en ligne, présentée à la frontière sous forme de QR code signé. |

@@ -86,14 +86,14 @@ The matrix under the table shows each role's permissions, including **Security f
 | Watchlists (`watchlist`) | — | Yes | Yes | — | Yes | — |
 | Targeting rules (`rules`) | — | Yes | Yes | — | Yes | — |
 | APIS (`apis`) | — | Yes | Yes | — | Yes | — |
-| e-Visa decisions (`evisa`) | — | Yes | Yes | — | Yes | — |
+| e-Visa and delegation decisions (`evisa`) | — | Yes | Yes | — | Yes | — |
 | eGate management (`gates`) | — | — | Yes | — | Yes | — |
 | Users (`users`) | — | — | — | — | Yes | — |
 | System settings (`system`) | — | — | — | — | Yes | — |
 | Security fee (`finance`) | — | — | — | Yes | Yes | — |
 | Airline platform, own airline (`carrier`) | — | — | — | — | — | Yes |
 
-**Read access** gives read-only access to dashboards, crossings, watchlists, rules, connectors, flights, e-Visas, monitoring, the audit log and the project page.
+**Read access** gives read-only access to dashboards, crossings, watchlists, rules, connectors, flights, e-Visas, delegations, monitoring, the audit log and the project page.
 
 ## Audit log
 
@@ -119,6 +119,7 @@ The table shows the latest 1,000 entries, newest first: **No.**, **Timestamp**, 
 | Intelligence | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
 | Portal and e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT` (history, no longer written), `WAWPASS_VALIDATION` (verification of a former receipt), `PREENROLEMENT` |
+| Delegations | `DELEGATION_CREATION` (DPAF space or organizer portal; actor: the officer or the contact name), `DELEGATION_VALIDER`, `DELEGATION_REFUSER`, `DELEGATION_CLOTURER`, `DELEGATION_ARRIVEE` (arrival checked in), `DELEGATION_AJOUTER`, `DELEGATION_RETIRER` (object: `DL…` reference) |
 | Security fee | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (declaration by an airline), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 
