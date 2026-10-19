@@ -319,7 +319,7 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
 // --- Back-office ---
 on("GET", "/api/data", async (_r, _p, user) => {
   need(user, "read");
-  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages"]);
+  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices"]);
   d.crossings = d.crossings.sort((a: any, b: any) => b.ts.localeCompare(a.ts)).slice(0, 4000);
   d.connectors = decorate(d.connectors);
   // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
@@ -543,6 +543,52 @@ on("POST", "/api/apis/manifest", async (req, _p, user) => {
   await Promise.all([save("flights", d.flights.slice(0, 200)), save("alerts", d.alerts)]);
   await audit(user.username, "APIS_MANIFESTE", flight.id, `${flight.flight} · ${passengers.length} passagers`);
   return json(flight);
+});
+
+// --- Redevance de sécurité ---
+
+/** Assiette provisoire du mois à partir des passages enregistrés par WawID (vols commerciaux, postes aériens). */
+on("POST", "/api/redevance/assiette", async (req, _p, user) => {
+  need(user, "finance");
+  const { month } = await body(req);
+  if (!/^\d{4}-\d{2}$/.test(String(month))) fail(400, "Mois attendu au format AAAA-MM");
+  const crossings = (await load<any[]>("crossings")) || [];
+  const byCarrier: Record<string, { counted: number; enfants: number }> = {};
+  for (const c of crossings) {
+    if (!c.flight || !c.ts.startsWith(month)) continue;
+    const code = c.flight.slice(0, 2);
+    const b = (byCarrier[code] ||= { counted: 0, enfants: 0 });
+    b.counted++;
+    if ((ageAt(c.traveler.dob, new Date(c.ts)) ?? 99) < 2) b.enfants++;
+  }
+  return json({ month, carriers: byCarrier, source: "Passages biométriques WawID (guichets et eGates)" });
+});
+
+on("POST", "/api/redevance/payments", async (req, _p, user) => {
+  need(user, "finance");
+  const b = await body(req);
+  const invoices = (await load<any[]>("invoices")) || [];
+  const inv = invoices.find((i) => i.id === b.invoiceId) ?? fail(404, "Facture introuvable");
+  const amount = Math.round(Number(b.amount));
+  if (!Number.isFinite(amount) || amount <= 0) fail(400, "Montant invalide");
+  inv.payments.push({ at: nowIso(), amount, ref: str(b.ref, 40) || uid("RGT"), by: user.name });
+  await save("invoices", invoices);
+  await audit(user.username, "REDEVANCE_ENCAISSEMENT", inv.id, `${amount} FCFA`);
+  return json(inv);
+});
+
+on("PATCH", "/api/redevance/settings", async (req, _p, user) => {
+  need(user, "system");
+  const b = await body(req);
+  const settings = await load<any>("settings");
+  const r = settings.redevance;
+  r.rateUSD = bounded(b.rateUSD, 1, 100, r.rateUSD);
+  r.operatorShare = bounded(b.operatorShare, 0, 1, r.operatorShare);
+  r.penaltyRate = bounded(b.penaltyRate, 0, 0.5, r.penaltyRate);
+  if (/^\d{4}-\d{2}$/.test(String(b.fxMonth)) && Number(b.fx) > 0) r.fx[b.fxMonth] = Number(b.fx);
+  await save("settings", settings);
+  await audit(user.username, "REDEVANCE_PARAMETRES", "redevance", `taux ${r.rateUSD} USD, part opérateur ${Math.round(r.operatorShare * 100)} %`);
+  return json(r);
 });
 
 // --- Passerelle transporteurs API / PNR ---

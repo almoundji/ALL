@@ -284,9 +284,44 @@ export function generateSeed(now = new Date()): Seed {
     { id: "CN-PAXLST", name: "Passerelle transporteurs API/PNR (PAXLST / PNRGOV)", source: "APIS", protocol: "UN/EDIFACT via MQ / HTTPS", mode: "Push transporteurs", status: "SIMULÉ", lastSync: now.toISOString(), records: flights.length, latencyMs: 0 },
   ];
 
+  // ----- Redevance de sécurité (décret 2011-652, arrêté de recouvrement, décret 2012-519) -----
+  // Volumes FICTIFS de démonstration. « declared » = déclaration de la compagnie ; « counted » = comptage WawID (biométrie + API/PNR).
+  const REDEV_CARRIERS: [string, string, number, number][] = [
+    ["HC", "Air Sénégal", 62000, 0], ["AF", "Air France", 41000, 0.01], ["AT", "Royal Air Maroc", 23000, 0.035], ["TK", "Turkish Airlines", 19000, 0.06],
+    ["SN", "Brussels Airlines", 9000, 0.02], ["IB", "Iberia", 8000, 0], ["ET", "Ethiopian", 7500, 0.045], ["EK", "Emirates", 11000, 0.015], ["TP", "TAP", 6500, 0.03], ["DL", "Delta", 5200, 0],
+  ];
+  const fx: Record<string, number> = {};
+  const invoices: any[] = [];
+  for (let k = 6; k >= 1; k--) {
+    const m = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - k, 1));
+    const month = m.toISOString().slice(0, 7);
+    fx[month] = Math.round((590 + rnd() * 30) * 100) / 100;
+    const issued = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 10));
+    const due = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 2, 0));
+    for (const [code, name, base, under] of REDEV_CARRIERS) {
+      const counted = Math.round(base * (0.9 + rnd() * 0.2));
+      const exempt = { equipage: Math.round(counted * 0.012), billetsID: Math.round(counted * 0.004), enfants: Math.round(counted * 0.021), transit: Math.round(counted * 0.03), deroutes: rnd() < 0.15 ? Math.round(rnd() * 180) : 0 };
+      const exemptTotal = Object.values(exempt).reduce((a, b) => a + b, 0);
+      const billable = counted - exemptTotal;
+      const declared = Math.round(billable * (1 - under * (0.6 + rnd() * 0.8)));
+      const amountUSD = declared * 12;
+      const amountXOF = Math.round(amountUSD * fx[month]);
+      const late = k <= 2 ? rnd() < 0.5 : rnd() < 0.12;
+      const paid = issued < now ? (late ? (k === 1 ? 0 : Math.round(amountXOF * (0.4 + rnd() * 0.4))) : amountXOF) : 0;
+      const paidAt = new Date(Math.min(now.getTime(), due.getTime() - rnd() * 12 * 86400000 + (late ? 20 * 86400000 : 0))).toISOString();
+      invoices.push({
+        id: `RS-${month.replace("-", "")}-${code}`, month, carrier: code, carrierName: name, counted, exempt, billable, declared,
+        rateUSD: 12, fx: fx[month], amountUSD, amountXOF, issuedAt: issued.toISOString(), dueAt: due.toISOString(),
+        payments: paid ? [{ at: paidAt, amount: paid, ref: `RGT-${Math.floor(rnd() * 1e8)}`, by: "Receveur général du Trésor" }] : [],
+      });
+    }
+  }
+
   return {
     meta: { seededAt: now.toISOString(), version: 1 },
-    settings: { visaExempt: VISA_EXEMPT, faceThreshold: 0.8, retentionDays: 1825, evisaFee: 50000, passFee: 15000 },
+    settings: { visaExempt: VISA_EXEMPT, faceThreshold: 0.8, retentionDays: 1825, evisaFee: 50000, passFee: 15000,
+      redevance: { rateUSD: 12, operatorShare: 0.75, penaltyRate: 0.05, fx } },
+    invoices,
     watchlist, rules, travelers: travelers.map(({ mrz, ...t }) => t), crossings, alerts, cases, evisas, gates, flights, passes, vehicles, devices, connectors,
     enrolments: [], carrierMessages: [],
   };

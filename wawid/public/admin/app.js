@@ -10,6 +10,7 @@ import * as apis from "./views/apis.js";
 import * as evisa from "./views/evisa.js";
 import * as ses from "./views/ses.js";
 import * as scrum from "./views/scrum.js";
+import * as redevance from "./views/redevance.js";
 
 initTheme();
 const root = document.getElementById("root");
@@ -52,6 +53,12 @@ const APPS = [
   { space: "e-Visa & voyageurs", id: "portail", href: "../", external: true, title: "Portail voyageur", sub: "Site public", icon: "globe", perm: "read" },
   { space: "e-Visa & voyageurs", id: "kiosque", href: "../gate/", external: true, title: "Kiosque eGate", sub: "Écran des portes", icon: "gate", perm: "read" },
 
+  { space: "Finances", id: "redevance", path: "redevance", title: "Redevance de sécurité", sub: "Synthèse 6 mois", icon: "creditCard", perm: "finance", view: redevance, kpi: (d) => [Math.round((d.invoices || []).reduce((s, i) => s + i.amountXOF, 0) / 1e9 * 10) / 10, "Mds FCFA facturés"] },
+  { space: "Finances", id: "rs-factures", href: "#/redevance?tab=factures", title: "Factures compagnies", sub: "Échéances et encaissements", icon: "file", perm: "finance", kpi: (d) => [(d.invoices || []).filter((i) => redevance.invoiceState(i, d.settings.redevance).status === "EN RETARD").length, "factures en retard"], tone: "critical" },
+  { space: "Finances", id: "rs-rappro", href: "#/redevance?tab=rapprochement", title: "Rapprochement", sub: "Déclarations / comptage WawID", icon: "shieldCheck", perm: "finance", kpi: (d) => [(d.invoices || []).reduce((s, i) => s + Math.max(0, i.billable - i.declared), 0), "passagers non déclarés"], tone: "warning" },
+  { space: "Finances", id: "rs-repart", href: "#/redevance?tab=repartition", title: "Répartition", sub: "Part opérateur / part État", icon: "chart", perm: "finance", kpi: (d) => [Math.round((d.settings.redevance?.operatorShare ?? 0.75) * 100), "% part opérateur"] },
+  { space: "Finances", id: "rs-simu", href: "#/redevance?tab=simulateur", title: "Simulateur de modèle", sub: "Contrat actuel vs WawID", icon: "kanban", perm: "finance" },
+
   { space: "Administration", id: "systemes", path: "systemes", title: "Supervision systèmes", sub: "Terminaux, CCTV, scanners", icon: "server", perm: "read", view: ses, kpi: (d) => [d.devices.filter((x) => x.status !== "EN_LIGNE").length, "anomalies"], tone: "warning" },
   { space: "Administration", id: "utilisateurs", path: "utilisateurs", title: "Utilisateurs & rôles", sub: "Habilitations", icon: "users", perm: "users", view: ses, fn: "renderUsers" },
   { space: "Administration", id: "audit", path: "audit", title: "Journal d'audit", sub: "Chaîne d'intégrité SHA-256", icon: "lock", perm: "read", view: ses, fn: "renderAudit" },
@@ -60,7 +67,7 @@ const APPS = [
 
   { space: "Projet", id: "projet", path: "projet", title: "Projet (Scrum)", sub: "Backlog & sprints", icon: "kanban", perm: "read", view: scrum, kpi: () => [5, "sprint en cours"] },
 ];
-const SPACES = ["Contrôle frontière", "Renseignement", "APIS & PNR", "e-Visa & voyageurs", "Administration", "Projet"];
+const SPACES = ["Contrôle frontière", "Renseignement", "APIS & PNR", "e-Visa & voyageurs", "Finances", "Administration", "Projet"];
 const today = (d) => d.crossings.filter((c) => Date.now() - Date.parse(c.ts) < 86400000);
 
 // ---------- Connexion ----------
@@ -111,6 +118,7 @@ function renderShell() {
   root.innerHTML = `
   <header class="shell no-print">
     <div class="shell-bar">
+      <button class="btn btn-ghost btn-icon back-btn" id="back" title="Page précédente (Alt + ←)" aria-label="Page précédente" hidden>${icon("arrowLeft")}</button>
       <a class="brand" href="#/" title="Accueil"><span class="brand-logo">${LOGO}</span></a>
       <div class="shell-title"><span class="brand-name">${WORDMARK}</span><span class="shell-app" id="shell-app">Accueil</span></div>
       <form class="shell-search" id="shell-search" role="search">${icon("search")}<input id="q" placeholder="Rechercher un voyageur, un document, une application…" aria-label="Recherche globale"><kbd>/</kbd></form>
@@ -130,6 +138,8 @@ function renderShell() {
   <main class="page" id="view"></main>`;
 
   root.querySelector("#theme").onclick = toggleTheme;
+  // Retour : page précédente de l'outil, sinon l'accueil (ouverture directe d'un lien).
+  root.querySelector("#back").onclick = () => (history.length > 1 && sessionStorage.getItem("wawid:navigated") ? history.back() : (location.hash = "#/"));
   root.querySelector("#logout").onclick = logout;
   const pops = ["notif", "me"];
   for (const p of pops) root.querySelector(`#${p}`).onclick = (e) => {
@@ -185,7 +195,7 @@ function renderHome(el) {
     const [v, unit] = a.kpi ? a.kpi(d) : [];
     return `<a class="tile ${off ? "off" : ""}" href="${href}" ${a.external ? 'target="_blank"' : ""}>
       <div class="tile-title">${esc(a.title)}</div><div class="tile-sub">${esc(a.sub)}</div>
-      <div class="tile-foot"><span class="tile-glyph">${icon(a.icon)}</span>${a.kpi ? `<span class="tile-num"><span class="tile-kpi ${a.tone && v ? a.tone : ""}">${fmtNum(v)}</span><span class="tile-info">${esc(unit)}</span></span>` : a.external ? `<span class="tile-info">${icon("arrowRight")}</span>` : ""}</div>${toggle}
+      <div class="tile-foot"><span class="tile-glyph">${icon(a.icon)}</span>${a.kpi ? `<span class="tile-num"><span class="tile-kpi ${a.tone && v ? a.tone : ""}">${fmtNum(v, Number.isInteger(v) ? 0 : 1)}</span><span class="tile-info">${esc(unit)}</span></span>` : a.external ? `<span class="tile-info">${icon("arrowRight")}</span>` : ""}</div>${toggle}
     </a>`;
   };
   const sections = (space === "Mon accueil" ? SPACES : [space]).map((s) => {
@@ -212,6 +222,8 @@ function renderHome(el) {
 }
 
 // ---------- Routeur ----------
+addEventListener("hashchange", () => sessionStorage.setItem("wawid:navigated", "1"));
+
 async function route() {
   const view = root.querySelector("#view");
   if (!view) return;
@@ -220,6 +232,7 @@ async function route() {
   const query = Object.fromEntries(new URLSearchParams(qs || ""));
   const app = APPS.find((a) => a.path === section && a.view);
   root.querySelector("#shell-app").textContent = app ? app.title : "Accueil";
+  root.querySelector("#back").hidden = !section;
   document.title = app ? `${app.title} · WawID` : "WawID Back-office";
   scrollTo(0, 0);
   if (!app) return renderHome(view);

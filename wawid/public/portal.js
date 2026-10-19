@@ -10,6 +10,7 @@ const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["
 function shell(page, html) {
   app.innerHTML = `
   <header class="p-nav"><nav class="p-nav-bar">
+    ${page !== "accueil" ? `<button class="btn btn-ghost btn-icon" id="nav-back" title="Page précédente" aria-label="Page précédente" style="border:1px solid var(--line)">${icon("arrowLeft")}</button>` : ""}
     <a class="brand" href="#accueil"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">${WORDMARK}</span><br><span class="brand-sub">Portail voyageur</span></span></a>
     <div class="p-links">${NAV.map(([k, l]) => `<a href="#${k}" ${k === page ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</div>
     <button class="btn btn-ghost btn-icon" id="theme" title="Thème">${icon("moon")}</button>
@@ -17,6 +18,7 @@ function shell(page, html) {
   </nav></header>
   <main class="p-main">${html}</main>
   <footer class="p-foot">WawID — gestion des identités et des frontières · une solution WAW Telecom · Données protégées conformément à la loi n° 2008-12 (CDP).</footer>`;
+  app.querySelector("#nav-back")?.addEventListener("click", () => (history.length > 1 ? history.back() : (location.hash = "#accueil")));
   const themeBtn = app.querySelector("#theme");
   const paintTheme = () => { const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; themeBtn.innerHTML = icon(dark ? "sun" : "moon"); };
   themeBtn.onclick = () => { toggleTheme(); paintTheme(); };

@@ -6,6 +6,7 @@ body { min-height: 100vh; background: var(--bg); }
 .shell { position: sticky; top: 0; z-index: 50; padding: 12px 16px 0; }
 .shell-bar { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-1); max-width: 1480px; margin: 0 auto; }
 .shell .brand-logo { width: 40px; height: 40px; }
+.back-btn { border: 1px solid var(--line); border-radius: 10px; flex: none; }
 .shell-title { display: flex; flex-direction: column; min-width: 0; }
 .shell-app { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .shell-search { flex: 1; max-width: 520px; margin: 0 auto; position: relative; }

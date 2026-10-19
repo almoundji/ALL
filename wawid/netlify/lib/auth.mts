@@ -18,7 +18,8 @@ export const ROLES: Record<string, { label: string; perms: string[] }> = {
   agent: { label: "Agent de contrôle", perms: ["read", "control", "alerts", "cases"] },
   analyste: { label: "Analyste renseignement", perms: ["read", "alerts", "cases", "watchlist", "rules", "apis", "evisa"] },
   superviseur: { label: "Superviseur", perms: ["read", "control", "alerts", "cases", "watchlist", "rules", "apis", "evisa", "gates"] },
-  admin: { label: "Administrateur", perms: ["read", "control", "alerts", "cases", "watchlist", "rules", "apis", "evisa", "gates", "users", "system"] },
+  tresor: { label: "Agent du Trésor (redevance)", perms: ["read", "finance"] },
+  admin: { label: "Administrateur", perms: ["read", "control", "alerts", "cases", "watchlist", "rules", "apis", "evisa", "gates", "users", "system", "finance"] },
 };
 
 export const hashPassword = (password: string, salt = randomBytes(16).toString("hex")) =>
@@ -41,6 +42,7 @@ async function bootstrapUsers(): Promise<any[]> {
   const demo = env("WAWID_DEMO_PASSWORD") || ((globalThis as any).Netlify ? undefined : "demo");
   if (demo) created.push(
     mk("agent", "Awa Ndiaye", "agent", demo), mk("analyste", "Moussa Diallo", "analyste", demo), mk("superviseur", "Fatou Sarr", "superviseur", demo),
+    mk("tresor", "Ibrahima Kane", "tresor", demo),
   );
   await save("users", created);
   return created;
