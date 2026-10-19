@@ -39,35 +39,44 @@ Ces volumes sont modestes pour une architecture transactionnelle classique : le 
                          │  CDN/WAF anti-DDoS ─ API publique e-Visa / WawPass / APIS Gateway (DMZ)    │
                          └───────────────────────────────┬────────────────────────────────────────────┘
                                                          │ (flux filtrés, unidirectionnels si possible)
-┌──────────────────────── Centre de données national principal (actif) ───────────────────────────────┐
-│  Passerelle API + IAM (OIDC, MFA, PKI cartes agents) ─ HSM (clés, signatures QR, chiffrement)        │
-│  Services : contrôle · eGates · TMS (alertes, règles, dossiers) · APIS/PNR · e-Visa (VMS) · audit     │
-│  PostgreSQL (partitionné par mois, réplication synchrone) ─ bus d'événements (Kafka)                  │
-│  ABIS biométrique (1:1 et 1:N, visage + empreintes + iris) ─ moteur de correspondance nominale        │
-│  Entrepôt analytique (BI, tableaux de bord) ─ SIEM / SOC ─ sauvegardes chiffrées hors ligne            │
-│  Connecteurs : BCN Interpol (I-24/7 FIND/MIND) · WAPIS · FPR · état civil/passeports (DAF) · PIU       │
-└──────────────┬─────────────────────────────────────────────────────────────┬────────────────────────┘
-               │ réplication asynchrone (RPO < 5 min)                         │ MPLS/VPN chiffré
-┌──────────────┴───────────── Site de secours (DR) ─────────┐        + secours 4G/VSAT par poste
-│  Même pile, bascule < 1 h (RTO)                            │                    │
-└────────────────────────────────────────────────────────────┘   ┌────────────────┴──────────────────┐
-                                                                  │ Serveur de poste (edge) — par poste │
-                                                                  │  copie locale des listes (synchro   │
-                                                                  │  < 1 min), file d'attente des        │
-                                                                  │  passages, décision hors ligne       │
-                                                                  │  Guichets · eGates · kiosques · CCTV │
-                                                                  └──────────────────────────────────────┘
+┌──────────── Site A — Datacenter national de Diamniadio (actif) ─────────────┐   ┌──── Site B — DC commercial Tier III (actif) ────┐
+│  Passerelle API + IAM (OIDC, MFA, PKI cartes agents) ─ HSM (paire)          │   │  Même pile, mêmes services (actif-actif)         │
+│  Services : contrôle · eGates · TMS · APIS/PNR · e-Visa (VMS) · audit       │◄─►│  PostgreSQL : réplique SYNCHRONE                 │
+│  PostgreSQL primaire (partitionné par mois) ─ bus d'événements (Kafka)      │   │  Stockage objet répliqué ─ Kafka ─ HSM (paire)   │
+│  ABIS biométrique (1:1 et 1:N) ─ stockage objet (S3) ─ SIEM / SOC           │   │  Préproduction isolée                            │
+│  Connecteurs : BCN Interpol (I-24/7) · WAPIS · FPR · état civil (DAF) · PIU │   └───────────────────────┬──────────────────────────┘
+└──────────────┬──────────────────────────────┬───────────────────────────────┘    fibre A↔B : deux chemins distincts
+               │ réplication asynchrone        │ MPLS/VPN chiffré vers A et B      (réplication synchrone, latence ~1 ms)
+┌──────────────┴────────────────────────┐     │ + secours 4G/VSAT par poste
+│ Site C — coffre de sauvegarde          │     │
+│ copies chiffrées immuables (WAL, bases,│   ┌─┴────────────────────────────────────┐
+│ objets, audit) + copies hors ligne     │   │ Serveur de poste (edge, 2 nœuds)      │
+│ hebdomadaires ; arbitre de quorum      │   │  copie locale des listes (synchro     │
+└────────────────────────────────────────┘   │  < 1 min), file d'attente des         │
+                                             │  passages, décision hors ligne        │
+                                             │  Guichets · eGates · kiosques · CCTV  │
+                                             └───────────────────────────────────────┘
 ```
 
 ### Principes
 
-- **Souveraineté** : hébergement au datacenter national (ex. Diamniadio) + site de secours sur le territoire ; aucune donnée biométrique hors du pays. Seuls le portail public et l'API transporteurs sont exposés, en DMZ.
+- **Souveraineté** : deux centres de données actifs au Sénégal + un site de sauvegarde (voir « Hébergement haute disponibilité » ci-dessous) ; aucune donnée personnelle ni clé hors du pays, aucun cloud étranger. Seuls le portail public, la plateforme des compagnies et l'API transporteurs sont exposés, derrière WAF et anti-DDoS.
 - **Fonctionnement dégradé** : chaque poste dispose d'un serveur local avec la copie chiffrée des listes (déjà prévu dans le modèle « connecteurs + copie locale » du démonstrateur). Sans liaison, le contrôle continue ; les passages sont mis en file et resynchronisés, les correspondances critiques déclenchent une alerte locale.
 - **Événements** : chaque passage, alerte, décision e-Visa est un événement (Kafka) consommé par le TMS, l'analytique et l'audit. Le journal d'audit chaîné (SHA-256) du démonstrateur est conservé et ancré périodiquement (signature HSM).
 - **Séparation des rôles** (moindre privilège, déjà en place) + **MFA** et carte agent, sessions courtes, traçabilité de chaque consultation de fiche.
 - **Biométrie** : ABIS certifié (performances NIST FRTE/PFT), détection du vivant ISO/IEC 30107-3, normes ISO/IEC 19794 / 39794. L'enclave du terminal ne transmet que gabarits chiffrés et scores.
 - **Interopérabilité** : API (UN/EDIFACT PAXLST), PNR (PNRGOV), Interpol via le BCN, normes OACI annexe 9 et Doc 9303, ICAO PKD pour la vérification des puces de passeports (Passive/Active Authentication).
-- **Disponibilité** : objectif 99,95 % au central, 100 % de capacité de contrôle au poste (mode dégradé), RPO < 5 min, RTO < 1 h, tests de bascule semestriels.
+- **Disponibilité** : objectif 99,95 % ou plus au central, 100 % de capacité de contrôle au poste (mode dégradé) ; RPO nul dans un site ; en cas de perte d'un site, RPO ≤ 5 min (nul tant que la réplication synchrone A → B est saine) et RTO ≤ 1 h ; tests de bascule semestriels, restauration testée chaque trimestre.
+
+### Hébergement haute disponibilité
+
+| Site | Rôle | Option recommandée (à valider) | État des informations publiques |
+| --- | --- | --- | --- |
+| A | Principal, actif | Datacenter national de Diamniadio (État, exploité par Sénégal Numérique SA, ex-ADIE ; inauguré en juin 2021 ; ~1 000 m² de salles, 1,4 MW) | Présenté « de type Tier III » ; aucune certification Uptime Institute confirmée publiquement — à vérifier |
+| B | Secondaire, actif | Centre commercial certifié Tier III sur un site et un réseau électrique distincts : Sonatel (Orange) Rufisque en premier choix (meilleure séparation, < ~20 km pour la réplication synchrone), Yas (ex-Tigo) Diamniadio en alternative | Rufisque : annoncé Tier III, extension signalée en 2025 par une seule source — à vérifier. Yas Diamniadio : certifié Tier III Uptime Institute (2017), mais même zone que le site A |
+| C | Coffre de sauvegarde | Site sécurisé de l'État ou installation distincte, hors de la zone Dakar–Diamniadio–Rufisque si possible | À identifier avec Sénégal Numérique |
+
+Autres centres cités dans les annuaires : Free Sénégal Diamniadio (conception Tier III, non certifié), PAIX Dakar, Onix (colocation). Modes : actif-actif pour le web et l'API ; PostgreSQL primaire/secours (Patroni ou équivalent) avec réplique synchrone en B et archivage asynchrone vers C ; stockage objet (MinIO/Ceph) et Kafka répliqués ; paire de HSM par site ; une grappe Kubernetes par site ; bascule DNS ou adresse virtuelle ; deux opérateurs par site et par poste. Sauvegardes selon la règle 3-2-1-1-0. Le plan détaillé (scénarios de bascule, phases, RACI, nomenclature, risques) figure dans la page du centre d'aide *Plan de déploiement — infrastructure haute disponibilité au Sénégal* (`docs/content/fr/plan-deploiement.md`).
 
 ## 4. Passage du démonstrateur à la cible
 
@@ -80,7 +89,7 @@ Ces volumes sont modestes pour une architecture transactionnelle classique : le 
 | Biométrie | Scores simulés | SDK/ABIS certifié + lecteurs de documents RFID (PA/AA via ICAO PKD) | Élevé |
 | Connecteurs | Contrat REST + copie locale | Raccordement BCN Interpol, WAPIS, FPR, DAF ; accords juridiques | Élevé (organisationnel) |
 | Poste hors ligne | — | Serveur edge + synchronisation | Élevé |
-| Exploitation | Netlify | Kubernetes on-premise, SOC/SIEM, sauvegardes, MCO | Élevé |
+| Exploitation | Netlify | Deux sites actifs + coffre, Kubernetes on-premise par site, HSM, SOC/SIEM, sauvegardes 3-2-1-1-0, MCO | Élevé |
 
 Ces chantiers correspondent aux sprints 5 à 8 du backlog (`docs/SCRUM.md`).
 

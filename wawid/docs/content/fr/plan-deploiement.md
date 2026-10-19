@@ -186,7 +186,7 @@ Aujourd'hui, les quatre plateformes sont servies sous un même domaine, avec des
 
 | Plateforme | Domaine indicatif | Exposition |
 | --- | --- | --- |
-| Voyageurs (portail, aide, e-Visa, WawPass) | `www.<domaine>` ou `voyageurs.<domaine>` | Internet, derrière le WAF |
+| Voyageurs (portail, aide, e-Visa, pré-enrôlement eGate) | `www.<domaine>` ou `voyageurs.<domaine>` | Internet, derrière le WAF |
 | Applications mobiles et leur API | `app.<domaine>` (page) et `api.<domaine>` (routes publiques) | Internet, derrière le WAF |
 | Compagnies aériennes (plateforme et passerelle) | `compagnies.<domaine>` | Internet, derrière le WAF, limitation de débit |
 | Espace DPAF | `dpaf.<domaine>` | Réseau privé ou VPN uniquement, jamais sur Internet |
@@ -199,14 +199,14 @@ Le code appelle l'API par des chemins relatifs (`/api/...`) : chaque domaine rou
 | Élément | Cible (À développer) |
 | --- | --- |
 | Serveurs | Grappe de deux nœuds par poste (AIBD, PDK, ZIG, ROS, KID, KAR) ; capacité de l'AIBD à dimensionner pour la pointe |
-| Données locales | Copie chiffrée des listes de surveillance, des e-Visa approuvés, des reçus WawPass et des listes de certificats CSCA, synchronisée en moins d'une minute |
+| Données locales | Copie chiffrée des listes de surveillance, des e-Visa approuvés et des listes de certificats CSCA, synchronisée en moins d'une minute |
 | Décision | Moteur `public/shared/engine.js` exécuté localement ; comparaison biométrique 1:1 locale |
 | Passages | Enregistrés localement puis retransmis au central (stockage et retransmission), avec identifiant unique pour éviter les doublons |
 | Équipements rattachés | Guichets, eGates, kiosques, CCTV, lecteurs de plaques ; ils dialoguent avec le serveur de poste, qui dialogue avec le central |
 | Énergie | Onduleur et groupe électrogène ; autonomie dimensionnée selon les coupures observées |
 | Réseau | Deux liaisons (principale et secours), pare-feu local, segmentation |
 
-Ce qui ne fonctionne pas sans liaison : interrogation en temps réel des sources externes (Interpol, WAPIS), recherche biométrique 1:N, réception des nouveaux messages API/PNR, contrôle d'unicité immédiat d'un reçu WawPass présenté dans deux postes. Ces limites sont compensées par la copie locale et le rapprochement au retour de la liaison.
+Ce qui ne fonctionne pas sans liaison : interrogation en temps réel des sources externes (Interpol, WAPIS), recherche biométrique 1:N, réception des nouveaux messages API/PNR, connaissance des e-Visa approuvés ou révoqués après la coupure. Ces limites sont compensées par la copie locale et le rapprochement au retour de la liaison.
 
 ## 3. Stratégie de sauvegarde
 

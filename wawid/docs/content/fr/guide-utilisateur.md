@@ -345,7 +345,6 @@ Le point devant le nom du poste, dans la barre supérieure, indique seulement qu
 | Vérification sur les listes de surveillance | Disponible sur la **copie locale**, à jour de la dernière synchronisation |
 | Enregistrement des passages | Disponible ; passages mis en file puis transmis au retour de la liaison |
 | Vérification des e-Visa | Sur la copie locale des e-Visa approuvés ; un e-Visa approuvé après la coupure n'est pas connu du poste |
-| Vérification d'un reçu WawPass | Sur la copie locale ; l'utilisation du même reçu dans un autre poste n'est détectée qu'au retour de la liaison |
 | Interrogation en temps réel d'Interpol, du WAPIS ou d'autres sources | Indisponible |
 | Recherche biométrique 1:N, nouveaux messages API/PNR | Indisponibles |
 | eGates | Selon la politique fixée par la DPAF pour le mode dégradé (fermeture ou fonctionnement restreint) |

@@ -232,7 +232,7 @@ The demonstrator (Netlify Functions + Netlify Blobs) validates the journeys, not
 
 ### Target architecture
 
-- Active national data center + disaster recovery site in the country (RPO < 5 min, RTO < 1 h, 99.95% availability).
+- Two active data centers in Senegal (site A: national data center in Diamniadio; site B: Tier III-certified commercial data center on a separate site) and a backup site C (immutable and offline copies); availability of 99.95% or more, zero RPO within a site, RPO ≤ 5 min and RTO ≤ 1 h if a site is lost.
 - API gateway + IAM (OIDC, MFA, PKI officer cards), HSM for keys and signatures.
 - PostgreSQL partitioned by month + Kafka event bus; `store.mts` replaced by a SQL repository.
 - Certified biometric ABIS (1:1 and 1:N), ISO/IEC 30107-3 liveness detection, RFID readers with PA/AA verification through the ICAO PKD.
@@ -240,3 +240,15 @@ The demonstrator (Netlify Functions + Netlify Blobs) validates the journeys, not
 - Only the public portal and the carrier gateway are exposed, in a DMZ behind a CDN/WAF.
 
 The business engine, API contracts and interfaces are reused as is; only the storage, identity, biometrics and connector layers change. This work matches sprints S5 to S8 of the backlog (`docs/SCRUM.md`).
+
+### Sovereign high-availability infrastructure
+
+The target hosting, the backup strategy (3-2-1-1-0 rule), failover scenarios, environments (production, pre-production, test and training) and phasing are described in the page *Deployment plan — high-availability infrastructure in Senegal*. For technical teams, the concrete changes compared with the demonstrator are:
+
+| Demonstrator | Target |
+| --- | --- |
+| Netlify Functions (`netlify/functions/api.mts`) | Containerized API (Node.js 22), same `/api/*` routes, active-active in both sites |
+| Netlify Blobs (`netlify/lib/store.mts`) | PostgreSQL replicated synchronously between sites + S3-compatible object storage |
+| Netlify environment variables | Secrets vault and HSMs (one pair per site) |
+| Static files published by Netlify, single domain | Web tier behind a WAF, one domain per platform; DPAF space on the private network only |
+| Netlify demonstrator | Kept for demonstrations, without any real personal data |

@@ -137,12 +137,15 @@ The period is shown in **Administration → Settings** ("Retention"). In the dem
 
 The demonstrator is hosted on Netlify (outside the country). For real operations:
 
-- hosting in a **national data center** (for example Diamniadio) with a disaster recovery site **in the country**;
+- hosting in **two active data centers in Senegal** (recommendation: national data center in Diamniadio as the primary site, Tier III-certified commercial data center on a separate site as the secondary site) and a **backup site** in the country; no foreign cloud for personal data;
 - **no biometric data outside the country**;
 - only the public portal, the airline platform and the carrier gateway exposed, in a DMZ behind an anti-DDoS CDN/WAF;
-- keys and signatures in an **HSM**; encrypted offline backups;
+- keys and signatures in **HSMs** (one pair per central site); encrypted backups following the 3-2-1-1-0 rule, with immutable and offline copies;
 - officer identity through **OIDC, MFA and PKI officer cards**;
-- **SIEM/SOC** monitoring, penetration testing before go-live, failover tests twice a year.
+- **SIEM/SOC** monitoring, penetration testing before go-live, failover tests twice a year;
+- administration through a bastion with MFA, network segmentation, key ceremonies and clearance of personnel with privileged access.
+
+Details (choice of sites, network, backups, failover scenarios, infrastructure security, risks) are in the page *Deployment plan — high-availability infrastructure in Senegal*.
 
 ## Known limits of the demonstrator
 
@@ -160,6 +163,6 @@ These limits are deliberate: the demonstrator validates the journeys, not nation
 | Single shared eGate key | A leak affects every device | Per-device certificates (mTLS) |
 | `SESSION_SECRET` is used for both sessions and QR codes | Rotating it also invalidates issued QR codes | Separate keys managed in an HSM |
 | No automatic purge | The retention period is not enforced yet | Purge and archiving job |
-| Hosting outside the country | Not compliant for real data | National data center |
+| Hosting outside the country | Not compliant for real data | Two active data centers in Senegal + backup site |
 
 All demo data is **fictitious**. No real personal data must be entered in the demonstrator.

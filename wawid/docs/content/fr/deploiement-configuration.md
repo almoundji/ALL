@@ -232,7 +232,7 @@ Le démonstrateur (Netlify Functions + Netlify Blobs) valide les parcours, pas l
 
 ### Architecture cible
 
-- Centre de données national actif + site de secours sur le territoire (RPO < 5 min, RTO < 1 h, disponibilité 99,95 %).
+- Deux centres de données actifs au Sénégal (site A : Datacenter national de Diamniadio ; site B : centre commercial certifié Tier III sur un site distinct) et un site C de sauvegarde (copies immuables et hors ligne) ; disponibilité 99,95 % ou plus, RPO nul dans un site, RPO ≤ 5 min et RTO ≤ 1 h en cas de perte d'un site.
 - Passerelle API + IAM (OIDC, MFA, cartes agents PKI), HSM pour les clés et signatures.
 - PostgreSQL partitionné par mois + bus d'événements Kafka ; `store.mts` remplacé par un dépôt SQL.
 - ABIS biométrique certifié (1:1 et 1:N), détection du vivant ISO/IEC 30107-3, lecteurs RFID avec vérification PA/AA via l'ICAO PKD.
@@ -240,3 +240,15 @@ Le démonstrateur (Netlify Functions + Netlify Blobs) valide les parcours, pas l
 - Seuls le portail public et la passerelle transporteurs sont exposés, en DMZ derrière un CDN/WAF.
 
 Le moteur métier, les contrats d'API et les interfaces sont réutilisés tels quels ; seules les couches stockage, identité, biométrie et connecteurs changent. Ces chantiers correspondent aux sprints S5 à S8 du backlog (`docs/SCRUM.md`).
+
+### Infrastructure souveraine haute disponibilité
+
+L'hébergement cible, la stratégie de sauvegarde (règle 3-2-1-1-0), les scénarios de bascule, les environnements (production, préproduction, test et formation) et le phasage sont décrits dans la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*. Pour les équipes techniques, les changements concrets par rapport au démonstrateur sont les suivants :
+
+| Démonstrateur | Cible |
+| --- | --- |
+| Netlify Functions (`netlify/functions/api.mts`) | API conteneurisée (Node.js 22), mêmes routes `/api/*`, actif-actif dans les deux sites |
+| Netlify Blobs (`netlify/lib/store.mts`) | PostgreSQL répliqué de manière synchrone entre les sites + stockage objet compatible S3 |
+| Variables d'environnement Netlify | Coffre à secrets et HSM (une paire par site) |
+| Fichiers statiques publiés par Netlify, un seul domaine | Niveau web derrière un WAF, un domaine par plateforme ; espace DPAF sur réseau privé uniquement |
+| Démonstrateur Netlify | Conservé pour les démonstrations, sans aucune donnée personnelle réelle |

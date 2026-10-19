@@ -137,12 +137,15 @@ La durée est affichée dans **Administration → Paramètres** (« Conservation
 
 Le démonstrateur est hébergé sur Netlify (hors du territoire). Pour une exploitation réelle :
 
-- hébergement dans un **centre de données national** (par exemple Diamniadio) et site de secours **sur le territoire** ;
+- hébergement dans **deux centres de données actifs au Sénégal** (recommandation : Datacenter national de Diamniadio comme site principal, centre commercial certifié Tier III sur un site distinct comme site secondaire) et un **site de sauvegarde** sur le territoire ; aucun cloud étranger pour les données personnelles ;
 - **aucune donnée biométrique hors du pays** ;
 - seuls le portail public, la plateforme des compagnies et la passerelle transporteurs exposés, en DMZ derrière un CDN/WAF anti-DDoS ;
-- clés et signatures dans un **HSM** ; sauvegardes chiffrées hors ligne ;
+- clés et signatures dans des **HSM** (une paire par site central) ; sauvegardes chiffrées selon la règle 3-2-1-1-0, avec copies immuables et hors ligne ;
 - identité des agents par **OIDC, MFA et cartes agents PKI** ;
-- supervision **SIEM/SOC**, tests d'intrusion avant mise en service, tests de bascule semestriels.
+- supervision **SIEM/SOC**, tests d'intrusion avant mise en service, tests de bascule semestriels ;
+- administration par bastion avec MFA, segmentation des réseaux, cérémonies de clés et habilitation du personnel à accès privilégié.
+
+Le détail (choix des sites, réseau, sauvegardes, scénarios de bascule, sécurité de l'infrastructure, risques) figure dans la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*.
 
 ## Limites connues du démonstrateur
 
@@ -160,6 +163,6 @@ Ces limites sont assumées : le démonstrateur valide les parcours, pas une expl
 | Clé eGate unique partagée | Une fuite concerne tous les équipements | Certificats par équipement (mTLS) |
 | `SESSION_SECRET` sert aux sessions et aux QR codes | Sa rotation invalide aussi les QR émis | Clés séparées gérées en HSM |
 | Pas de purge automatique | La durée de conservation n'est pas encore appliquée | Tâche de purge et d'archivage |
-| Hébergement hors du territoire | Non conforme pour des données réelles | Centre de données national |
+| Hébergement hors du territoire | Non conforme pour des données réelles | Deux centres de données actifs au Sénégal + site de sauvegarde |
 
 Toutes les données de démonstration sont **fictives**. Aucune donnée personnelle réelle ne doit être saisie dans le démonstrateur.

@@ -189,7 +189,7 @@ The **Supervisor** role combines the officer's and the analyst's rights with eGa
 | --- | --- |
 | Escalation for a red notice | Confirm the identity, apply service instructions (Interpol NCB, prosecutor), record everything in the case and close the alert with the appropriate resolution ("Handed over to the border police", "Notice sent to Interpol (NCB)"…). |
 | Officer can no longer sign in | Session expired (12 h) or account deactivated: have the administrator check. |
-| Post network outage | Apply the post's degraded-mode procedure and notify support. In the demonstrator there is no offline mode yet (planned in the target architecture). |
+| Post network outage | Apply the post's degraded-mode procedure and notify support (see "Service continuity" below). In the demonstrator there is no offline mode yet (planned in the target architecture). |
 | Audit log integrity broken | Do not touch anything, note the entry number displayed and immediately notify the administrator and the security officer. |
 
 ## Administrator
@@ -316,13 +316,95 @@ The app lets you apply by reading your passport chip. It works on **iPhone 7 or 
 | Referred by the eGate to a counter | Go to the counter: it is not a penalty. |
 | WawPass "Receipt already used" | A receipt can only be used once; show your proof of payment to the officer. |
 
+## Service continuity: degraded mode, failover and maintenance
+
+In national operations, WawID is hosted in **two active data centers in Senegal**, with a third site for backups, and each post will have a **post server** able to work without a link (see *Deployment plan — high-availability infrastructure in Senegal*). This section describes what you see and what you do in each situation. It distinguishes what exists today in the demonstrator from what is planned (Target, To be developed).
+
+### Possible situations
+
+| Situation | What you notice | What you do |
+| --- | --- | --- |
+| Planned maintenance | Advance notice from the post chief or the administrator; possibly a request to sign in again during the window | Finish ongoing checks before the announced time; sign in again if the sign-in screen appears |
+| Failover from one data center to the other | A few errors or slowdowns for a short time; possibly a return to the sign-in screen | Wait, reload the page, sign in again; check that your last action was recorded before redoing it |
+| Post link cut | Error messages when saving; data no longer refreshing; kiosks showing that the WawID server is unreachable | Apply the post's degraded-mode procedure (below) and notify support |
+| Both data centers unavailable | The same at every post | Degraded mode; instructions are given by the crisis unit through the post chief |
+
+The dot in front of the post name, in the top bar, only shows that your workstation's browser has a network connection. It can stay green while the WawID server is not responding: when in doubt, rely on the error messages and notify support.
+
+### Degraded mode at the post
+
+**Today (demonstrator)**: there is no offline mode. Without a link, no crossing can be recorded in WawID. The post applies its written **manual checking procedure**, validated by the DPAF.
+
+**Target (To be developed)**: the post server will take over automatically. With it:
+
+| Function | Without a link to the central system |
+| --- | --- |
+| MRZ reading and check digits | Available |
+| Chip reading and passive authentication | Available (CSCA certificates copied to the post server) |
+| Face comparison with the chip photo (1:1) | Available |
+| Watchlist check | Available on the **local copy**, as of the last synchronization |
+| Recording crossings | Available; crossings are queued then sent when the link returns |
+| e-Visa verification | On the local copy of approved e-Visas; an e-Visa approved after the cut is not known to the post |
+| Real-time queries to Interpol, WAPIS or other sources | Unavailable |
+| 1:N biometric search, new API/PNR messages | Unavailable |
+| eGates | According to the policy set by the DPAF for degraded mode (closure or restricted operation) |
+
+### Manual checking procedure (as long as offline mode does not exist)
+
+1. The shift leader declares degraded mode and notes the time.
+2. The supervisor closes the eGates (**Close**) if the DPAF space is still reachable; otherwise, travelers are directed to the counters.
+3. Officers apply the reinforced visual document check set out in the DPAF procedure and consult the lists available outside WawID according to service instructions.
+4. Each crossing is recorded in the designated register (paper or authorized local file), with the time, document, decision and officer's name.
+5. When service returns, the shift leader organizes deferred entry of the crossings according to DPAF instructions and closes degraded mode, noting the time.
+
+The exact arrangements (register, deferred entry, eGate policy) are set by the DPAF before go-live (**To be checked**).
+
+### During a central site failover
+
+- The failover is decided and carried out by the operator; you have no technical action to take.
+- Your session may remain valid, but you may be asked to sign in again: do so with your own account.
+- If an action was in progress when the error occurred (crossing decision, collection, declaration, message), **first check that it was not recorded** (**Crossings**, invoice record, **Messages** screen) before redoing it, to avoid duplicates.
+- The post supervisor then checks the **Audit log** (**Chain intact**).
+
+### Planned maintenance
+
+Maintenance is carried out site by site and, barring exceptions, without service interruption. It is announced in advance to posts, airlines and the Treasury, preferably during off-peak hours. Any maintenance requiring an interruption is approved with the DPAF.
+
+### Notes per profile
+
+| Profile | During failover, link cut or maintenance |
+| --- | --- |
+| DPAF counter officer | Follow the shift leader's instructions; do not confirm a crossing twice; note the time and the exact message displayed |
+| eGate supervisor | Close the gates whose kiosk shows that the WawID server is unreachable; reopen them after a test crossing once service returns |
+| Intelligence analyst | Checks rely on the local copy of the lists: when service resumes, check the **Connectors** (**Test**) and the alerts received during the cut |
+| Post supervisor | Declare and close degraded mode; after a failover, check **Chain intact** and that your post's data has come back |
+| Administrator | Relay maintenance announcements; after a failover, check sign-ins and **Connectors**; never reset the demo in operations |
+| Treasury officer | Before re-entering an interrupted collection or transfer, check the invoice record: a recorded collection can be neither edited nor deleted in this version |
+| Airline | See below |
+| Traveler | The portal and the app may be briefly unavailable; try again later and keep your `EV…` reference |
+
+### Airlines: resending messages
+
+- If the gateway does not respond or returns a server error (`500` or no response), resend the **same** message a little later. A `401` or `422` response is not fixed by resending the same message.
+- **Existing**: a resend creates a new message with a new `MSG-…` reference (both appear in the **Messages** screen), but passengers of the same flight, on the same date, are merged by document number: the resend does not create duplicate passengers.
+- **To be developed**: an explicit idempotency key (same reference returned for a message already received) and automatic resend guidelines documented in *API reference (airlines, devices, connectors)*.
+- Security fee payment declaration: in case of error, first check in the invoice whether the declaration appears; a resent declaration creates a second declaration, which the Treasury will reject as a duplicate.
+
+### Backups and restorations (administrator)
+
+- Backups are automatic and managed by the operator; no user action is required.
+- A restoration request (data deleted or modified by mistake, incident) is sent in writing by the administrator to the operator (level L2), with the item, the date and time concerned and the reason. It requires the DPAF's agreement and the intervention of two authorized people.
+- A restoration must never be used to erase a trace from the **Audit log**; after any restoration, the administrator checks **Chain intact**.
+- In the demonstrator there is no dedicated backup; resetting the demo is not a restoration.
+
 ## Support and escalation
 
 | Level | Who | For what |
 | --- | --- | --- |
-| 1 | Post shift leader | Any operational question, escalation of a check, closing an eGate |
-| 2 | Post technical support (WawID focal point) | Reader, NFC bridge, camera, kiosk, network, locked account |
-| 3 | Central WawID administrator | Accounts and roles, settings, connectors, device and airline keys |
-| 4 | Security / operations manager | Security incident, broken audit chain, key leak, general outage |
+| L1 | Shift leader and post WawID focal point | Any operational question, escalation of a check, closing an eGate; reader, NFC bridge, camera, kiosk, local network, declaring degraded mode |
+| L2 | Central WawID administrator, operator support and 24/7 network operations center (NOC) | Accounts and roles, settings, connectors, device and airline keys; post links; data center status; restoration requests |
+| L3 | Operator experts (infrastructure, database) and development team | Software defects, central site failover, restoration |
+| Security | Security officer and SOC | Security incident, broken audit chain, key leak |
+| Crisis | Crisis unit (operator and DPAF) | General outage, loss of a data center, ransomware, prolonged degraded mode |
 
-Contact details for each level are set by the DPAF and the operator at go-live (see *Installation guide — Senegal*). For any incident, note the time, post, device, the exact message displayed and, where applicable, the reference (`PX-…`, `EV…`, `MSG-…`).
+Contact details for each level are set by the DPAF and the operator at go-live (see *Installation guide — Senegal*). The network operations center (NOC) can be reached 24/7; it may already be aware of a general outage before you call, but always report an incident observed at the post. For any incident, note the time, post, device, the exact message displayed and, where applicable, the reference (`PX-…`, `EV…`, `MSG-…`).

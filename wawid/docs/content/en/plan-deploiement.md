@@ -186,7 +186,7 @@ Today, the four platforms are served under a single domain, with separate paths 
 
 | Platform | Indicative domain | Exposure |
 | --- | --- | --- |
-| Travelers (portal, help, e-Visa, WawPass) | `www.<domain>` or `voyageurs.<domain>` | Internet, behind the WAF |
+| Travelers (portal, help, e-Visa, eGate pre-enrollment) | `www.<domain>` or `voyageurs.<domain>` | Internet, behind the WAF |
 | Mobile apps and their API | `app.<domain>` (page) and `api.<domain>` (public routes) | Internet, behind the WAF |
 | Airlines (platform and gateway) | `compagnies.<domain>` | Internet, behind the WAF, rate limiting |
 | DPAF space | `dpaf.<domain>` | Private network or VPN only, never on the Internet |
@@ -199,14 +199,14 @@ The code calls the API through relative paths (`/api/...`): each domain therefor
 | Item | Target (To be developed) |
 | --- | --- |
 | Servers | Two-node cluster per post (AIBD, PDK, ZIG, ROS, KID, KAR); AIBD capacity to be sized for the peak |
-| Local data | Encrypted copy of the watchlists, approved e-Visas, WawPass receipts and CSCA certificate lists, synchronized in under one minute |
+| Local data | Encrypted copy of the watchlists, approved e-Visas and CSCA certificate lists, synchronized in under one minute |
 | Decision | `public/shared/engine.js` engine run locally; local 1:1 biometric comparison |
 | Crossings | Recorded locally then forwarded to the central system (store and forward), with a unique identifier to avoid duplicates |
 | Attached devices | Counters, eGates, kiosks, CCTV, plate readers; they talk to the post server, which talks to the central system |
 | Power | UPS and generator; autonomy sized according to observed outages |
 | Network | Two links (main and backup), local firewall, segmentation |
 
-What does not work without a link: real-time queries to external sources (Interpol, WAPIS), 1:N biometric search, reception of new API/PNR messages, immediate single-use check of a WawPass receipt presented at two posts. These limits are offset by the local copy and by reconciliation when the link returns.
+What does not work without a link: real-time queries to external sources (Interpol, WAPIS), 1:N biometric search, reception of new API/PNR messages, knowledge of e-Visas approved or revoked after the cut. These limits are offset by the local copy and by reconciliation when the link returns.
 
 ## 3. Backup strategy
 
