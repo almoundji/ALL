@@ -1,7 +1,7 @@
 // API WawID : une seule fonction, routée sur /api/*.
 import type { Config } from "@netlify/functions";
 import {
-  COUNTRIES, DEFAULT_GATE_CONFIG, POSTES, alertType, assessRisk, gateDecision, normName, parseMRZ, severityOf,
+  COUNTRIES, DEFAULT_GATE_CONFIG, POSTES, ageAt, alertType, assessRisk, gateDecision, normName, parseMRZ, severityOf,
 } from "../../public/shared/engine.js";
 import {
   ROLES, clearCookie, currentUser, gateKeyValid, hashPassword, json, login, publicUser, sessionCookie, signToken, verifyToken,
@@ -63,8 +63,13 @@ async function evaluate(input: any, extra: Record<string, unknown> = {}) {
 
 /** e-Visa utilisable pour ce document (une autorisation approuvée mais échue est signalée « EXPIREE »). */
 function activeVisa(evisas: any[], docNo: string) {
-  const v = evisas.find((x: any) => x.applicant.docNo === docNo && x.status !== "REFUSEE");
-  if (v?.status === "APPROUVEE" && v.validUntil && v.validUntil < nowIso().slice(0, 10)) return { ...v, status: "EXPIREE" };
+  const today = nowIso().slice(0, 10);
+  const mine = evisas.filter((x: any) => x.applicant.docNo === docNo && x.status !== "REFUSEE");
+  // Un e-Visa approuvé et en cours de validité prime sur une nouvelle demande en instruction.
+  const valid = mine.find((x: any) => x.status === "APPROUVEE" && (!x.validUntil || x.validUntil >= today));
+  if (valid) return valid;
+  const v = mine[0];
+  if (v?.status === "APPROUVEE") return { ...v, status: "EXPIREE" };
   return v;
 }
 
@@ -197,10 +202,12 @@ on("POST", "/api/public/pass", async (req) => {
   const b = await body(req);
   for (const [k, v] of Object.entries({ Nom: b.surname, Prénoms: b.given, "N° de passeport": b.docNo, Vol: b.flight, "Date du voyage": b.travelDate }))
     if (!str(v)) fail(400, `Champ obligatoire manquant : ${k}`);
+  if (!/^[A-Z]{3}$/.test(str(b.nat, 3).toUpperCase())) fail(400, "Nationalité obligatoire");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str(b.travelDate, 10)) || str(b.travelDate, 10) < nowIso().slice(0, 10)) fail(400, "La date du voyage doit être aujourd'hui ou plus tard");
   const settings = await load("settings");
   const passes = (await load<any[]>("passes")) || [];
   const pass = {
-    ref: `WP${Date.now().toString().slice(-7)}`, createdAt: nowIso(), surname: str(b.surname, 60), given: str(b.given, 80), docNo: str(b.docNo, 12).toUpperCase(),
+    ref: `WP${Date.now().toString().slice(-7)}`, createdAt: nowIso(), surname: str(b.surname, 60), given: str(b.given, 80), docNo: str(b.docNo, 20).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12),
     nat: str(b.nat, 3).toUpperCase(), flight: str(b.flight, 12).toUpperCase(), travelDate: str(b.travelDate, 10), amount: settings.passFee, currency: "XOF",
     method: str(b.paymentMethod, 30) || "Carte bancaire", used: false,
   };
@@ -215,7 +222,12 @@ on("POST", "/api/public/enrol", async (req) => {
   const parsed = parseMRZ(b.mrz);
   if (!parsed.ok || !parsed.checksOk) fail(400, "MRZ invalide : vérifiez les deux lignes de votre passeport.");
   if (!b.consent) fail(400, "Le consentement biométrique est requis");
+  if (!/^\S+@\S+\.\S+$/.test(str(b.email))) fail(400, "Adresse e-mail invalide");
+  if ((ageAt(parsed.dob) ?? 0) < 18) fail(400, "Le passage par eGate est réservé aux voyageurs majeurs.");
+  if (!parsed.expiry || parsed.expiry < nowIso().slice(0, 10)) fail(400, "Votre passeport est expiré.");
   const enrolments = (await load<any[]>("enrolments")) || [];
+  const existing = enrolments.find((e) => e.traveler.docNo === parsed.docNo);
+  if (existing) return json({ ref: existing.ref, status: existing.status, already: true });
   const ref = `EN${Date.now().toString().slice(-7)}`;
   enrolments.unshift({ ref, createdAt: nowIso(), status: "EN_ATTENTE", traveler: travelerOf(parsed), email: str(b.email, 120), phone: str(b.phone, 30) });
   await save("enrolments", enrolments);

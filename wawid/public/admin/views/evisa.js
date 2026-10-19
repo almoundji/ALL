@@ -65,7 +65,7 @@ function renderApplication(el, ctx, ref) {
 }
 
 // ---------- Vérification d'un QR ----------
-export function renderVerify(el) {
+export function renderVerify(el, ctx) {
   el.innerHTML = `${pageHead({ title: "Vérifier un QR code", sub: "e-Visa ou reçu WawPass (taxe de sécurité) : la signature cryptographique est contrôlée par le serveur.", crumbs: [[null, "Contrôle frontière"]] })}
   <div class="grid-2">
     <form class="card card-pad stack" id="f">
@@ -79,8 +79,9 @@ export function renderVerify(el) {
   const verify = async (token) => {
     try {
       const r = await api("/api/verify-token", { method: "POST", body: { token } });
+      ctx.reload().catch(() => {});
       res.innerHTML = `<div class="msg ${r.valid ? "good" : "critical"}">${icon(r.valid ? "checkCircle" : "xCircle")}<span><b>${r.valid ? "Valide" : "Non valide"}</b> — ${esc(r.message)}</span></div>${r.holder ? `<dl class="kv" style="margin-top:14px"><dt>Type</dt><dd>${esc(r.kind)}</dd><dt>Référence</dt><dd class="mono">${esc(r.ref)}</dd><dt>Titulaire</dt><dd>${esc(r.holder)}</dd><dt>Document</dt><dd class="mono">${esc(r.docNo)}</dd></dl><p class="small muted">Comparer avec le document présenté.</p>` : ""}`;
-    } catch (e) { toast(e.message, "critical"); }
+    } catch (e) { res.innerHTML = `<div class="msg critical">${icon("alert")}<span>${esc(e.message)}</span></div>`; }
   };
   el.querySelector("#f").onsubmit = (e) => { e.preventDefault(); const t = e.target.token.value.trim(); if (t) verify(t); };
   el.querySelector("#scan").onclick = async () => {

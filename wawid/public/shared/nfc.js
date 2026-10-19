@@ -8,7 +8,7 @@ const KEY = "wawid:nfcBridge";
 export const DEFAULT_BRIDGE = "http://127.0.0.1:8765";
 
 export function bridgeUrl() {
-  try { return localStorage.getItem(KEY) || DEFAULT_BRIDGE; } catch { return DEFAULT_BRIDGE; }
+  try { return (localStorage.getItem(KEY) || DEFAULT_BRIDGE).replace(/\/+$/, ""); } catch { return DEFAULT_BRIDGE; }
 }
 export function setBridgeUrl(url) {
   try { url ? localStorage.setItem(KEY, url) : localStorage.removeItem(KEY); } catch {}
@@ -16,6 +16,7 @@ export function setBridgeUrl(url) {
 
 /** État du pont : { ok, reader, version } ou { ok:false }. */
 export async function bridgeStatus(url = bridgeUrl()) {
+  url = url.replace(/\/+$/, "");
   try {
     const res = await fetch(`${url}/status`, { signal: AbortSignal.timeout(1200) });
     return { ok: res.ok, ...(await res.json()) };
@@ -30,7 +31,7 @@ export async function bridgeStatus(url = bridgeUrl()) {
 export async function readChip(mrz, simulate = {}) {
   try {
     const res = await fetch(`${bridgeUrl()}/read`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mrz }), signal: AbortSignal.timeout(15000),
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mrz, simulate }), signal: AbortSignal.timeout(15000),
     });
     if (res.ok) return { source: "lecteur", ...(await res.json()) };
   } catch { /* pas de pont : simulation */ }

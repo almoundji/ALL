@@ -108,7 +108,7 @@ function chipPanel() {
   if (!c) return `<p class="muted small" style="margin:0">Lecture de la puce ICAO (DG1 données, DG2 portrait, SOD signature) via le lecteur du poste. Recommandé pour tout passeport biométrique.</p>`;
   if (!c.read) return `<div class="msg warning">${icon("alert")}<span>Puce non lue — vérifier les sécurités physiques du document.</span></div>`;
   const dg1 = c.dg1 ? parseMRZ(c.dg1) : null;
-  const match = dg1?.ok && dg1.docNo === s.parsed?.docNo && dg1.dob === s.parsed?.dob && dg1.surname === s.parsed?.surname && dg1.expiry === s.parsed?.expiry;
+  const match = dg1?.ok && dg1.checksOk && dg1.docNo === s.parsed?.docNo && dg1.dob === s.parsed?.dob && dg1.surname === s.parsed?.surname && dg1.expiry === s.parsed?.expiry && dg1.nat === s.parsed?.nat;
   return `<div class="row" style="align-items:flex-start;gap:14px">${c.photo ? `<img src="${c.photo}" alt="Portrait DG2" style="width:72px;border-radius:8px">` : ""}
     <div class="stack" style="gap:6px">
       <span class="status ${c.passiveAuth ? "good" : "critical"}">Authentification passive : ${c.passiveAuth ? "valide" : "échec"}</span>

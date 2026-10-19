@@ -13,11 +13,14 @@ function shell(page, html) {
     <a class="brand" href="#accueil"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">WAW TELECOM</span><br><span class="brand-sub">WawID · Portail voyageur</span></span></a>
     <div class="p-links">${NAV.map(([k, l]) => `<a href="#${k}" ${k === page ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</div>
     <button class="btn btn-ghost btn-icon" id="theme" title="Thème">${icon("moon")}</button>
-    <a class="btn btn-dark btn-sm" href="admin/">${icon("lock")} Espace agents</a>
+    <a class="btn btn-dark btn-sm p-agents" href="admin/" title="Espace agents">${icon("lock")}<span>Espace agents</span></a>
   </nav></header>
   <main class="p-main">${html}</main>
   <footer class="p-foot">WawID — solution de gestion des identités et des frontières par WAW Telecom · Données protégées conformément à la loi n° 2008-12 (CDP).</footer>`;
-  app.querySelector("#theme").onclick = toggleTheme;
+  const themeBtn = app.querySelector("#theme");
+  const paintTheme = () => { const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; themeBtn.innerHTML = icon(dark ? "sun" : "moon"); };
+  themeBtn.onclick = () => { toggleTheme(); paintTheme(); };
+  paintTheme();
   scrollTo(0, 0);
 }
 
@@ -63,7 +66,7 @@ function evisa() {
       ${field("surname", "Nom", a.surname)}${field("given", "Prénoms", a.given)}
       ${field("dob", "Date de naissance", a.dob, "date")}
       <label class="field"><span>Sexe</span><select class="select" name="sex">${[["F", "Féminin"], ["M", "Masculin"], ["X", "Non précisé"]].map(([v, l]) => `<option value="${v}" ${a.sex === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
-      <label class="field"><span>Nationalité</span><select class="select" name="nat" required>${countryOptions(a.nat)}</select></label>
+      <label class="field"><span>Nationalité *</span><select class="select" name="nat" required>${countryOptions(a.nat)}</select></label>
       ${field("docNo", "N° de passeport", a.docNo)}${field("expiry", "Expiration du passeport", a.expiry, "date")}
       ${field("email", "E-mail", a.email, "email")}${field("phone", "Téléphone", a.phone, "tel", false)}
      </div>`,
@@ -78,7 +81,7 @@ function evisa() {
       <label class="field"><span>Pays visités au cours des 21 derniers jours</span><input class="input" name="countriesVisited" value="${esc(h.countriesVisited || "")}"></label></div>`,
     `<div class="stack">
       <div class="card card-pad row" style="justify-content:space-between"><span><b>Frais de traitement e-Visa</b><br><span class="small muted">Non remboursables</span></span><b style="font:800 24px var(--display)">${fmtXOF(info.evisaFee)}</b></div>
-      <label class="field"><span>Moyen de paiement</span><select class="select" name="paymentMethod"><option>Wave</option><option>Orange Money</option><option>Free Money</option><option>Carte bancaire</option></select></label>
+      <label class="field"><span>Moyen de paiement</span><select class="select" name="paymentMethod">${["Wave", "Orange Money", "Free Money", "Carte bancaire"].map((m) => `<option ${draft.paymentMethod === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>
       <div class="msg warning">${icon("lock")}<span>Démonstration : aucun paiement réel n'est effectué.</span></div>
       <label class="check"><input type="checkbox" name="consent" required> J'accepte que mes données soient traitées par les services de l'immigration pour l'instruction de ma demande et le contrôle aux frontières (loi n° 2008-12), et certifie l'exactitude des informations.</label></div>`,
   ][step];
@@ -91,8 +94,9 @@ function evisa() {
   app.querySelector("#mrz")?.addEventListener("input", (e) => {
     const p = parseMRZ(e.target.value);
     if (!p.ok) return;
+    collect(f);
     Object.assign(draft.applicant, { surname: p.surname, given: p.given, dob: p.dob, sex: p.sex, nat: p.nat, docNo: p.docNo, expiry: p.expiry });
-    collect(f); evisa(); toast(p.checksOk ? "Informations du passeport importées" : "MRZ importée — vérifiez les champs (chiffres de contrôle invalides)", p.checksOk ? "" : "critical");
+    evisa(); toast(p.checksOk ? "Informations du passeport importées" : "MRZ importée — vérifiez les champs (chiffres de contrôle invalides)", p.checksOk ? "" : "critical");
   });
   app.querySelector("#back")?.addEventListener("click", () => { collect(f); draft.step--; evisa(); });
   f.onsubmit = async (e) => {
@@ -141,7 +145,7 @@ async function track(q) {
       const r = await api("/api/public/evisa/status", { method: "POST", body: { ref: f.ref.value, docNo: f.doc.value } });
       res.innerHTML = `<section class="card p-form">
         <div class="row" style="justify-content:space-between"><div><b style="font:800 22px var(--display)">${esc(r.applicant.surname)} ${esc(r.applicant.given)}</b><div class="muted small">${esc(r.ref)} · ${esc(country(r.applicant.nat))} · déposée le ${fmtDateTime(r.createdAt)}</div></div>${status("evisa", r.status)}</div>
-        ${r.status === "APPROUVEE" ? `<div class="grid-2" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center"><div class="qr">${qrSvg(r.token)}</div><div><b>e-Visa n° ${esc(r.visaNo)}</b><p class="muted">Valable jusqu'au ${fmtDate(r.validUntil)} pour une entrée par ${esc(r.trip.port)}. Présentez ce QR code et votre passeport au contrôle ou à l'eGate.</p><button class="btn" onclick="print()">${icon("printer")} Imprimer</button></div></div>` : ""}
+        ${r.status === "APPROUVEE" ? `<div class="grid-2" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center"><div class="qr">${qrSvg(r.token)}</div><div><b>e-Visa n° ${esc(r.visaNo)}</b><p class="muted">Valable jusqu'au ${fmtDate(r.validUntil)} pour une entrée par ${esc(info.postes.find((p) => p.id === r.trip.port)?.name || r.trip.port)}. Présentez ce QR code et votre passeport au contrôle ou à l'eGate.</p><button class="btn" onclick="print()">${icon("printer")} Imprimer</button></div></div>` : ""}
         ${r.messages.length ? `<div><span class="label">Messages</span><div class="timeline" style="margin-top:8px">${r.messages.map((m) => `<div><b>${esc(m.from)}</b> · ${fmtDateTime(m.at)}<br>${esc(m.text)}</div>`).join("")}</div></div>` : ""}
         ${r.status === "INFO_DEMANDEE" ? `<form id="reply" class="stack"><label class="field"><span>Votre réponse</span><textarea class="textarea" name="text" required></textarea></label><button class="btn btn-primary">Envoyer</button></form>` : ""}
       </section>`;
@@ -158,7 +162,7 @@ async function track(q) {
 // ---------- WawPass ----------
 function wawpass() {
   shell("wawpass", `<section class="p-section"><h2>WawPass — taxe de sécurité</h2><p class="muted">Payez en ligne avant votre vol et présentez le QR code à l'aéroport.</p>
-    <form class="card p-form" id="f"><div class="form-grid">${field("surname", "Nom")}${field("given", "Prénoms")}<label class="field"><span>Nationalité</span><select class="select" name="nat">${countryOptions()}</select></label>${field("docNo", "N° de passeport")}${field("flight", "Vol (ex. HC 404)")}${field("travelDate", "Date du voyage", "", "date")}
+    <form class="card p-form" id="f"><div class="form-grid">${field("surname", "Nom")}${field("given", "Prénoms")}<label class="field"><span>Nationalité *</span><select class="select" name="nat" required>${countryOptions()}</select></label>${field("docNo", "N° de passeport")}${field("flight", "Vol (ex. HC 404)")}${field("travelDate", "Date du voyage", "", "date")}
       <label class="field"><span>Moyen de paiement</span><select class="select" name="paymentMethod"><option>Wave</option><option>Orange Money</option><option>Carte bancaire</option></select></label></div>
       <div class="row" style="justify-content:space-between"><b style="font:800 22px var(--display)">${fmtXOF(info.passFee)}</b><button class="btn btn-primary btn-lg">${icon("creditCard")} Payer</button></div></form></section>`);
   app.querySelector("#f").onsubmit = async (e) => {
@@ -186,7 +190,10 @@ function egate() {
   app.querySelector("#f").onsubmit = async (e) => {
     e.preventDefault();
     const b = Object.fromEntries(new FormData(e.target));
-    try { const r = await api("/api/public/enrol", { method: "POST", body: { ...b, consent: "consent" in b } }); toast(`Pré-enregistrement ${r.ref} confirmé`); e.target.reset(); } catch (err) { toast(err.message, "critical"); }
+    try {
+      const r = await api("/api/public/enrol", { method: "POST", body: { ...b, consent: "consent" in b } });
+      e.target.outerHTML = `<div class="card card-pad stack"><span class="status good">Pré-enregistrement confirmé</span><b class="mono" style="font-size:22px">${esc(r.ref)}</b><p class="muted">Votre visage et vos empreintes seront capturés lors de votre premier passage au guichet ; ensuite, les eGates vous seront ouvertes.</p></div>`;
+    } catch (err) { toast(err.message, "critical"); }
   };
 }
 

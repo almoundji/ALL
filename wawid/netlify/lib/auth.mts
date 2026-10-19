@@ -71,7 +71,7 @@ export async function currentUser(req: Request): Promise<any | null> {
   const [uid, exp, sig] = raw.split(".");
   if (!uid || !exp || !sig) return null;
   const expected = sign(`${uid}.${exp}`);
-  if (sig.length !== expected.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) || Number(exp) < Date.now() / 1000) return null;
+  if (Buffer.byteLength(sig) !== Buffer.byteLength(expected) || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) || Number(exp) < Date.now() / 1000) return null;
   const id = Buffer.from(uid, "base64url").toString();
   const user = ((await load<any[]>("users")) || []).find((u) => u.id === id && u.active);
   return user ? publicUser(user) : null;
@@ -81,7 +81,7 @@ export async function currentUser(req: Request): Promise<any | null> {
 export function gateKeyValid(req: Request): boolean {
   const key = env("WAWID_GATE_KEY") || ((globalThis as any).Netlify ? "" : "dev-gate-key");
   const given = req.headers.get("x-gate-key") || "";
-  if (!key || given.length !== key.length) return false;
+  if (!key || Buffer.byteLength(given) !== Buffer.byteLength(key)) return false;
   return timingSafeEqual(Buffer.from(given), Buffer.from(key));
 }
 
@@ -90,8 +90,8 @@ export const signToken = (kind: string, ref: string) => `${kind}.${ref}.${sign(`
 export function verifyToken(token: string): { kind: string; ref: string } | null {
   const [kind, ref, sig] = String(token).trim().split(".");
   if (!kind || !ref || !sig) return null;
-  const expected = sign(`${kind}.${ref}`).slice(0, 16);
-  return sig.length === expected.length && timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) ? { kind, ref } : null;
+  const a = Buffer.from(sig), b = Buffer.from(sign(`${kind}.${ref}`).slice(0, 16));
+  return a.length === b.length && timingSafeEqual(a, b) ? { kind, ref } : null;
 }
 
 export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>

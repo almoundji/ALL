@@ -51,7 +51,9 @@ async function boot() {
 }
 
 function askKey() {
+  const refused = Boolean(store.get("wawid:gateKey"));
   frame(`<form id="k" class="card card-pad stack" style="width:min(460px,100%);background:#1a1a19">
+    ${refused ? `<div class="msg critical">${icon("alert")}<span>Clé refusée par le serveur.</span></div>` : ""}
     <h2 style="font:800 24px var(--display)">Activation de l'équipement</h2>
     <p class="muted">Saisissez la clé d'équipement fournie par l'administrateur (ou connectez-vous au back-office avec un compte superviseur dans ce navigateur).</p>
     <input class="input" name="key" type="password" placeholder="Clé d'équipement" autofocus>
