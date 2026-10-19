@@ -159,7 +159,7 @@ function stepBiometrics(host, _ctx, next, back) {
     canvas.width = 640; canvas.height = 480;
     const g = canvas.getContext("2d");
     if (video) g.drawImage(video, 0, 0, 640, 480);
-    else { g.fillStyle = "#222"; g.fillRect(0, 0, 640, 480); g.fillStyle = "#FFD500"; g.font = "bold 28px Poppins, sans-serif"; g.textAlign = "center"; g.fillText("Capture simulée", 320, 250); }
+    else { g.fillStyle = "#0B1F33"; g.fillRect(0, 0, 640, 480); g.fillStyle = "#2DD4BF"; g.font = "bold 28px Sora, sans-serif"; g.textAlign = "center"; g.fillText("Capture simulée", 320, 250); }
     stopCamera();
     cap.innerHTML = ""; canvas.id = "snap"; cap.append(canvas); cap.insertAdjacentHTML("beforeend", '<span class="frame"></span>');
     s.snapshot = canvas;

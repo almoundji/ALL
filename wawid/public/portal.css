@@ -1,4 +1,4 @@
-/* Portail voyageur WawID — identité WAW Telecom. */
+/* Portail voyageur WawID. */
 body { background: radial-gradient(900px 480px at 85% -10%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 60%), var(--bg); }
 .p-nav { position: sticky; top: 0; z-index: 20; padding: 14px 16px 0; }
 .p-nav-bar { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 18px; padding: 12px 18px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-2); }
@@ -11,7 +11,7 @@ body { background: radial-gradient(900px 480px at 85% -10%, color-mix(in srgb, v
 .p-hero { padding: 40px 0 20px; }
 .p-hero h1 { font: 900 clamp(38px, 6.6vw, 86px)/.98 var(--display); letter-spacing: -.04em; margin-top: 26px; max-width: 900px; }
 .p-hero p { font-size: 18px; color: var(--ink-2); max-width: 640px; margin: 22px 0 28px; }
-.p-underline { display: block; width: 120px; height: 5px; border-radius: 3px; background: var(--brand-strong); margin: 18px 0 0 auto; max-width: 30%; }
+.p-underline { display: block; width: 120px; height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--brand), var(--accent-2)); margin: 18px 0 0 auto; max-width: 30%; }
 .p-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 40px; }
 .p-card { padding: 24px; display: grid; gap: 10px; text-decoration: none; color: inherit; transition: transform .15s, box-shadow .15s; }
 .p-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
@@ -20,7 +20,7 @@ body { background: radial-gradient(900px 480px at 85% -10%, color-mix(in srgb, v
 .p-section h2 { font: 900 clamp(28px, 4vw, 44px)/1.05 var(--display); letter-spacing: -.03em; }
 .p-steps { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
 .p-steps span { padding: 8px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 600; font-size: 13px; color: var(--muted); }
-.p-steps span.on { background: #333; color: var(--brand); border-color: #333; }
+.p-steps span.on { background: var(--night); color: var(--accent); border-color: var(--night); }
 .p-steps span.done { color: var(--ink); }
 .p-form { padding: 28px; display: grid; gap: 18px; max-width: 860px; }
 .p-receipt { text-align: center; display: grid; gap: 14px; justify-items: center; padding: 34px; max-width: 560px; margin: 0 auto; }

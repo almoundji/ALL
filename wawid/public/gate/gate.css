@@ -1,26 +1,26 @@
 /* Kiosque eGate / ABC : interface tactile plein écran, lisible à distance. */
-body { background: #111; color: #f0efec; min-height: 100vh; overflow-x: hidden; }
-.k-top { display: flex; align-items: center; gap: 14px; padding: 18px 28px; border-bottom: 1px solid #2a2a28; }
+body { background: #06121f; color: #f0efec; min-height: 100vh; overflow-x: hidden; }
+.k-top { display: flex; align-items: center; gap: 14px; padding: 18px 28px; border-bottom: 1px solid #1c3350; }
 .k-top .brand-name { color: #fff; }
 .k-gate { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #aaa; }
 .k-main { display: grid; place-items: center; min-height: calc(100vh - 150px); padding: 24px; }
 .k-card { width: min(980px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
 @media (max-width: 820px) { .k-card { grid-template-columns: 1fr; } }
 .k-title { font: 900 clamp(34px, 5vw, 60px)/1.02 var(--display); letter-spacing: -.03em; }
-.k-title em { font-style: normal; color: var(--brand); }
+.k-title em { font-style: normal; color: var(--accent); }
 .k-lead { font-size: 20px; color: #c3c2b7; margin-top: 16px; }
 .k-langs { display: flex; gap: 8px; margin-top: 22px; }
 .k-langs span { padding: 6px 12px; border-radius: 999px; border: 1px solid #3a3a38; font-size: 13px; color: #bbb; }
-.k-visual { aspect-ratio: 1; border-radius: 32px; background: #1a1a19; border: 1px solid #2a2a28; display: grid; place-items: center; position: relative; overflow: hidden; }
+.k-visual { aspect-ratio: 1; border-radius: 32px; background: #0b1f33; border: 1px solid #1c3350; display: grid; place-items: center; position: relative; overflow: hidden; }
 .k-visual video, .k-visual canvas { width: 100%; height: 100%; object-fit: cover; }
-.k-visual .icon { width: 120px; height: 120px; stroke-width: 1.2; color: var(--brand); }
-.k-oval { position: absolute; inset: 12% 22%; border: 4px solid var(--brand); border-radius: 50%; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
-.k-scanline { position: absolute; left: 10%; right: 10%; height: 4px; background: var(--brand); box-shadow: 0 0 24px var(--brand); animation: scan 1.6s ease-in-out infinite alternate; border-radius: 2px; }
+.k-visual .icon { width: 120px; height: 120px; stroke-width: 1.2; color: var(--accent); }
+.k-oval { position: absolute; inset: 12% 22%; border: 4px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
+.k-scanline { position: absolute; left: 10%; right: 10%; height: 4px; background: var(--accent); box-shadow: 0 0 24px var(--accent); animation: scan 1.6s ease-in-out infinite alternate; border-radius: 2px; }
 @keyframes scan { from { top: 20%; } to { top: 78%; } }
 .k-steps { display: flex; gap: 10px; justify-content: center; padding: 18px; border-top: 1px solid #2a2a28; }
 .k-steps span { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #777; }
 .k-steps span b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #2a2a28; }
-.k-steps span.on { color: #fff; } .k-steps span.on b { background: var(--brand); color: #222; }
+.k-steps span.on { color: #fff; } .k-steps span.on b { background: var(--accent); color: var(--night); }
 .k-result { text-align: center; display: grid; gap: 18px; justify-items: center; }
 .k-result .big { width: 160px; height: 160px; border-radius: 50%; display: grid; place-items: center; }
 .k-result .big .icon { width: 90px; height: 90px; stroke-width: 2.4; }
@@ -28,10 +28,10 @@ body { background: #111; color: #f0efec; min-height: 100vh; overflow-x: hidden; 
 .k-result.ko .big { background: #fab219; color: #222; animation: pop .4s ease-out; }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } }
 .k-doors { display: flex; gap: 6px; height: 120px; align-items: stretch; }
-.k-doors i { width: 60px; border-radius: 8px; background: #333; transition: transform .8s ease; }
+.k-doors i { width: 60px; border-radius: 8px; background: #1c3350; transition: transform .8s ease; }
 .k-result.ok .k-doors i:first-child { transform: translateX(-50px) scaleX(.4); }
 .k-result.ok .k-doors i:last-child { transform: translateX(50px) scaleX(.4); }
-.k-sim { position: fixed; right: 16px; bottom: 16px; width: 330px; max-width: calc(100vw - 32px); background: #1a1a19; border: 1px solid #333; border-radius: 16px; padding: 14px; font-size: 13px; display: grid; gap: 10px; z-index: 10; }
-.k-sim summary { cursor: pointer; font-weight: 700; color: var(--brand); }
+.k-sim { position: fixed; right: 16px; bottom: 16px; width: 330px; max-width: calc(100vw - 32px); background: #0b1f33; border: 1px solid #1c3350; border-radius: 16px; padding: 14px; font-size: 13px; display: grid; gap: 10px; z-index: 10; }
+.k-sim summary { cursor: pointer; font-weight: 700; color: var(--accent); }
 .k-sim textarea { font: 11px/1.4 var(--mono); min-height: 64px; }
 .btn-xl { min-height: 64px; padding: 0 34px; font-size: 20px; border-radius: 18px; }

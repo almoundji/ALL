@@ -11,7 +11,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Label("E-VISA · NFC · SUIVI", systemImage: "bolt")
                     .font(.caption.weight(.heavy)).padding(.horizontal, 14).padding(.vertical, 8)
-                    .background(Theme.ink).foregroundStyle(Theme.brand).clipShape(Capsule())
+                    .background(Theme.ink).foregroundStyle(Theme.accent).clipShape(Capsule())
                 (Text("Votre e-Visa,\n") + Text("vérifié").foregroundColor(Theme.brand) + Text(" par la puce"))
                     .font(Theme.display(40))
                 Text("Scannez votre passeport, lisez sa puce avec l'iPhone et déposez votre demande en quelques minutes.")

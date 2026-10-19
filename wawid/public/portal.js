@@ -1,6 +1,6 @@
 // Portail voyageur WawID : e-Visa, suivi, WawPass (taxe de sécurité), pré-enrôlement eGate.
 import { parseMRZ } from "./shared/engine.js";
-import { LOGO, api, countryOptions, country, esc, fmtDate, fmtDateTime, fmtXOF, icon, initTheme, qrSvg, status, toast, toggleTheme } from "./shared/ui.js";
+import { LOGO, WORDMARK, api, countryOptions, country, esc, fmtDate, fmtDateTime, fmtXOF, icon, initTheme, qrSvg, status, toast, toggleTheme } from "./shared/ui.js";
 
 initTheme();
 const app = document.getElementById("app");
@@ -10,13 +10,13 @@ const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["
 function shell(page, html) {
   app.innerHTML = `
   <header class="p-nav"><nav class="p-nav-bar">
-    <a class="brand" href="#accueil"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">WAW TELECOM</span><br><span class="brand-sub">WawID · Portail voyageur</span></span></a>
+    <a class="brand" href="#accueil"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">${WORDMARK}</span><br><span class="brand-sub">Portail voyageur</span></span></a>
     <div class="p-links">${NAV.map(([k, l]) => `<a href="#${k}" ${k === page ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</div>
     <button class="btn btn-ghost btn-icon" id="theme" title="Thème">${icon("moon")}</button>
     <a class="btn btn-dark btn-sm p-agents" href="admin/" title="Espace agents">${icon("lock")}<span>Espace agents</span></a>
   </nav></header>
   <main class="p-main">${html}</main>
-  <footer class="p-foot">WawID — solution de gestion des identités et des frontières par WAW Telecom · Données protégées conformément à la loi n° 2008-12 (CDP).</footer>`;
+  <footer class="p-foot">WawID — gestion des identités et des frontières · une solution WAW Telecom · Données protégées conformément à la loi n° 2008-12 (CDP).</footer>`;
   const themeBtn = app.querySelector("#theme");
   const paintTheme = () => { const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; themeBtn.innerHTML = icon(dark ? "sun" : "moon"); };
   themeBtn.onclick = () => { toggleTheme(); paintTheme(); };

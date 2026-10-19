@@ -15,7 +15,7 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 .shell-search kbd { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font: 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
 .shell-actions { display: flex; align-items: center; gap: 4px; }
 .shell-actions .btn-icon { position: relative; border-radius: 12px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; background: #333; color: var(--brand); font: 700 13px var(--display); display: grid; place-items: center; border: 0; cursor: pointer; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--night); color: var(--accent); font: 700 13px var(--display); display: grid; place-items: center; border: 0; cursor: pointer; }
 .poste-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; background: var(--surface-3); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .net-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
 .net-dot.off { background: var(--critical); }
@@ -67,9 +67,9 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 .tile-kpi.good { color: var(--good-text); }
 .tile-kpi.warning { color: var(--warning-text); }
 .tile-info { font-size: 12px; color: var(--muted); }
-.tile.accent { background: #333; color: #fff; border-color: #333; }
+.tile.accent { background: linear-gradient(135deg, var(--night), var(--night-2)); color: #fff; border-color: var(--night); }
 .tile.accent .tile-sub, .tile.accent .tile-info { color: #c9c9c9; }
-.tile.accent .tile-icon { background: var(--brand); color: #333; }
+.tile.accent .tile-icon { background: var(--accent); color: var(--night); }
 
 /* ---------- KPI & graphiques ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 16px; }
@@ -121,12 +121,12 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 .wizard-step { flex: 1; min-width: 150px; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-weight: 600; }
 .wizard-step b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-2); flex: none; }
 .wizard-step.active { color: var(--ink); border-color: var(--brand-strong); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
-.wizard-step.active b { background: var(--brand); color: #333; }
-.wizard-step.done b { background: #333; color: var(--brand); }
+.wizard-step.active b { background: var(--brand); color: var(--brand-ink); }
+.wizard-step.done b { background: var(--night); color: var(--accent); }
 .mrz-input { font: 15px/1.6 var(--mono); letter-spacing: .06em; min-height: 86px; text-transform: uppercase; }
 .capture { display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: 16px; background: #111; color: #aaa; overflow: hidden; position: relative; }
 .capture video, .capture canvas, .capture img { width: 100%; height: 100%; object-fit: cover; }
-.capture .frame { position: absolute; inset: 14% 26%; border: 3px solid var(--brand); border-radius: 46% 46% 42% 42%; box-shadow: 0 0 0 999px rgba(0, 0, 0, .25); pointer-events: none; }
+.capture .frame { position: absolute; inset: 14% 26%; border: 3px solid var(--accent); border-radius: 46% 46% 42% 42%; box-shadow: 0 0 0 999px rgba(0, 0, 0, .25); pointer-events: none; }
 .fingers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .finger { display: grid; place-items: center; gap: 4px; padding: 12px 6px; border-radius: 12px; border: 1px dashed var(--line-strong); font-size: 11px; color: var(--muted); text-align: center; }
 .finger.ok { border-style: solid; border-color: var(--good); color: var(--good-text); background: var(--good-soft); }
@@ -138,8 +138,8 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 .gauge-value b { font: 900 40px/1 var(--display); display: block; }
 .decision-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .decision-card { border: 2px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); cursor: pointer; text-align: left; display: grid; gap: 4px; }
-.decision-card[aria-pressed="true"] { border-color: #333; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent); }
-.decision-card .reco { font-size: 11px; font-weight: 700; color: var(--ink); background: var(--brand); border-radius: 6px; padding: 1px 6px; justify-self: start; }
+.decision-card[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent); }
+.decision-card .reco { font-size: 11px; font-weight: 700; color: var(--brand-ink); background: var(--brand); border-radius: 6px; padding: 1px 6px; justify-self: start; }
 @media (max-width: 700px) { .decision-cards { grid-template-columns: 1fr; } }
 
 /* ---------- eGates ---------- */
@@ -160,9 +160,10 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 
 /* ---------- Connexion ---------- */
 .login { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
-.login-art { background: #333; color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.login-art { background: radial-gradient(800px 500px at 0% 0%, var(--night-2), var(--night)); color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
 .login-art h1 { font: 900 clamp(32px, 4vw, 52px)/1.03 var(--display); letter-spacing: -.03em; }
-.login-art .diamond { position: absolute; right: -80px; bottom: -80px; width: 340px; height: 340px; border: 28px solid var(--brand); border-radius: 40px; transform: rotate(45deg); opacity: .9; }
+.login-art .rings { position: absolute; right: -140px; bottom: -140px; width: 460px; height: 460px; border-radius: 50%; background: repeating-radial-gradient(circle, transparent 0 26px, color-mix(in srgb, var(--accent) 40%, transparent) 26px 29px); opacity: .8; }
 .login-form { display: grid; place-items: center; padding: 32px 16px; }
 .login-form form { width: min(380px, 100%); display: grid; gap: 16px; }
 @media (max-width: 860px) { .login { grid-template-columns: 1fr; } .login-art { min-height: 260px; padding: 28px; } }
+.login-art .brand-name b, .tile.accent .brand-name b { color: var(--accent); }

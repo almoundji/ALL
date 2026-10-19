@@ -1,5 +1,5 @@
 // Back-office WawID : session, shell Fiori, launchpad et routeur.
-import { LOGO, api, esc, fmtNum, icon, initTheme, toast, toggleTheme, ago, status } from "../shared/ui.js";
+import { LOGO, WORDMARK, api, esc, fmtNum, icon, initTheme, toast, toggleTheme, ago, status } from "../shared/ui.js";
 import * as dashboard from "./views/dashboard.js";
 import * as control from "./views/control.js";
 import * as crossings from "./views/crossings.js";
@@ -57,13 +57,13 @@ function renderLogin(error = "") {
   root.innerHTML = `
   <main class="login">
     <section class="login-art">
-      <a class="brand" href="../" style="color:#fff"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">WAW TELECOM</span><br><span class="brand-sub" style="color:#bbb">Solutions Innovantes</span></span></a>
+      <a class="brand" href="../" style="color:#fff"><span class="brand-logo">${LOGO}</span><span><span class="brand-name" style="color:#fff">${WORDMARK}</span><br><span class="brand-sub" style="color:#9fb3c8">Identité & frontières</span></span></a>
       <div style="position:relative;z-index:1">
-        <span class="pill-dark" style="background:#222">${icon("zap")} BCS · TMS · APIS · e-VISA</span>
-        <h1 style="margin-top:18px">WawID<br><span style="color:var(--brand)">Back-office</span> sécurisé</h1>
+        <span class="pill-dark" style="background:rgba(255,255,255,.08)">${icon("zap")} BCS · TMS · APIS · e-VISA</span>
+        <h1 style="margin-top:18px">WawID<br><span style="color:var(--accent)">Back-office</span> sécurisé</h1>
         <p style="color:#ccc;max-width:440px">Contrôle aux frontières, eGates & ABC, renseignement et autorisations de voyage dans une seule console.</p>
       </div>
-      <div class="diamond" aria-hidden="true"></div>
+      <div class="rings" aria-hidden="true"></div>
     </section>
     <section class="login-form">
       <form id="login-form">
@@ -101,7 +101,7 @@ function renderShell() {
   <header class="shell no-print">
     <div class="shell-bar">
       <a class="brand" href="#/" title="Accueil"><span class="brand-logo">${LOGO}</span></a>
-      <div class="shell-title"><span class="brand-name">WawID</span><span class="shell-app" id="shell-app">Accueil</span></div>
+      <div class="shell-title"><span class="brand-name">${WORDMARK}</span><span class="shell-app" id="shell-app">Accueil</span></div>
       <form class="shell-search" id="shell-search" role="search">${icon("search")}<input id="q" placeholder="Rechercher un voyageur, un document, une application…" aria-label="Recherche globale"><kbd>/</kbd></form>
       <div class="shell-actions">
         <span class="poste-chip" title="Poste et connexion"><span class="net-dot" id="net-dot"></span>${esc(ctx.poste(ctx.me.posteId))}</span>

@@ -30,7 +30,7 @@ async function call(path, body) {
 
 function frame(main, step = 0) {
   root.innerHTML = `
-  <header class="k-top"><span class="brand-logo">${LOGO}</span><div><div class="brand-name">WawID <span style="color:var(--brand)">eGate</span></div><div class="brand-sub">République du Sénégal · Police de l'Air et des Frontières</div></div>
+  <header class="k-top"><span class="brand-logo">${LOGO}</span><div><div class="brand-name">Waw<b>ID</b> <span style="color:var(--accent)">eGate</span></div><div class="brand-sub">République du Sénégal · Police de l'Air et des Frontières</div></div>
     <div class="k-gate">${gate ? `${icon("gate")} ${esc(gate.name)} · ${esc(gate.zone)} <button class="btn btn-sm btn-ghost" id="chg" title="Changer d'équipement">${icon("settings")}</button>` : ""}</div></header>
   <main class="k-main">${main}</main>
   <nav class="k-steps">${["Passeport", "Visage", "Vérification", "Passage"].map((s, i) => `<span class="${i + 1 <= step ? "on" : ""}"><b>${i + 1}</b>${s}</span>`).join("")}</nav>`;
@@ -52,7 +52,7 @@ async function boot() {
 
 function askKey() {
   const refused = Boolean(store.get("wawid:gateKey"));
-  frame(`<form id="k" class="card card-pad stack" style="width:min(460px,100%);background:#1a1a19">
+  frame(`<form id="k" class="card card-pad stack" style="width:min(460px,100%);background:#0b1f33">
     ${refused ? `<div class="msg critical">${icon("alert")}<span>Clé refusée par le serveur.</span></div>` : ""}
     <h2 style="font:800 24px var(--display)">Activation de l'équipement</h2>
     <p class="muted">Saisissez la clé d'équipement fournie par l'administrateur (ou connectez-vous au back-office avec un compte superviseur dans ce navigateur).</p>
@@ -63,7 +63,7 @@ function askKey() {
 
 function choose() {
   frame(`<div class="stack" style="width:min(760px,100%)"><h2 style="font:800 26px var(--display)">Choisir l'équipement</h2>
-    <div class="gate-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${gates.map((g) => `<button class="btn" style="height:auto;padding:14px;justify-content:flex-start;text-align:left;background:#1a1a19" data-g="${g.id}"><span>${icon("gate")} <b>${esc(g.name)}</b><br><span class="small muted">${esc(g.id)} · ${esc(g.type)} · ${g.status === "EN_SERVICE" && g.mode === "AUTO" ? "Ouvert" : "Fermé"}</span></span></button>`).join("")}</div></div>`);
+    <div class="gate-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${gates.map((g) => `<button class="btn" style="height:auto;padding:14px;justify-content:flex-start;text-align:left;background:#0b1f33" data-g="${g.id}"><span>${icon("gate")} <b>${esc(g.name)}</b><br><span class="small muted">${esc(g.id)} · ${esc(g.type)} · ${g.status === "EN_SERVICE" && g.mode === "AUTO" ? "Ouvert" : "Fermé"}</span></span></button>`).join("")}</div></div>`);
   root.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { gate = gates.find((g) => g.id === b.dataset.g); store.set("wawid:gate", gate.id); idle(); }));
 }
 
@@ -107,7 +107,7 @@ async function run(mrz, spoof, useCamera, chipSim = {}) {
   const started = Date.now();
   frame(`<div class="k-result"><div class="spinner" style="width:64px;height:64px;border-width:6px"></div><div class="k-title" style="font-size:38px">Lecture de la puce…</div><p class="k-lead">Ne retirez pas votre passeport.</p></div>`, 1);
   const chip = await readChip(mrz, chipSim);
-  frame(`<div class="k-card"><div><div class="k-title">Regardez la <em>caméra</em></div><p class="k-lead">Retirez lunettes de soleil et couvre-chef. Restez immobile.</p><p class="k-lead" id="cd" style="font:900 64px var(--display);color:var(--brand)">3</p></div>
+  frame(`<div class="k-card"><div><div class="k-title">Regardez la <em>caméra</em></div><p class="k-lead">Retirez lunettes de soleil et couvre-chef. Restez immobile.</p><p class="k-lead" id="cd" style="font:900 64px var(--display);color:var(--accent)">3</p></div>
     <div class="k-visual" id="vis">${icon("user")}<span class="k-oval"></span></div></div>`, 2);
   if (useCamera) {
     try {

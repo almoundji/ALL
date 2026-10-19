@@ -48,7 +48,7 @@ export async function readChip(mrz, simulate = {}) {
 /** Portrait de substitution (en production : image DG2 extraite de la puce). */
 function avatar(p) {
   const initials = `${p.surname[0] || ""}${p.given[0] || ""}`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150"><rect width="120" height="150" fill="#e9e6dc"/><circle cx="60" cy="58" r="30" fill="#c9c2ae"/><path d="M14 150c4-34 24-50 46-50s42 16 46 50z" fill="#c9c2ae"/><text x="60" y="66" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="22" fill="#333">${initials}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150"><rect width="120" height="150" fill="#e9e6dc"/><circle cx="60" cy="58" r="30" fill="#c9c2ae"/><path d="M14 150c4-34 24-50 46-50s42 16 46 50z" fill="#c9c2ae"/><text x="60" y="66" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="22" fill="#333">${initials}</text></svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 

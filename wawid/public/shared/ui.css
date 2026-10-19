@@ -1,11 +1,12 @@
-/* WawID — système de design partagé (inspiré de SAP Fiori Horizon, identité WAW Telecom). */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800;900&display=swap");
+/* WawID — système de design partagé (ergonomie inspirée de SAP Fiori Horizon, identité propre WawID : bleu nuit + turquoise sécurité). */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap");
 
 :root {
   color-scheme: light;
   --bg: #f4f5f7; --surface: #ffffff; --surface-2: #f7f8fa; --surface-3: #eef0f4;
-  --ink: #2b2b2b; --ink-2: #555b68; --muted: #7d8494; --line: #e4e7ee; --line-strong: #cfd4de;
-  --brand: #ffd500; --brand-strong: #f2c200; --brand-soft: #fff6c7; --brand-ink: #2b2b2b; --dark: #333333;
+  --ink: #13202e; --ink-2: #555b68; --muted: #7d8494; --line: #e4e7ee; --line-strong: #cfd4de;
+  --brand: #0f766e; --brand-strong: #0b5e58; --brand-soft: #ddf3ef; --brand-ink: #ffffff; --dark: #0b1f33;
+  --night: #0b1f33; --night-2: #13304d; --accent: #2dd4bf; --accent-2: #38bdf8;
   --good: #0ca30c; --good-text: #0b7a0b; --good-soft: #e7f6e7;
   --warning: #fab219; --warning-text: #8a5a00; --warning-soft: #fff4dc;
   --serious: #ec835a; --serious-text: #b04a1e; --serious-soft: #fdeee7;
@@ -16,7 +17,7 @@
   --shadow-2: 0 10px 30px rgba(20, 24, 40, .08), 0 2px 6px rgba(20, 24, 40, .05);
   --radius: 16px; --radius-sm: 10px;
   --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --display: "Poppins", "Inter", system-ui, sans-serif;
+  --display: "Sora", "Inter", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -24,7 +25,7 @@
     color-scheme: dark;
     --bg: #0f0f0f; --surface: #1a1a19; --surface-2: #222221; --surface-3: #2a2a28;
     --ink: #f0efec; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #2f2f2d; --line-strong: #44443f;
-    --brand-soft: #3a3210; --dark: #f0efec;
+    --brand: #2dd4bf; --brand-strong: #14b8a6; --brand-soft: #0f2e2b; --brand-ink: #042f2c; --dark: #f0efec;
     --good-text: #4cc94c; --good-soft: #10260f; --warning-text: #fab219; --warning-soft: #2e2510;
     --serious-text: #f19a76; --serious-soft: #2e1b13; --critical-text: #f07a7a; --critical-soft: #2e1515;
     --info-text: #7fb0ee; --info-soft: #132235;
@@ -36,7 +37,7 @@
   color-scheme: dark;
   --bg: #0f0f0f; --surface: #1a1a19; --surface-2: #222221; --surface-3: #2a2a28;
   --ink: #f0efec; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #2f2f2d; --line-strong: #44443f;
-  --brand-soft: #3a3210; --dark: #f0efec;
+  --brand: #2dd4bf; --brand-strong: #14b8a6; --brand-soft: #0f2e2b; --brand-ink: #042f2c; --dark: #f0efec;
   --good-text: #4cc94c; --good-soft: #10260f; --warning-text: #fab219; --warning-soft: #2e2510;
   --serious-text: #f19a76; --serious-soft: #2e1b13; --critical-text: #f07a7a; --critical-soft: #2e1515;
   --info-text: #7fb0ee; --info-soft: #132235;
@@ -64,12 +65,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- Marque ---------- */
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
-.brand-logo { width: 44px; height: 44px; border-radius: 12px; background: #fff; box-shadow: var(--shadow-1); display: grid; place-items: center; border: 1px solid var(--line); }
-.brand-logo svg { width: 30px; height: 30px; }
+.brand-logo { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+.brand-logo svg { width: 100%; height: 100%; }
+.brand-name b { color: var(--brand); font-weight: inherit; }
 .brand-name { font: 800 18px/1.1 var(--display); letter-spacing: -.01em; }
 .brand-sub { font-size: 12px; color: var(--muted); }
-.hl { color: var(--brand); -webkit-text-stroke: 1px var(--brand-strong); }
-.pill-dark { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: #333; color: var(--brand); font: 800 13px var(--display); letter-spacing: .08em; text-transform: uppercase; box-shadow: var(--shadow-2); }
+.hl { background: linear-gradient(90deg, var(--brand), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pill-dark { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--night); color: var(--accent); font: 700 12px var(--display); letter-spacing: .1em; text-transform: uppercase; box-shadow: var(--shadow-2); }
 
 /* ---------- Boutons ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .05s; white-space: nowrap; }
@@ -78,8 +80,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-primary { background: var(--brand); border-color: var(--brand-strong); color: var(--brand-ink); }
 .btn-primary:hover { background: var(--brand-strong); }
-.btn-dark { background: #333; border-color: #333; color: #fff; }
-.btn-dark:hover { background: #222; }
+.btn-dark { background: var(--night); border-color: var(--night); color: #fff; }
+.btn-dark:hover { background: var(--night-2); }
 .btn-ghost { background: transparent; border-color: transparent; }
 .btn-ghost:hover { background: var(--surface-3); }
 .btn-danger { color: var(--critical-text); border-color: color-mix(in srgb, var(--critical) 45%, transparent); }
@@ -99,7 +101,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .textarea { min-height: 90px; resize: vertical; }
 .input[aria-invalid="true"] { border-color: var(--critical); }
 .check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-.check input { margin-top: 3px; accent-color: #333; width: 16px; height: 16px; }
+.check input { margin-top: 3px; accent-color: var(--brand); width: 16px; height: 16px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 .seg { display: inline-flex; padding: 3px; border-radius: 12px; background: var(--surface-3); gap: 2px; flex-wrap: wrap; }
 .seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 9px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
