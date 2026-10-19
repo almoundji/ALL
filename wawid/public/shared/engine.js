@@ -197,6 +197,12 @@ export function screenWatchlist(p, watchlist) {
   const full = `${p.surname} ${p.given}`;
   for (const w of watchlist || []) {
     if (w.active === false) continue;
+    if (["email", "phone", "device"].includes(w.kind)) {
+      const norm = (v) => String(v || "").toLowerCase().replace(w.kind === "phone" ? /[^0-9]/g : /\s/g, "");
+      const value = norm({ email: p.email, phone: p.phone, device: p.deviceId }[w.kind]);
+      if (value && value === norm(w.value)) hits.push({ entry: w, score: 1, basis: { email: "E-mail", phone: "Téléphone", device: "Appareil" }[w.kind] });
+      continue;
+    }
     if (w.kind === "document") {
       const key = docKey(w.docNo);
       const issuerOk = !w.issuer || !p.issuer || w.issuer === p.issuer;
@@ -274,7 +280,9 @@ export function assessRisk(p, ctx = {}) {
 
   for (const h of screenWatchlist(p, ctx.watchlist)) {
     const w = h.entry;
-    if (w.kind === "document") {
+    if (["email", "phone", "device"].includes(w.kind)) {
+      add("LISTE_NOIRE", `Liste noire : ${h.basis.toLowerCase()} signalé`, { critique: 80, haute: 60, moyenne: 35, basse: 15 }[w.severity] ?? 40, `${w.list} — ${w.reason || ""}`);
+    } else if (w.kind === "document") {
       critical = true;
       add("SLTD", "Document signalé perdu / volé", 85, `${w.list} — ${w.reason || "signalement"}`);
     } else {
@@ -307,6 +315,21 @@ export function assessRisk(p, ctx = {}) {
   // Attaques de présentation / d'injection (ISO/IEC 30107-3), à la manière des moteurs eKYC (ex. ZOLOZ).
   const PAD = { masque: "masque 3D", ecran: "rejeu sur écran", impression: "photo imprimée", deepfake: "deepfake / injection vidéo" };
   if (ctx.attack && PAD[ctx.attack]) add("ATTAQUE", `Attaque de présentation détectée : ${PAD[ctx.attack]}`, 60);
+  // eKYC à distance (e-Visa) : authenticité du document, comparaison faciale, vivacité, deepfake, injection.
+  if (ctx.ekyc) {
+    const e = ctx.ekyc;
+    if (e.document?.recapture) add("EKYC_DOC", "Document : photo d'écran (recapture) détectée", 50);
+    if (e.document?.printed) add("EKYC_DOC", "Document : copie imprimée détectée", 50);
+    if (e.document?.tampering || e.document?.aigc) add("EKYC_DOC", "Document altéré ou généré par IA", 60);
+    if (typeof e.faceScore === "number" && e.faceScore < 0.8) add("EKYC_FACE", "Selfie différent de la photo du document", 40, `score ${(e.faceScore * 100).toFixed(1)} %`);
+    if (e.liveness === false) add("ATTAQUE", "Défis de vivacité échoués (selfie)", 50);
+    if (e.deepfake) add("ATTAQUE", "Deepfake détecté (visage généré ou permuté)", 60);
+    if (e.injection) add("INJECTION", "Attaque par injection vidéo (caméra virtuelle)", 60, (e.virtualCameras || []).join(", "));
+    if (e.quality === false) add("EKYC_QUALITE", "Qualité d'image insuffisante", 5);
+  }
+  // Réseau d'identités : mêmes coordonnées ou même appareil pour des identités différentes.
+  if (ctx.network?.size > 0) add("RESEAU", `Coordonnées ou appareil partagés avec ${ctx.network.size} autre(s) identité(s)`, Math.min(45, 15 + 10 * ctx.network.size), ctx.network.via.join(", "));
+
   // Réutilisation d'identité : même document avec une autre identité, ou même personne avec plusieurs documents.
   if (ctx.identity?.docOtherIdentity) add("DOC_REUTILISE", "Document déjà présenté sous une autre identité", 70, ctx.identity.docOtherIdentity);
   if (ctx.identity?.otherDocs > 0) add("MULTI_DOCS", "Même identité présentée avec plusieurs documents", 15, `${ctx.identity.otherDocs} autre(s) document(s) sur 90 jours`);
@@ -329,7 +352,7 @@ export function assessRisk(p, ctx = {}) {
   const score = Math.max(0, Math.min(100, factors.reduce((s, f) => s + f.points, 0)));
   const level = levelOf(score);
   const recommendation = critical || score >= 80 ? "REFUSE" : score >= 30 ? "SECONDAIRE" : "AUTORISE";
-  const fraud = factors.some((f) => ["SLTD", "MRZ", "LIVENESS", "FACE", "PUCE_PA", "PUCE_MRZ", "ATTAQUE", "DOC_REUTILISE"].includes(f.code));
+  const fraud = factors.some((f) => ["SLTD", "MRZ", "LIVENESS", "FACE", "PUCE_PA", "PUCE_MRZ", "ATTAQUE", "DOC_REUTILISE", "EKYC_DOC", "EKYC_FACE", "INJECTION"].includes(f.code));
   return { score, level: level.id, levelLabel: level.label, tone: level.tone, recommendation, critical, fraud, factors };
 }
 
@@ -401,6 +424,11 @@ export function alertType(factors) {
   if (find("WATCHLIST")) return ["WATCHLIST", find("WATCHLIST").label];
   if (find("DOC_REUTILISE")) return ["FRAUDE_DOC", "Document réutilisé sous une autre identité"];
   if (find("ATTAQUE")) return ["FRAUDE_BIO", find("ATTAQUE").label];
+  if (find("INJECTION")) return ["FRAUDE_BIO", find("INJECTION").label];
+  if (find("EKYC_DOC")) return ["FRAUDE_DOC", find("EKYC_DOC").label];
+  if (find("EKYC_FACE")) return ["FRAUDE_BIO", find("EKYC_FACE").label];
+  if (find("RESEAU")) return ["RESEAU", find("RESEAU").label];
+  if (find("LISTE_NOIRE")) return ["WATCHLIST", find("LISTE_NOIRE").label];
   if (find("PUCE_PA") || find("PUCE_MRZ")) return ["FRAUDE_DOC", "Puce électronique invalide (document falsifié)"];
   if (find("LIVENESS") || find("FACE")) return ["FRAUDE_BIO", "Suspicion d'usurpation d'identité (biométrie)"];
   if (find("MRZ")) return ["FRAUDE_DOC", "Document suspect (MRZ)"];

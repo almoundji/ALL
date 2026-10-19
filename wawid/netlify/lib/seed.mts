@@ -50,6 +50,7 @@ export function generateSeed(now = new Date()): Seed {
     { kind: "document", source: "INTERPOL_SLTD", list: "Interpol SLTD", docNo: "GN2219034", issuer: "GIN", reason: "Déclaré perdu", reference: "SLTD-GN-12007" },
     { kind: "document", source: "INTERPOL_SLTD", list: "Interpol SLTD", docNo: "19FV22871", issuer: "FRA", reason: "Déclaré volé", reference: "SLTD-FR-993102" },
     { kind: "document", source: "SLTD_NATIONAL", list: "Documents nationaux invalidés", docNo: "A05102277", issuer: "SEN", reason: "Passeport annulé (fraude à l'état civil)", reference: "DAF-2026-301" },
+    { kind: "phone", source: "LISTE_NOIRE", list: "Liste noire — coordonnées", value: "+221 77 000 13 13", severity: "haute", reason: "Numéro utilisé par un réseau de faux dossiers e-Visa", reference: "LN-2026-007" },
   ].map((w, i) => ({ id: id("WL", i + 1), active: true, addedBy: "Système (seed)", addedAt: daysAgo(30 + i).toISOString(), ...w }));
 
   const rules = [
@@ -105,6 +106,27 @@ export function generateSeed(now = new Date()): Seed {
       validUntil: status === "APPROUVEE" ? iso(new Date(created.getTime() + 90 * 86400000)) : null,
     });
   });
+  for (const v of evisas) v.deviceId = `dev-${Math.floor(rnd() * 1e9).toString(36)}`;
+  // Réseau de fraude : quatre demandes d'identités différentes, même téléphone et même appareil.
+  const ring = [["Haddad", "Samir", "LBN"], ["Wang", "Jun", "CHN"], ["Yilmaz", "Emre", "TUR"], ["Sharma", "Ravi", "IND"]];
+  ring.forEach(([surname, given, nat], k) => {
+    const docNo = `${nat.slice(0, 2)}${7700000 + k * 1311}`;
+    const created = daysAgo(1 + k * 0.4);
+    evisas.unshift({
+      ref: `EV${String(269000 + k)}`, createdAt: created.toISOString(), status: k < 2 ? "EN_EXAMEN" : "SOUMISE", travelerId: null, channel: "Web", deviceId: "dev-ring-4f2a9",
+      applicant: { surname, given, dob: `198${k}-0${k + 2}-1${k}`, sex: "M", nat, docNo, expiry: "2031-06-30", email: `voyage.dakar${k}@exemple.org`, phone: "+221 77 000 13 13" },
+      trip: { purpose: "Affaires", arrival: iso(new Date(now.getTime() + 6 * 86400000)), nights: 30, port: "AIBD", address: "Même adresse : Villa 12, Ouakam" },
+      health: { yellowFever: true, symptoms: false, countriesVisited: "" },
+      payment: { amount: 50000, currency: "XOF", method: "Carte bancaire", paidAt: created.toISOString(), receipt: `PAY-RING-${k}` },
+      prescreen: { score: 0, level: "FAIBLE", factors: [] }, messages: [], decidedBy: null, visaNo: null, validUntil: null,
+    });
+  });
+  // Pré-contrôle des demandes du réseau (réseau d'identités + liste noire).
+  for (const v of evisas.slice(0, ring.length)) {
+    const others = evisas.filter((o) => o !== v && (o.deviceId === v.deviceId || o.applicant.phone === v.applicant.phone)).length;
+    const r = assessRisk({ ...v.applicant, issuer: v.applicant.nat, deviceId: v.deviceId }, { watchlist, rules, now, direction: "ENTREE", channel: "EVISA", network: { size: others, via: ["téléphone", "appareil"] } });
+    v.prescreen = { score: r.score, level: r.level, factors: r.factors };
+  }
   const visaByDoc = new Map(evisas.map((v) => [v.applicant.docNo, v]));
 
   // ----- eGates / ABC -----

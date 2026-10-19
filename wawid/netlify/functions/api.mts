@@ -73,6 +73,41 @@ function activeVisa(evisas: any[], docNo: string) {
   return v;
 }
 
+/**
+ * Résultat eKYC transmis par le portail ou l'app (normalisé, types stricts).
+ * En production, les images sont envoyées au fournisseur eKYC côté serveur et seul son verdict fait foi.
+ */
+function ekycFacts(e: any) {
+  if (!e || typeof e !== "object") return undefined;
+  const bool = (v: any) => v === true;
+  const q = (x: any) => (x && typeof x === "object" ? { brightness: Number(x.brightness) || 0, sharpness: Number(x.sharpness) || 0, lightOk: bool(x.lightOk), sharpOk: bool(x.sharpOk) } : null);
+  const docQuality = q(e.docQuality), selfieQuality = q(e.selfieQuality);
+  return {
+    provider: str(e.provider, 30) || "simulation", docQuality, selfieQuality, faceDetected: typeof e.faceDetected === "boolean" ? e.faceDetected : null,
+    document: { recapture: bool(e.document?.recapture), printed: bool(e.document?.printed), tampering: bool(e.document?.tampering), aigc: bool(e.document?.aigc) },
+    faceScore: typeof e.faceScore === "number" && e.faceScore >= 0 && e.faceScore <= 1 ? e.faceScore : null,
+    liveness: typeof e.liveness === "boolean" ? e.liveness : null, deepfake: bool(e.deepfake), injection: bool(e.injection),
+    virtualCameras: Array.isArray(e.virtualCameras) ? e.virtualCameras.slice(0, 5).map((v: any) => str(v, 60)) : [],
+    quality: !(docQuality && (!docQuality.lightOk || !docQuality.sharpOk)) && !(selfieQuality && (!selfieQuality.lightOk || !selfieQuality.sharpOk)),
+  };
+}
+
+/** Réseau d'identités : demandes d'autres personnes partageant e-mail, téléphone ou appareil. */
+function networkOf(app: any, evisas: any[]) {
+  const phone = (v: any) => String(v || "").replace(/[^0-9]/g, "");
+  const via = new Set<string>(), others = new Set<string>();
+  for (const v of evisas) {
+    if (v.applicant.docNo === app.applicant.docNo) continue;
+    const links = [
+      app.applicant.email && v.applicant.email?.toLowerCase() === app.applicant.email.toLowerCase() ? "e-mail" : "",
+      phone(app.applicant.phone).length >= 8 && phone(v.applicant.phone) === phone(app.applicant.phone) ? "téléphone" : "",
+      app.deviceId && app.deviceId !== "inconnu" && v.deviceId === app.deviceId ? "appareil" : "",
+    ].filter(Boolean);
+    if (links.length) { links.forEach((l) => via.add(l)); others.add(v.applicant.docNo); }
+  }
+  return { size: others.size, via: [...via] };
+}
+
 /** Résultat de lecture NFC transmis par le terminal : la cohérence DG1 ↔ MRZ imprimée est recalculée ici. */
 function chipFacts(parsed: any, chip: any) {
   if (!chip || typeof chip !== "object") return undefined;
@@ -156,10 +191,13 @@ on("POST", "/api/public/evisa", async (req) => {
     docNo: str(a.docNo, 12).toUpperCase().replace(/\s/g, ""), expiry: str(a.expiry, 10), email: str(a.email, 120), phone: str(a.phone, 30),
   };
   const chip = b.chip && typeof b.chip === "object" ? chipFacts({ ...applicant }, b.chip) : undefined;
-  const risk = assessRisk({ ...applicant, issuer: applicant.nat }, {
-    ...(await loadMany(["watchlist", "rules"])), direction: "ENTREE", channel: "EVISA", chip,
-  });
+  const ekyc = ekycFacts(b.ekyc);
+  const deviceId = str(b.deviceId, 64);
   const evisas = (await load<any[]>("evisas")) || [];
+  const network = networkOf({ applicant, deviceId }, evisas);
+  const risk = assessRisk({ ...applicant, issuer: applicant.nat, deviceId }, {
+    ...(await loadMany(["watchlist", "rules"])), direction: "ENTREE", channel: "EVISA", chip, ekyc, network,
+  });
   const ref = `EV${Date.now().toString().slice(-7)}`;
   const app = {
     ref, createdAt: nowIso(), status: "SOUMISE", applicant,
@@ -167,7 +205,7 @@ on("POST", "/api/public/evisa", async (req) => {
     health: { yellowFever: Boolean(h.yellowFever), symptoms: Boolean(h.symptoms), countriesVisited: str(h.countriesVisited, 160) },
     payment: { amount: settings.evisaFee, currency: "XOF", method: str(b.paymentMethod, 30) || "Carte bancaire", paidAt: nowIso(), receipt: uid("PAY") },
     prescreen: { score: risk.score, level: risk.level, factors: risk.factors }, messages: [], decidedBy: null, visaNo: null, validUntil: null,
-    channel: str(b.channel, 20) || "Web", chip: chip ? { ...chip, source: str(b.chip.source, 30) || "NFC", protocol: str(b.chip.protocol, 10) || null } : null,
+    channel: str(b.channel, 20) || "Web", deviceId, ekyc, chip: chip ? { ...chip, source: str(b.chip.source, 30) || "NFC", protocol: str(b.chip.protocol, 10) || null } : null,
   };
   evisas.unshift(app);
   await save("evisas", evisas);
@@ -368,14 +406,15 @@ on("PATCH", "/api/cases/:id", async (req, p, user) => {
 on("POST", "/api/watchlist", async (req, _p, user) => {
   need(user, "watchlist");
   const b = await body(req);
-  const kind = b.kind === "document" ? "document" : "person";
+  const kind = ["document", "email", "phone", "device"].includes(b.kind) ? b.kind : "person";
   if (kind === "person" && (!str(b.surname) || !str(b.given))) fail(400, "Nom et prénoms obligatoires");
   if (kind === "document" && !str(b.docNo)) fail(400, "Numéro de document obligatoire");
+  if (["email", "phone", "device"].includes(kind) && !str(b.value)) fail(400, "Valeur obligatoire (e-mail, téléphone ou identifiant d'appareil)");
   const list = (await load<any[]>("watchlist")) || [];
   const e = {
     id: uid("WL"), kind, source: str(b.source, 30) || "POI", list: str(b.list, 80) || "Personne d'intérêt", surname: str(b.surname, 60), given: str(b.given, 80),
     dob: str(b.dob, 10), nat: str(b.nat, 3).toUpperCase(), docNo: str(b.docNo, 20).toUpperCase().replace(/[^A-Z0-9]/g, ""), issuer: str(b.issuer, 3).toUpperCase(),
-    severity: ["critique", "haute", "moyenne", "basse"].includes(b.severity) ? b.severity : "moyenne", reason: str(b.reason, 300), reference: str(b.reference, 60),
+    severity: ["critique", "haute", "moyenne", "basse"].includes(b.severity) ? b.severity : "moyenne", reason: str(b.reason, 300), reference: str(b.reference, 60), value: str(b.value, 120),
     active: true, addedBy: user.name, addedAt: nowIso(),
   };
   list.unshift(e);
