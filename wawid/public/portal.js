@@ -1,4 +1,4 @@
-// Portail voyageur WawID : e-Visa, suivi, WawPass (taxe de sécurité), pré-enrôlement eGate.
+// Portail voyageur WawID : e-Visa, suivi, pré-enrôlement eGate. La redevance de sécurité est incluse dans le billet d'avion.
 import { parseMRZ } from "./shared/engine.js";
 import { bindLangSwitch, initI18n, langSwitch, lang } from "./shared/i18n.js";
 import { LOGO, WORDMARK, api, countryOptions, country, esc, fmtDate, fmtDateTime, fmtXOF, icon, initTheme, qrSvg, status, toast, toggleTheme } from "./shared/ui.js";
@@ -6,7 +6,7 @@ import { LOGO, WORDMARK, api, countryOptions, country, esc, fmtDate, fmtDateTime
 initTheme();
 const app = document.getElementById("app");
 let info = null;
-const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["wawpass", "WawPass"], ["egate", "eGate"]];
+const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["egate", "eGate"]];
 
 function shell(page, html) {
   app.innerHTML = `
@@ -34,7 +34,7 @@ function shell(page, html) {
 function home() {
   shell("accueil", `
   <section class="p-hero">
-    <span class="pill-dark">${icon("zap")} e-Visa · WawPass · eGate · Suivi</span>
+    <span class="pill-dark">${icon("zap")} e-Visa · eGate · Suivi</span>
     <h1>Votre voyage, <span class="hl">simplifié</span> et sécurisé</h1>
     <span class="p-underline" style="margin:14px 0 0 0"></span>
     <p>Demandez votre autorisation de voyage en ligne, payez la taxe de sécurité et franchissez la frontière en quelques secondes grâce aux eGates biométriques.</p>
@@ -47,7 +47,7 @@ function home() {
   <div class="p-cards">
     ${card("evisa", "fileCheck", "e-Visa", `Formulaire en ligne, paiement ${fmtXOF(info.evisaFee)}, réponse par e-mail et QR code à présenter.`)}
     ${card("suivi", "search", "Suivi de demande", "Consultez l'état de votre dossier et répondez aux demandes de l'administration.")}
-    ${card("wawpass", "creditCard", "WawPass", `Taxe de sécurité aéroportuaire (${fmtXOF(info.passFee)}) payée en ligne, validée à l'aéroport par QR code.`)}
+    ${card("redevance", "creditCard", "Redevance de sécurité", "Incluse dans le prix de votre billet d'avion : aucun paiement à effectuer sur place ni en ligne.")}
     ${card("egate", "gate", "Passage eGate", "Pré-enregistrez votre passeport pour passer par les portes automatiques.")}
   </div>`);
   const nat = app.querySelector("#nat");
@@ -165,20 +165,15 @@ async function track(q) {
   if (q.ref && q.doc) show();
 }
 
-// ---------- WawPass ----------
-function wawpass() {
-  shell("wawpass", `<section class="p-section"><h2>WawPass — taxe de sécurité</h2><p class="muted">Payez en ligne avant votre vol et présentez le QR code à l'aéroport.</p>
-    <form class="card p-form" id="f"><div class="form-grid">${field("surname", "Nom")}${field("given", "Prénoms")}<label class="field"><span>Nationalité *</span><select class="select" name="nat" required>${countryOptions()}</select></label>${field("docNo", "N° de passeport")}${field("flight", "Vol (ex. HC 404)")}${field("travelDate", "Date du voyage", "", "date")}
-      <label class="field"><span>Moyen de paiement</span><select class="select" name="paymentMethod"><option>Wave</option><option>Orange Money</option><option>Carte bancaire</option></select></label></div>
-      <div class="row" style="justify-content:space-between"><b style="font:800 22px var(--display)">${fmtXOF(info.passFee)}</b><button class="btn btn-primary btn-lg">${icon("creditCard")} Payer</button></div></form></section>`);
-  app.querySelector("#f").onsubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const r = await api("/api/public/pass", { method: "POST", body: Object.fromEntries(new FormData(e.target)) });
-      shell("wawpass", `<div class="card p-receipt"><h2 style="font:900 30px var(--display)">Paiement confirmé</h2><div class="qr">${qrSvg(r.token)}</div><b class="mono">${esc(r.ref)}</b>
-        <p class="muted">${esc(r.surname)} ${esc(r.given)} · vol ${esc(r.flight)} du ${fmtDate(r.travelDate)} · ${fmtXOF(r.amount)}</p><button class="btn" onclick="print()">${icon("printer")} Imprimer / enregistrer</button></div>`);
-    } catch (err) { toast(err.message, "critical"); }
-  };
+// ---------- Redevance de sécurité (information) ----------
+// La redevance est perçue par les compagnies aériennes dans le prix du billet : le voyageur n'a rien à payer à part.
+function redevance() {
+  shell("redevance", `<section class="p-section"><h2>Redevance de sécurité</h2>
+    <div class="card p-form">
+      <div class="msg good">${icon("checkCircle")}<span><b>Vous n'avez rien à payer.</b> La redevance de sécurité est incluse dans le prix de votre billet d'avion et perçue par votre compagnie aérienne.</span></div>
+      <p>Elle s'applique aux passagers embarqués ou débarqués sur un vol commercial international au Sénégal. Les membres d'équipage, les enfants de moins de 2 ans, les passagers en transit de moins de 24 h et les vols déroutés en sont exonérés.</p>
+      <p class="muted">Méfiez-vous de toute demande de paiement en ligne ou à l'aéroport au titre de cette redevance : elle ne vous sera jamais réclamée directement.</p>
+    </div></section>`);
 }
 
 // ---------- eGate ----------
@@ -208,7 +203,7 @@ async function route() {
   const q = Object.fromEntries(new URLSearchParams(qs || ""));
   if (page === "evisa") return evisa();
   if (page === "suivi") return track(q);
-  if (page === "wawpass") return wawpass();
+  if (page === "redevance" || page === "wawpass") return redevance();
   if (page === "egate") return egate();
   return home();
 }

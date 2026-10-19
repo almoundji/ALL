@@ -1638,5 +1638,16 @@
 "Page réservée aux agents connectés": "Page restricted to signed-in officers",
 "Agents de la DPAF : la documentation complète est disponible dans l'espace DPAF.": "DPAF officers: the full documentation is available in the DPAF space.",
 "Paiement non retrouvé sur le relevé bancaire": "Payment not found on the bank statement",
-"Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé bancaire ; seuls les paiements validés soldent les factures.": "Payments declared by airlines on their platform. Validate them after reconciliation with the bank statement; only validated payments settle invoices."
+"Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé bancaire ; seuls les paiements validés soldent les factures.": "Payments declared by airlines on their platform. Validate them after reconciliation with the bank statement; only validated payments settle invoices.",
+"Incluse dans le prix de votre billet d'avion : aucun paiement à effectuer sur place ni en ligne.": "Included in your plane ticket price: nothing to pay at the airport or online.",
+"Vous n'avez rien à payer.": "You have nothing to pay.",
+"La redevance de sécurité est incluse dans le prix de votre billet d'avion et perçue par votre compagnie aérienne.": "The security fee is included in your plane ticket price and collected by your airline.",
+"Elle s'applique aux passagers embarqués ou débarqués sur un vol commercial international au Sénégal. Les membres d'équipage, les enfants de moins de 2 ans, les passagers en transit de moins de 24 h et les vols déroutés en sont exonérés.": "It applies to passengers boarding or leaving an international commercial flight in Senegal. Crew members, children under 2, passengers in transit for less than 24 h and diverted flights are exempt.",
+"Méfiez-vous de toute demande de paiement en ligne ou à l'aéroport au titre de cette redevance : elle ne vous sera jamais réclamée directement.": "Beware of any request to pay this fee online or at the airport: it will never be asked of you directly.",
+"e-Visa · eGate · Suivi": "e-Visa · eGate · Tracking",
+"Pré-enrôlements eGate": "eGate pre-enrollments",
+"Programme de passage automatisé": "Automated border crossing programme",
+"pré-enrôlements": "pre-enrollments",
+"Historique WawPass ({0})": "WawPass history ({0})",
+"Pré-enrôlements au programme eGate. Historique des anciens reçus WawPass (paiement voyageur supprimé : la redevance est incluse dans le billet).": "Pre-enrollments to the eGate programme. History of former WawPass receipts (traveler payment removed: the fee is included in the ticket)."
 }

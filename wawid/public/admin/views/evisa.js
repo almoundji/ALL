@@ -104,10 +104,10 @@ export function renderVerify(el, ctx) {
 
 // ---------- WawPass & pré-enrôlements ----------
 export function renderPasses(el, ctx, _rest, query) {
-  const tab = query.tab || "pass";
+  const tab = query.tab || "enrol";
   const d = ctx.data;
-  el.innerHTML = `${pageHead({ title: "WawPass & enrôlements", sub: "Taxes de sécurité payées en ligne (QR validé à l'aéroport) et pré-enrôlements au programme eGate.", crumbs: [[null, "e-Visa & voyageurs"]] })}
-  <nav class="space-tabs"><button aria-selected="${tab === "pass"}" data-tab="pass">WawPass (${d.passes.length})</button><button aria-selected="${tab === "enrol"}" data-tab="enrol">Pré-enrôlements eGate (${d.enrolments.length})</button></nav>
+  el.innerHTML = `${pageHead({ title: "Pré-enrôlements eGate", sub: "Pré-enrôlements au programme eGate. Historique des anciens reçus WawPass (paiement voyageur supprimé : la redevance est incluse dans le billet).", crumbs: [[null, "e-Visa & voyageurs"]] })}
+  <nav class="space-tabs"><button aria-selected="${tab === "enrol"}" data-tab="enrol">Pré-enrôlements eGate (${d.enrolments.length})</button><button aria-selected="${tab === "pass"}" data-tab="pass">Historique WawPass (${d.passes.length})</button></nav>
   <section class="card" id="t"></section>`;
   el.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => (location.hash = `#/wawpass?tab=${b.dataset.tab}`)));
   if (tab === "pass") mountTable(el.querySelector("#t"), {

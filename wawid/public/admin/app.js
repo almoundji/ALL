@@ -34,7 +34,7 @@ const APPS = [
   { space: "Contrôle frontière", id: "egates", path: "egates", title: "eGates & ABC", sub: "Supervision temps réel", icon: "gate", perm: "read", view: gates, kpi: (d) => [d.gates.filter((g) => g.status === "EN_SERVICE" && g.mode === "AUTO").length, `portes ouvertes sur ${d.gates.length}`] },
   { space: "Contrôle frontière", id: "passages", path: "passages", title: "Passages", sub: "Historique des franchissements", icon: "list", perm: "read", view: crossings, kpi: (d) => [d.crossings.length, "sur 14 jours"] },
   { space: "Contrôle frontière", id: "voyageurs", path: "voyageurs", title: "Recherche voyageur", sub: "Profil 360° et parcours", icon: "user", perm: "read", view: crossings, fn: "renderSearch", kpi: (d) => [new Set(d.crossings.map((c) => c.traveler.docNo)).size, "voyageurs connus"] },
-  { space: "Contrôle frontière", id: "verifier", path: "verifier", title: "Vérifier un QR", sub: "e-Visa · WawPass", icon: "qr", perm: "read", view: evisa, fn: "renderVerify" },
+  { space: "Contrôle frontière", id: "verifier", path: "verifier", title: "Vérifier un QR", sub: "e-Visa", icon: "qr", perm: "read", view: evisa, fn: "renderVerify" },
   { space: "Contrôle frontière", id: "vehicules", path: "vehicules", title: "Véhicules (VRS)", sub: "Postes terrestres", icon: "car", perm: "read", view: ses, fn: "renderVehicles", kpi: (d) => [d.vehicles.filter((v) => v.flagged).length, "véhicules signalés"], tone: "warning" },
   { space: "Contrôle frontière", id: "new-controle", create: true, href: "#/controle", title: "Nouveau contrôle", sub: "Lecture du passeport", perm: "control" },
 
@@ -51,7 +51,7 @@ const APPS = [
   { space: "APIS & PNR", id: "new-msg", create: true, href: "#/apis?tab=passerelle&send=1", title: "Recevoir un message", sub: "API (PAXLST) ou PNR", perm: "apis" },
 
   { space: "e-Visa & voyageurs", id: "evisa", path: "evisa", title: "e-Visa", sub: "Instruction des demandes", icon: "file", perm: "read", view: evisa, kpi: (d) => [d.evisas.filter((v) => ["SOUMISE", "EN_EXAMEN"].includes(v.status)).length, "demandes à instruire"], tone: "warning" },
-  { space: "e-Visa & voyageurs", id: "wawpass", path: "wawpass", title: "WawPass & enrôlements", sub: "Taxe de sécurité, eGate", icon: "creditCard", perm: "read", view: evisa, fn: "renderPasses", kpi: (d) => [d.passes.filter((p) => !p.used).length, "reçus valides"] },
+  { space: "e-Visa & voyageurs", id: "wawpass", path: "wawpass", title: "Pré-enrôlements eGate", sub: "Programme de passage automatisé", icon: "gate", perm: "read", view: evisa, fn: "renderPasses", kpi: (d) => [d.enrolments.length, "pré-enrôlements"] },
   { space: "e-Visa & voyageurs", id: "kiosque", href: "../gate/", external: true, title: "Kiosque eGate", sub: "Écran des portes", icon: "gate", perm: "read" },
 
   { space: "Finances", id: "redevance", path: "redevance", title: "Redevance de sécurité", sub: "Synthèse 6 mois", icon: "creditCard", perm: "finance", view: redevance, kpi: (d) => [Math.round((d.invoices || []).reduce((s, i) => s + i.amountXOF, 0) / 1e9 * 10) / 10, "Mds FCFA facturés"] },

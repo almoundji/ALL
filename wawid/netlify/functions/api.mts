@@ -244,24 +244,9 @@ on("POST", "/api/public/evisa/reply", async (req) => {
   return json(publicApplication(app));
 });
 
-on("POST", "/api/public/pass", async (req) => {
-  const b = await body(req);
-  for (const [k, v] of Object.entries({ Nom: b.surname, Prénoms: b.given, "N° de passeport": b.docNo, Vol: b.flight, "Date du voyage": b.travelDate }))
-    if (!str(v)) fail(400, `Champ obligatoire manquant : ${k}`);
-  if (!/^[A-Z]{3}$/.test(str(b.nat, 3).toUpperCase())) fail(400, "Nationalité obligatoire");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(str(b.travelDate, 10)) || str(b.travelDate, 10) < nowIso().slice(0, 10)) fail(400, "La date du voyage doit être aujourd'hui ou plus tard");
-  const settings = await load("settings");
-  const passes = (await load<any[]>("passes")) || [];
-  const pass = {
-    ref: `WP${Date.now().toString().slice(-7)}`, createdAt: nowIso(), surname: str(b.surname, 60), given: str(b.given, 80), docNo: str(b.docNo, 20).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12),
-    nat: str(b.nat, 3).toUpperCase(), flight: str(b.flight, 12).toUpperCase(), travelDate: str(b.travelDate, 10), amount: settings.passFee, currency: "XOF",
-    method: str(b.paymentMethod, 30) || "Carte bancaire", used: false,
-  };
-  passes.unshift(pass);
-  await save("passes", passes);
-  await audit("Portail voyageur", "WAWPASS_PAIEMENT", pass.ref);
-  return json({ ...pass, token: signToken("WP", pass.ref) });
-});
+// Ancien paiement de la taxe de sécurité par le voyageur (WawPass) : supprimé, la redevance est incluse dans le billet
+// et perçue par les compagnies. Les reçus déjà émis restent vérifiables (/api/verify-token).
+on("POST", "/api/public/pass", async () => json({ error: "La redevance de sécurité est incluse dans le prix du billet : aucun paiement n'est demandé au voyageur." }, 410));
 
 on("POST", "/api/public/enrol", async (req) => {
   const b = await body(req);
