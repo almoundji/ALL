@@ -1,10 +1,10 @@
 /* Back-office WawID — shell, launchpad et modèles de pages Fiori. */
 
-body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 60%), var(--bg); }
+body { min-height: 100vh; background: var(--bg); }
 
 /* ---------- Shell bar ---------- */
 .shell { position: sticky; top: 0; z-index: 50; padding: 12px 16px 0; }
-.shell-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-2); max-width: 1480px; margin: 0 auto; }
+.shell-bar { display: flex; align-items: center; gap: 12px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-1); max-width: 1480px; margin: 0 auto; }
 .shell .brand-logo { width: 40px; height: 40px; }
 .shell-title { display: flex; flex-direction: column; min-width: 0; }
 .shell-app { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -26,7 +26,7 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 /* ---------- Mise en page ---------- */
 .page { max-width: 1480px; margin: 0 auto; padding: 20px 16px 60px; }
 .page-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 8px 0 20px; }
-.page-head h1 { font: 800 28px/1.15 var(--display); letter-spacing: -.02em; }
+.page-head h1 { font: 800 28px/1.2 var(--display); letter-spacing: -.01em; color: var(--heading); }
 .page-head p { margin: 4px 0 0; color: var(--muted); }
 .page-head .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .crumbs { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
@@ -45,31 +45,49 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
 }
 .card, .grid-main > *, .grid-2 > * { min-width: 0; }
 
-/* ---------- Launchpad ---------- */
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin: 18px 0 30px; }
-.hero h1 { font: 900 clamp(30px, 4.4vw, 54px)/1.02 var(--display); letter-spacing: -.035em; margin-top: 18px; }
-.hero p { color: var(--ink-2); max-width: 640px; margin: 14px 0 0; font-size: 15px; }
-@media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
-.space-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto; }
-.space-tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--ink-2); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
-.space-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--brand-strong); }
-.tile-group { margin-bottom: 28px; }
-.tile-group h2 { font: 700 16px var(--display); margin-bottom: 12px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 14px; }
-.tile { position: relative; display: flex; flex-direction: column; min-height: 176px; padding: 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); text-decoration: none; color: inherit; transition: transform .15s, box-shadow .15s, border-color .15s; overflow: hidden; }
-.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: var(--line-strong); }
-.tile-title { font-weight: 700; font-size: 15px; line-height: 1.25; }
-.tile-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.tile-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
-.tile-kpi { font: 800 34px/1 var(--display); letter-spacing: -.02em; }
-.tile-kpi small { font: 600 13px var(--font); color: var(--muted); margin-left: 4px; }
+/* ---------- Launchpad (accueil par tuiles) ---------- */
+.home-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 14px 0 22px; }
+.home-head h1 { font: 800 30px/1.2 var(--display); color: var(--heading); letter-spacing: -.01em; }
+.home-head h1 span { font: 400 17px var(--font); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+.home-head .btn { margin-left: auto; }
+.space-tabs { display: flex; flex-wrap: wrap; gap: 0 4px; border-bottom: 2px solid var(--line-strong); margin-bottom: 26px; }
+.space-tabs button { border: 0; background: none; padding: 14px 20px 12px; font: 400 17px var(--font); color: var(--ink-2); cursor: pointer; position: relative; white-space: nowrap; }
+.space-tabs button:hover { color: var(--heading); }
+.space-tabs button[aria-selected="true"] { color: var(--heading); font-weight: 700; }
+.space-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 4px; border-radius: 4px 4px 0 0; background: var(--accent); }
+.tile-group { margin-bottom: 30px; }
+.tile-group h2 { font: 700 19px var(--display); color: var(--heading); margin-bottom: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 262px)); gap: 18px; }
+.tile { position: relative; display: flex; flex-direction: column; aspect-ratio: 1 / 1; min-height: 210px; padding: 20px 22px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); text-decoration: none; color: inherit; transition: box-shadow .15s, border-color .15s, transform .15s; }
+.tile:hover { box-shadow: var(--shadow-2); border-color: var(--line-strong); transform: translateY(-1px); }
+.tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.tile-title { font: 500 19px/1.3 var(--font); color: var(--ink); }
+.tile-sub { font-size: 15px; line-height: 1.4; color: var(--muted); margin-top: 4px; }
+.tile-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.tile-glyph { color: var(--icon); padding-bottom: 26px; }
+.tile-glyph .icon { width: 34px; height: 34px; stroke-width: 1.5; }
+.tile-num { display: grid; justify-items: end; text-align: right; min-width: 0; }
+.tile-kpi { font: 300 42px/1.05 var(--font); color: var(--ink); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .tile-kpi.critical { color: var(--critical-text); }
-.tile-kpi.good { color: var(--good-text); }
 .tile-kpi.warning { color: var(--warning-text); }
-.tile-info { font-size: 12px; color: var(--muted); }
-.tile.accent { background: linear-gradient(135deg, var(--night), var(--night-2)); color: #fff; border-color: var(--night); }
-.tile.accent .tile-sub, .tile.accent .tile-info { color: #c9c9c9; }
-.tile.accent .tile-icon { background: var(--accent); color: var(--night); }
+.tile-kpi.good { color: var(--good-text); }
+.tile-info { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.tile.create { border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent); background: linear-gradient(180deg, var(--surface) 40%, var(--accent-soft)); box-shadow: none; }
+.tile-plus { color: var(--accent); }
+.tile-plus .icon { width: 30px; height: 30px; stroke-width: 1.8; }
+.tile.off { opacity: .45; }
+.tile-toggle { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); display: grid; place-items: center; cursor: pointer; }
+.tile:not(.off) .tile-toggle { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.tile-toggle .icon { width: 16px; height: 16px; }
+.tile-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-soft); display: grid; place-items: center; color: var(--brand); }
+@media (max-width: 760px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tile { aspect-ratio: auto; min-height: 170px; padding: 16px; }
+  .tile-title { font-size: 16px; } .tile-sub { font-size: 13px; } .tile-kpi { font-size: 32px; }
+  .tile-glyph { padding-bottom: 18px; } .tile-glyph .icon { width: 26px; height: 26px; }
+  .space-tabs button { padding: 10px 12px; font-size: 15px; }
+  .home-head h1 { font-size: 24px; } .home-head h1 span { display: block; margin: 4px 0 0; }
+}
 
 /* ---------- KPI & graphiques ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 16px; }

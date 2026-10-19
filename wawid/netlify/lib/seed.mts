@@ -288,6 +288,6 @@ export function generateSeed(now = new Date()): Seed {
     meta: { seededAt: now.toISOString(), version: 1 },
     settings: { visaExempt: VISA_EXEMPT, faceThreshold: 0.8, retentionDays: 1825, evisaFee: 50000, passFee: 15000 },
     watchlist, rules, travelers: travelers.map(({ mrz, ...t }) => t), crossings, alerts, cases, evisas, gates, flights, passes, vehicles, devices, connectors,
-    enrolments: [],
+    enrolments: [], carrierMessages: [],
   };
 }

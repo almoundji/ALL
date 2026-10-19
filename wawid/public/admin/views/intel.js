@@ -33,6 +33,7 @@ export function render(el, ctx, _rest, query) {
     ],
   });
   el.querySelector("#add")?.addEventListener("click", () => addEntry(el, ctx, _rest, query));
+  if (query.new && canEdit) { history.replaceState(null, "", "#/surveillance"); addEntry(el, ctx, _rest, {}); }
   el.querySelector("#test").onclick = () => testMatch(ctx);
 }
 

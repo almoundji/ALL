@@ -85,6 +85,22 @@ export function gateKeyValid(req: Request): boolean {
   return timingSafeEqual(Buffer.from(given), Buffer.from(key));
 }
 
+/**
+ * Clés des transporteurs (passerelle API/PNR) : WAWID_CARRIER_KEYS="HC:clé1,AF:clé2" ; renvoie le code IATA.
+ * En local, la clé « dev-carrier-key » est acceptée pour tous les transporteurs.
+ */
+export function carrierFromKey(given: string): string | null {
+  const conf = env("WAWID_CARRIER_KEYS") || ((globalThis as any).Netlify ? "" : "*:dev-carrier-key");
+  for (const pair of conf.split(",")) {
+    const i = pair.indexOf(":");
+    if (i < 1) continue;
+    const code = pair.slice(0, i).trim(), key = pair.slice(i + 1).trim();
+    const a = Buffer.from(given), b = Buffer.from(key);
+    if (key && a.length === b.length && timingSafeEqual(a, b)) return code;
+  }
+  return null;
+}
+
 /** Jeton signé (e-Visa, WawPass) présenté sous forme de QR code et vérifiable à la frontière. */
 export const signToken = (kind: string, ref: string) => `${kind}.${ref}.${sign(`${kind}.${ref}`).slice(0, 16)}`;
 export function verifyToken(token: string): { kind: string; ref: string } | null {

@@ -48,7 +48,7 @@ export function renderVehicles(el, ctx) {
   el.querySelector("#flag").onchange = apply;
 }
 
-export async function renderUsers(el, ctx) {
+export async function renderUsers(el, ctx, _rest, query) {
   const users = await api("/api/users");
   const roles = ctx.data.roles;
   el.innerHTML = `${pageHead({ title: "Utilisateurs & rôles", sub: "Habilitations par rôle (moindre privilège). Mots de passe hachés (scrypt), sessions de 12 h, actions tracées.", crumbs: [[null, "Administration"]],
@@ -70,6 +70,7 @@ export async function renderUsers(el, ctx) {
   });
   const roleOpts = (sel) => Object.entries(roles).map(([k, r]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${esc(r.label)}</option>`).join("");
   const posteOpts = (sel) => ctx.data.postes.map((p) => `<option value="${p.id}" ${p.id === sel ? "selected" : ""}>${esc(p.name)}</option>`).join("");
+  if (query?.new) { history.replaceState(null, "", "#/utilisateurs"); setTimeout(() => el.querySelector("#add").click(), 0); }
   el.querySelector("#add").onclick = async () => {
     const { value, form } = await dialog({ title: "Nouvel utilisateur", body: `<div class="form-grid"><label class="field"><span>Nom complet</span><input class="input" name="name"></label><label class="field"><span>Identifiant</span><input class="input" name="username" autocomplete="off"></label><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts("agent")}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts("AIBD")}</select></label><label class="field" style="grid-column:1/-1"><span>Mot de passe initial (10 caractères min.)</span><input class="input" name="password" type="password" autocomplete="new-password"></label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Créer", cls: "btn-primary", value: "ok" }] });
     if (!value) return;

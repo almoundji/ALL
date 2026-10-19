@@ -24,32 +24,43 @@ export const ctx = {
 };
 
 // ---------- Applications (tuiles + routes) ----------
+// Applications du launchpad. « tile » = tuile de navigation ; « create » = tuile d'action (bordure pointillée).
 const APPS = [
-  { space: "Contrôle frontière", id: "dashboard", path: "dashboard", title: "Tableau de bord", sub: "Entrées, sorties, fraude", icon: "chart", perm: "read", view: dashboard, accent: true, kpi: (d) => [today(d).length, "passages 24 h"] },
-  { space: "Contrôle frontière", id: "controle", path: "controle", title: "Contrôle guichet", sub: "Document, biométrie, décision", icon: "scan", perm: "control", view: control },
-  { space: "Contrôle frontière", id: "egates", path: "egates", title: "eGates & ABC", sub: "Supervision temps réel", icon: "gate", perm: "read", view: gates, kpi: (d) => [d.gates.filter((g) => g.status === "EN_SERVICE").length, `/ ${d.gates.length} en service`] },
-  { space: "Contrôle frontière", id: "passages", path: "passages", title: "Passages", sub: "Historique des franchissements", icon: "list", perm: "read", view: crossings, kpi: (d) => [d.crossings.length, "sur 14 j"] },
-  { space: "Contrôle frontière", id: "voyageurs", path: "voyageurs", title: "Recherche voyageur", sub: "Profil 360° et parcours", icon: "user", perm: "read", view: crossings, fn: "renderSearch" },
+  { space: "Contrôle frontière", id: "dashboard", path: "dashboard", title: "Tableau de bord", sub: "Entrées, sorties, fraude", icon: "grid", perm: "read", view: dashboard, kpi: (d) => [today(d).length, "passages sur 24 h"] },
+  { space: "Contrôle frontière", id: "controle", path: "controle", title: "Contrôle guichet", sub: "Document, puce NFC, biométrie", icon: "scan", perm: "control", view: control, kpi: (d) => [today(d).filter((c) => c.channel === "GUICHET").length, "contrôles sur 24 h"] },
+  { space: "Contrôle frontière", id: "egates", path: "egates", title: "eGates & ABC", sub: "Supervision temps réel", icon: "gate", perm: "read", view: gates, kpi: (d) => [d.gates.filter((g) => g.status === "EN_SERVICE" && g.mode === "AUTO").length, `portes ouvertes sur ${d.gates.length}`] },
+  { space: "Contrôle frontière", id: "passages", path: "passages", title: "Passages", sub: "Historique des franchissements", icon: "list", perm: "read", view: crossings, kpi: (d) => [d.crossings.length, "sur 14 jours"] },
+  { space: "Contrôle frontière", id: "voyageurs", path: "voyageurs", title: "Recherche voyageur", sub: "Profil 360° et parcours", icon: "user", perm: "read", view: crossings, fn: "renderSearch", kpi: (d) => [new Set(d.crossings.map((c) => c.traveler.docNo)).size, "voyageurs connus"] },
   { space: "Contrôle frontière", id: "verifier", path: "verifier", title: "Vérifier un QR", sub: "e-Visa · WawPass", icon: "qr", perm: "read", view: evisa, fn: "renderVerify" },
-  { space: "Contrôle frontière", id: "vehicules", path: "vehicules", title: "Véhicules (VRS)", sub: "Postes terrestres", icon: "car", perm: "read", view: ses, fn: "renderVehicles", kpi: (d) => [d.vehicles.filter((v) => v.flagged).length, "signalés"], tone: "warning" },
+  { space: "Contrôle frontière", id: "vehicules", path: "vehicules", title: "Véhicules (VRS)", sub: "Postes terrestres", icon: "car", perm: "read", view: ses, fn: "renderVehicles", kpi: (d) => [d.vehicles.filter((v) => v.flagged).length, "véhicules signalés"], tone: "warning" },
+  { space: "Contrôle frontière", id: "new-controle", create: true, href: "#/controle", title: "Nouveau contrôle", sub: "Lecture du passeport", perm: "control" },
 
-  { space: "Renseignement", id: "alertes", path: "alertes", title: "Threat Monitor", sub: "Alertes à traiter", icon: "shieldAlert", perm: "alerts", view: threat, kpi: (d) => [d.alerts.filter((a) => a.status === "NOUVELLE").length, "nouvelles"], tone: "critical" },
-  { space: "Renseignement", id: "dossiers", path: "dossiers", title: "Dossiers", sub: "Contrôle secondaire & entretiens", icon: "briefcase", perm: "cases", view: threat, fn: "renderCases", kpi: (d) => [d.cases.filter((c) => c.status === "OUVERT").length, "ouverts"] },
+  { space: "Renseignement", id: "alertes", path: "alertes", title: "Threat Monitor", sub: "Alertes à traiter", icon: "shieldAlert", perm: "alerts", view: threat, kpi: (d) => [d.alerts.filter((a) => a.status === "NOUVELLE").length, "nouvelles alertes"], tone: "critical" },
+  { space: "Renseignement", id: "dossiers", path: "dossiers", title: "Dossiers", sub: "Contrôle secondaire & entretiens", icon: "briefcase", perm: "cases", view: threat, fn: "renderCases", kpi: (d) => [d.cases.filter((c) => c.status === "OUVERT").length, "dossiers ouverts"] },
   { space: "Renseignement", id: "surveillance", path: "surveillance", title: "Listes de surveillance", sub: "Interpol, FPR, WAPIS, POI, SLTD", icon: "target", perm: "read", view: intel, kpi: (d) => [d.watchlist.filter((w) => w.active).length, "entrées actives"] },
-  { space: "Renseignement", id: "regles", path: "regles", title: "Règles de ciblage", sub: "Profils de risque (POI)", icon: "filter", perm: "read", view: intel, fn: "renderRules", kpi: (d) => [d.rules.filter((r) => r.enabled).length, "actives"] },
-  { space: "Renseignement", id: "connecteurs", path: "connecteurs", title: "Connecteurs", sub: "Interpol I-24/7, WAPIS, fichiers nationaux", icon: "link", perm: "read", view: intel, fn: "renderConnectors" },
+  { space: "Renseignement", id: "regles", path: "regles", title: "Règles de ciblage", sub: "Profils de risque", icon: "filter", perm: "read", view: intel, fn: "renderRules", kpi: (d) => [d.rules.filter((r) => r.enabled).length, "règles actives"] },
+  { space: "Renseignement", id: "connecteurs", path: "connecteurs", title: "Connecteurs", sub: "Interpol I-24/7, WAPIS, fichiers", icon: "link", perm: "read", view: intel, fn: "renderConnectors", kpi: (d) => [d.connectors.filter((c) => c.status !== "DÉSACTIVÉ").length, "sources actives"] },
+  { space: "Renseignement", id: "new-watch", create: true, href: "#/surveillance?new=1", title: "Ajouter une entrée", sub: "Personne, document, contact", perm: "watchlist" },
 
-  { space: "APIS & e-Visa", id: "apis", path: "apis", title: "APIS Monitor", sub: "Pré-contrôle API / PNR", icon: "plane", perm: "read", view: apis, kpi: (d) => [d.flights.length, "vols annoncés"] },
-  { space: "APIS & e-Visa", id: "evisa", path: "evisa", title: "e-Visa (VMS)", sub: "Instruction des demandes", icon: "fileCheck", perm: "read", view: evisa, kpi: (d) => [d.evisas.filter((v) => ["SOUMISE", "EN_EXAMEN"].includes(v.status)).length, "à instruire"], tone: "warning" },
-  { space: "APIS & e-Visa", id: "wawpass", path: "wawpass", title: "WawPass & enrôlements", sub: "Taxe de sécurité · pré-enrôlement eGate", icon: "creditCard", perm: "read", view: evisa, fn: "renderPasses" },
+  { space: "APIS & PNR", id: "apis", path: "apis", title: "Vols annoncés", sub: "Pré-contrôle des passagers", icon: "plane", perm: "read", view: apis, kpi: (d) => [d.flights.reduce((n, f) => n + f.passengers.filter((p) => p.score >= 30).length, 0), "passagers signalés"], tone: "critical" },
+  { space: "APIS & PNR", id: "apis-gw", href: "#/apis?tab=passerelle", title: "Passerelle transporteurs", sub: "Messages PAXLST et PNR", icon: "upload", perm: "read", kpi: (d) => [(d.carrierMessages || []).filter((m) => Date.now() - Date.parse(m.receivedAt) < 86400000).length, "messages sur 24 h"] },
+  { space: "APIS & PNR", id: "apis-cf", href: "#/apis?tab=conformite", title: "Conformité transporteurs", sub: "Délais et complétude", icon: "fileCheck", perm: "read", kpi: (d) => [new Set(d.flights.map((f) => f.carrier)).size, "compagnies"] },
+  { space: "APIS & PNR", id: "new-msg", create: true, href: "#/apis?tab=passerelle&send=1", title: "Recevoir un message", sub: "API (PAXLST) ou PNR", perm: "apis" },
+
+  { space: "e-Visa & voyageurs", id: "evisa", path: "evisa", title: "e-Visa", sub: "Instruction des demandes", icon: "file", perm: "read", view: evisa, kpi: (d) => [d.evisas.filter((v) => ["SOUMISE", "EN_EXAMEN"].includes(v.status)).length, "demandes à instruire"], tone: "warning" },
+  { space: "e-Visa & voyageurs", id: "wawpass", path: "wawpass", title: "WawPass & enrôlements", sub: "Taxe de sécurité, eGate", icon: "creditCard", perm: "read", view: evisa, fn: "renderPasses", kpi: (d) => [d.passes.filter((p) => !p.used).length, "reçus valides"] },
+  { space: "e-Visa & voyageurs", id: "portail", href: "../", external: true, title: "Portail voyageur", sub: "Site public", icon: "globe", perm: "read" },
+  { space: "e-Visa & voyageurs", id: "kiosque", href: "../gate/", external: true, title: "Kiosque eGate", sub: "Écran des portes", icon: "gate", perm: "read" },
 
   { space: "Administration", id: "systemes", path: "systemes", title: "Supervision systèmes", sub: "Terminaux, CCTV, scanners", icon: "server", perm: "read", view: ses, kpi: (d) => [d.devices.filter((x) => x.status !== "EN_LIGNE").length, "anomalies"], tone: "warning" },
   { space: "Administration", id: "utilisateurs", path: "utilisateurs", title: "Utilisateurs & rôles", sub: "Habilitations", icon: "users", perm: "users", view: ses, fn: "renderUsers" },
   { space: "Administration", id: "audit", path: "audit", title: "Journal d'audit", sub: "Chaîne d'intégrité SHA-256", icon: "lock", perm: "read", view: ses, fn: "renderAudit" },
-  { space: "Administration", id: "parametres", path: "parametres", title: "Paramètres", sub: "Politique visa, seuils, données", icon: "settings", perm: "system", view: ses, fn: "renderSettings" },
-  { space: "Administration", id: "projet", path: "projet", title: "Projet (Scrum)", sub: "Backlog & sprints", icon: "kanban", perm: "read", view: scrum },
+  { space: "Administration", id: "parametres", path: "parametres", title: "Paramètres", sub: "Politique, NFC, données", icon: "settings", perm: "system", view: ses, fn: "renderSettings" },
+  { space: "Administration", id: "new-user", create: true, href: "#/utilisateurs?new=1", title: "Créer un utilisateur", sub: "Agent, analyste, superviseur", perm: "users" },
+
+  { space: "Projet", id: "projet", path: "projet", title: "Projet (Scrum)", sub: "Backlog & sprints", icon: "kanban", perm: "read", view: scrum, kpi: () => [5, "sprint en cours"] },
 ];
-const SPACES = ["Contrôle frontière", "Renseignement", "APIS & e-Visa", "Administration"];
+const SPACES = ["Contrôle frontière", "Renseignement", "APIS & PNR", "e-Visa & voyageurs", "Administration", "Projet"];
 const today = (d) => d.crossings.filter((c) => Date.now() - Date.parse(c.ts) < 86400000);
 
 // ---------- Connexion ----------
@@ -134,8 +145,8 @@ function renderShell() {
     e.preventDefault();
     const q = root.querySelector("#q").value.trim();
     if (!q) return;
-    const app = APPS.find((a) => q && a.title.toLowerCase().includes(q.toLowerCase()) && ctx.can(a.perm));
-    location.hash = app ? `#/${app.path}` : `#/voyageurs?q=${encodeURIComponent(q)}`;
+    const app = APPS.find((a) => q && !a.create && !a.external && a.title.toLowerCase().includes(q.toLowerCase()) && ctx.can(a.perm));
+    location.hash = app ? app.href || `#/${app.path}` : `#/voyageurs?q=${encodeURIComponent(q)}`;
   });
   const net = () => root.querySelector("#net-dot").classList.toggle("off", !navigator.onLine);
   addEventListener("online", net); addEventListener("offline", net); net();
@@ -155,34 +166,49 @@ function fillNotifications() {
 }
 
 // ---------- Launchpad ----------
+const hiddenTiles = () => { try { return JSON.parse(localStorage.getItem("wawid:hidden") || "[]"); } catch { return []; } };
+const saveHidden = (list) => { try { localStorage.setItem("wawid:hidden", JSON.stringify(list)); } catch {} };
+let editing = false;
+
 function renderHome(el) {
   const d = ctx.data;
-  const t = today(d);
-  const space = sessionStorage.getItem("wawid:space") || "Tous";
+  const space = sessionStorage.getItem("wawid:space") || "Mon accueil";
+  const hidden = hiddenTiles();
   const visible = APPS.filter((a) => ctx.can(a.perm));
+  const date = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const tile = (a) => {
+    const off = hidden.includes(a.id);
+    if (off && !editing && space === "Mon accueil") return "";
+    const href = a.href || `#/${a.path}`;
+    const toggle = editing ? `<button class="tile-toggle" data-toggle="${a.id}" title="${off ? "Afficher" : "Masquer"} sur Mon accueil">${icon(off ? "eye" : "check")}</button>` : "";
+    if (a.create) return `<a class="tile create ${off ? "off" : ""}" href="${href}"><div class="tile-title">${esc(a.title)}</div><div class="tile-sub">${esc(a.sub)}</div><div class="tile-foot"><span class="tile-plus">${icon("plus")}</span></div>${toggle}</a>`;
     const [v, unit] = a.kpi ? a.kpi(d) : [];
-    return `<a class="tile ${a.accent ? "accent" : ""}" href="#/${a.path}">
+    return `<a class="tile ${off ? "off" : ""}" href="${href}" ${a.external ? 'target="_blank"' : ""}>
       <div class="tile-title">${esc(a.title)}</div><div class="tile-sub">${esc(a.sub)}</div>
-      <div class="tile-foot">${a.kpi ? `<div><div class="tile-kpi ${a.tone && v ? a.tone : ""}">${fmtNum(v)}</div><div class="tile-info">${esc(unit)}</div></div>` : "<span></span>"}<span class="tile-icon">${icon(a.icon)}</span></div>
+      <div class="tile-foot"><span class="tile-glyph">${icon(a.icon)}</span>${a.kpi ? `<span class="tile-num"><span class="tile-kpi ${a.tone && v ? a.tone : ""}">${fmtNum(v)}</span><span class="tile-info">${esc(unit)}</span></span>` : a.external ? `<span class="tile-info">${icon("arrowRight")}</span>` : ""}</div>${toggle}
     </a>`;
   };
-  const fraud = t.filter((c) => c.risk.fraud).length;
-  el.innerHTML = `
-  <section class="hero">
-    <div>
-      <span class="pill-dark">${icon("zap")} Biométrie · eGates · Interpol · APIS · e-Visa</span>
-      <h1>L'identité <span class="hl">vérifiée</span><br>à chaque frontière</h1>
-      <p>Bonjour ${esc(ctx.me.name.split(" ")[0])} — ${fmtNum(t.length)} passages sur 24 h, dont ${fmtNum(t.filter((c) => c.channel === "EGATE").length)} par eGate, ${fmtNum(fraud)} suspicion(s) de fraude.</p>
-    </div>
-    <div class="row">${ctx.can("control") ? `<a class="btn btn-primary btn-lg" href="#/controle">${icon("scan")} Nouveau contrôle</a>` : ""}<a class="btn btn-lg" href="#/dashboard">${icon("chart")} Tableau de bord</a></div>
-  </section>
-  <nav class="space-tabs" role="tablist">${["Tous", ...SPACES].map((s) => `<button role="tab" aria-selected="${s === space}" data-space="${esc(s)}">${esc(s)}</button>`).join("")}</nav>
-  ${SPACES.filter((s) => space === "Tous" || s === space).map((s) => {
+  const sections = (space === "Mon accueil" ? SPACES : [space]).map((s) => {
     const apps = visible.filter((a) => a.space === s);
-    return apps.length ? `<section class="tile-group"><h2>${esc(s)}</h2><div class="tiles">${apps.map(tile).join("")}</div></section>` : "";
-  }).join("")}`;
+    const html = apps.map(tile).join("");
+    return html.trim() ? `<section class="tile-group"><h2>${esc(s)}</h2><div class="tiles">${html}</div></section>` : "";
+  }).join("");
+  el.innerHTML = `
+  <header class="home-head">
+    <h1>Bonjour ${esc(ctx.me.name.split(" ")[0])} <span>${esc(date)}</span></h1>
+    <button class="btn" id="perso">${icon(editing ? "check" : "settings")} ${editing ? "Terminer" : "Personnaliser"}</button>
+  </header>
+  ${editing ? `<div class="msg info" style="margin-bottom:16px">${icon("eye")}<span>Choisissez les tuiles affichées sur « Mon accueil ». Elles restent accessibles dans leur espace.</span></div>` : ""}
+  <nav class="space-tabs" role="tablist">${["Mon accueil", ...SPACES].filter((s) => s === "Mon accueil" || visible.some((a) => a.space === s)).map((s) => `<button role="tab" aria-selected="${s === space}" data-space="${esc(s)}">${esc(s)}</button>`).join("")}</nav>
+  ${sections}`;
   el.querySelectorAll("[data-space]").forEach((b) => (b.onclick = () => { sessionStorage.setItem("wawid:space", b.dataset.space); renderHome(el); }));
+  el.querySelector("#perso").onclick = () => { editing = !editing; renderHome(el); };
+  el.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const list = hiddenTiles();
+    saveHidden(list.includes(b.dataset.toggle) ? list.filter((x) => x !== b.dataset.toggle) : [...list, b.dataset.toggle]);
+    renderHome(el);
+  }));
 }
 
 // ---------- Routeur ----------
@@ -192,7 +218,7 @@ async function route() {
   const [path, qs] = location.hash.replace(/^#\/?/, "").split("?");
   const [section, ...rest] = path.split("/");
   const query = Object.fromEntries(new URLSearchParams(qs || ""));
-  const app = APPS.find((a) => a.path === section);
+  const app = APPS.find((a) => a.path === section && a.view);
   root.querySelector("#shell-app").textContent = app ? app.title : "Accueil";
   document.title = app ? `${app.title} · WawID` : "WawID Back-office";
   scrollTo(0, 0);

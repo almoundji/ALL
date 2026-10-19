@@ -1,31 +1,34 @@
-/* WawID — système de design partagé (ergonomie inspirée de SAP Fiori Horizon, identité propre WawID : bleu nuit + turquoise sécurité). */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap");
+/* WawID — système de design partagé : UX launchpad Fiori, bleu marine + accent orange, tuiles sobres. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
 :root {
   color-scheme: light;
-  --bg: #f4f5f7; --surface: #ffffff; --surface-2: #f7f8fa; --surface-3: #eef0f4;
-  --ink: #13202e; --ink-2: #555b68; --muted: #7d8494; --line: #e4e7ee; --line-strong: #cfd4de;
-  --brand: #0f766e; --brand-strong: #0b5e58; --brand-soft: #ddf3ef; --brand-ink: #ffffff; --dark: #0b1f33;
-  --night: #0b1f33; --night-2: #13304d; --accent: #2dd4bf; --accent-2: #38bdf8;
+  --bg: #f3f4f7; --surface: #ffffff; --surface-2: #f7f8fb; --surface-3: #eceff4;
+  --ink: #1d2433; --ink-2: #4a5568; --muted: #5b6b86; --line: #e3e7ee; --line-strong: #cfd6e2;
+  --heading: #14254b; --icon: #4a6a9a;
+  --brand: #1d4e89; --brand-strong: #163d6c; --brand-soft: #e8eef7; --brand-ink: #ffffff; --dark: #14254b;
+  --night: #14254b; --night-2: #1d3563; --accent: #e4572e; --accent-soft: #fdf1ec; --accent-2: #e4572e;
   --good: #0ca30c; --good-text: #0b7a0b; --good-soft: #e7f6e7;
   --warning: #fab219; --warning-text: #8a5a00; --warning-soft: #fff4dc;
   --serious: #ec835a; --serious-text: #b04a1e; --serious-soft: #fdeee7;
   --critical: #d03b3b; --critical-text: #b32d2d; --critical-soft: #fbe9e9;
   --info: #2a78d6; --info-text: #1c5cab; --info-soft: #e8f1fc;
   --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
-  --shadow-1: 0 1px 2px rgba(20, 24, 40, .06), 0 1px 1px rgba(20, 24, 40, .04);
-  --shadow-2: 0 10px 30px rgba(20, 24, 40, .08), 0 2px 6px rgba(20, 24, 40, .05);
-  --radius: 16px; --radius-sm: 10px;
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --display: "Sora", "Inter", system-ui, sans-serif;
+  --shadow-1: 0 1px 2px rgba(20, 37, 75, .06);
+  --shadow-2: 0 8px 24px rgba(20, 37, 75, .10), 0 2px 6px rgba(20, 37, 75, .05);
+  --radius: 12px; --radius-sm: 8px;
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display: "Inter", "Segoe UI", system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0f0f0f; --surface: #1a1a19; --surface-2: #222221; --surface-3: #2a2a28;
-    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #2f2f2d; --line-strong: #44443f;
-    --brand: #2dd4bf; --brand-strong: #14b8a6; --brand-soft: #0f2e2b; --brand-ink: #042f2c; --dark: #f0efec;
+    --bg: #0f1520; --surface: #182131; --surface-2: #1d2738; --surface-3: #243046;
+    --ink: #e7ecf3; --ink-2: #b9c3d3; --muted: #93a1b8; --line: #273348; --line-strong: #364560;
+    --heading: #e7ecf3; --icon: #93b4e6;
+    --brand: #6ea8ff; --brand-strong: #8bbaff; --brand-soft: #1b2b45; --brand-ink: #0b1424; --dark: #e7ecf3;
+    --accent: #ff7a50; --accent-soft: #2e1d18; --accent-2: #ff7a50;
     --good-text: #4cc94c; --good-soft: #10260f; --warning-text: #fab219; --warning-soft: #2e2510;
     --serious-text: #f19a76; --serious-soft: #2e1b13; --critical-text: #f07a7a; --critical-soft: #2e1515;
     --info-text: #7fb0ee; --info-soft: #132235;
@@ -35,9 +38,11 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f0f0f; --surface: #1a1a19; --surface-2: #222221; --surface-3: #2a2a28;
-  --ink: #f0efec; --ink-2: #c3c2b7; --muted: #8f8e86; --line: #2f2f2d; --line-strong: #44443f;
-  --brand: #2dd4bf; --brand-strong: #14b8a6; --brand-soft: #0f2e2b; --brand-ink: #042f2c; --dark: #f0efec;
+  --bg: #0f1520; --surface: #182131; --surface-2: #1d2738; --surface-3: #243046;
+  --ink: #e7ecf3; --ink-2: #b9c3d3; --muted: #93a1b8; --line: #273348; --line-strong: #364560;
+  --heading: #e7ecf3; --icon: #93b4e6;
+  --brand: #6ea8ff; --brand-strong: #8bbaff; --brand-soft: #1b2b45; --brand-ink: #0b1424; --dark: #e7ecf3;
+  --accent: #ff7a50; --accent-soft: #2e1d18; --accent-2: #ff7a50;
   --good-text: #4cc94c; --good-soft: #10260f; --warning-text: #fab219; --warning-soft: #2e2510;
   --serious-text: #f19a76; --serious-soft: #2e1b13; --critical-text: #f07a7a; --critical-soft: #2e1515;
   --info-text: #7fb0ee; --info-soft: #132235;
@@ -48,7 +53,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; font: 14px/1.5 var(--font); color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
-h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; color: var(--heading); }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
@@ -67,11 +72,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
 .brand-logo { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
 .brand-logo svg { width: 100%; height: 100%; }
-.brand-name b { color: var(--brand); font-weight: inherit; }
-.brand-name { font: 800 18px/1.1 var(--display); letter-spacing: -.01em; }
+.brand-name b { color: var(--accent); font-weight: inherit; }
+.brand-name { font: 800 18px/1.1 var(--display); letter-spacing: -.01em; color: var(--heading); }
 .brand-sub { font-size: 12px; color: var(--muted); }
-.hl { background: linear-gradient(90deg, var(--brand), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.pill-dark { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--night); color: var(--accent); font: 700 12px var(--display); letter-spacing: .1em; text-transform: uppercase; box-shadow: var(--shadow-2); }
+.hl { color: var(--accent); }
+.pill-dark { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--brand-soft); color: var(--heading); font: 600 12px var(--display); letter-spacing: .08em; text-transform: uppercase; }
 
 /* ---------- Boutons ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s, border-color .15s, transform .05s; white-space: nowrap; }

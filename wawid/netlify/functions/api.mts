@@ -4,8 +4,9 @@ import {
   COUNTRIES, DEFAULT_GATE_CONFIG, POSTES, ageAt, alertType, assessRisk, gateDecision, normName, parseMRZ, severityOf,
 } from "../../public/shared/engine.js";
 import {
-  ROLES, clearCookie, currentUser, gateKeyValid, hashPassword, json, login, publicUser, sessionCookie, signToken, verifyToken,
+  ROLES, carrierFromKey, clearCookie, currentUser, gateKeyValid, hashPassword, json, login, publicUser, sessionCookie, signToken, verifyToken,
 } from "../lib/auth.mts";
+import { detectFormat, parsePaxlst, parsePnr, pnrFactors, samples as carrierSamples } from "../lib/carrier.mts";
 import { decorate, externalHits, testConnector } from "../lib/connectors.mts";
 import { audit, ensureSeeded, load, loadMany, save, verifyChain } from "../lib/store.mts";
 
@@ -318,7 +319,7 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
 // --- Back-office ---
 on("GET", "/api/data", async (_r, _p, user) => {
   need(user, "read");
-  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments"]);
+  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages"]);
   d.crossings = d.crossings.sort((a: any, b: any) => b.ts.localeCompare(a.ts)).slice(0, 4000);
   d.connectors = decorate(d.connectors);
   // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
@@ -542,6 +543,115 @@ on("POST", "/api/apis/manifest", async (req, _p, user) => {
   await Promise.all([save("flights", d.flights.slice(0, 200)), save("alerts", d.alerts)]);
   await audit(user.username, "APIS_MANIFESTE", flight.id, `${flight.flight} · ${passengers.length} passagers`);
   return json(flight);
+});
+
+// --- Passerelle transporteurs API / PNR ---
+
+const AIRLINE_NAMES: Record<string, string> = { HC: "Air Sénégal", AF: "Air France", TK: "Turkish Airlines", AT: "Royal Air Maroc", IB: "Iberia", SN: "Brussels Airlines", ET: "Ethiopian", EK: "Emirates", DL: "Delta", TP: "TAP" };
+
+async function readCarrierBody(req: Request) {
+  const text = await req.text();
+  if (text.length > 2_000_000) fail(413, "Message trop volumineux (2 Mo max.)");
+  if ((req.headers.get("content-type") || "").includes("json")) {
+    try { const j = JSON.parse(text); return { message: String(j.message ?? ""), format: j.format }; } catch { fail(400, "JSON invalide"); }
+  }
+  return { message: text, format: undefined };
+}
+
+/** Décode, fusionne dans le vol, pré-contrôle chaque passager et journalise le message. */
+async function ingestCarrierMessage(raw: string, declared: string | undefined, source: string, actor: string, allowedCarrier = "*") {
+  const format = declared === "PAXLST" || declared === "PNR" ? declared : detectFormat(raw);
+  const receivedAt = nowIso();
+  const d = await loadMany(["watchlist", "rules", "evisas", "settings", "flights", "alerts", "carrierMessages"]);
+  const log = (entry: any) => { d.carrierMessages.unshift(entry); return save("carrierMessages", d.carrierMessages.slice(0, 2000)); };
+  const reference = uid("MSG");
+  if (!format) {
+    await log({ id: reference, receivedAt, source, format: "INCONNU", carrier: allowedCarrier, flight: null, flightId: null, passengers: 0, flagged: 0, status: "REJETÉ", errors: ["Format non reconnu (PAXLST UN/EDIFACT ou PNR attendu)"], size: raw.length, completeness: 0 });
+    return { status: "REJETÉ", reference, errors: ["Format non reconnu (PAXLST UN/EDIFACT ou PNR attendu)"] };
+  }
+  const msg = format === "PAXLST" ? parsePaxlst(raw) : parsePnr(raw);
+  const errors = [...msg.errors];
+  if (allowedCarrier !== "*" && msg.carrier && msg.carrier !== allowedCarrier) errors.unshift(`Le vol ${msg.flight} n'appartient pas au transporteur ${allowedCarrier}`);
+  const fatal = !msg.flight || !msg.passengers.length || (allowedCarrier !== "*" && msg.carrier !== allowedCarrier);
+  const complete = msg.passengers.filter((p) => p.docNo && p.dob && p.nat).length;
+  const completeness = msg.passengers.length ? Math.round((complete / msg.passengers.length) * 100) : 0;
+  if (fatal) {
+    await log({ id: reference, receivedAt, source, format, carrier: msg.carrier || allowedCarrier, flight: msg.flight || null, flightId: null, passengers: msg.passengers.length, flagged: 0, status: "REJETÉ", errors, size: raw.length, completeness });
+    return { status: "REJETÉ", reference, errors };
+  }
+
+  const flightLabel = msg.flight.replace(/^([A-Z0-9]{2})(\d+)$/, "$1 $2");
+  const eta = msg.arrival || msg.departure || new Date(Date.now() + 6 * 3600000).toISOString();
+  const arriving = ["DSS", "ZIG"].includes(msg.destination);
+  let flight = d.flights.find((f: any) => f.flight.replace(/\s/g, "") === msg.flight && f.eta.slice(0, 10) === eta.slice(0, 10));
+  if (!flight) {
+    flight = { id: uid("FL"), flight: flightLabel, carrier: AIRLINE_NAMES[msg.carrier] || msg.carrier, direction: arriving ? "ARRIVEE" : "DEPART", posteId: msg.destination === "ZIG" || msg.origin === "ZIG" ? "ZIG" : "AIBD",
+      route: `${msg.origin || "?"} → ${msg.destination || "?"}`, eta, receivedAt, source: "", onTime: true, passengers: [], messages: [] };
+    d.flights.unshift(flight);
+  }
+  const kinds = new Set(String(flight.source || "").split(" + ").filter(Boolean));
+  kinds.add(format === "PAXLST" ? "API" : "PNR");
+  flight.source = [...kinds].sort().join(" + ");
+  flight.messages = [...(flight.messages || []), reference];
+  // Délais : API attendue au plus tard au départ, PNR au plus tard 24 h avant.
+  const deadline = format === "PAXLST" ? Date.parse(msg.departure || eta) : Date.parse(eta) - 24 * 3600000;
+  const onTime = Date.parse(receivedAt) <= deadline;
+  if (!onTime) flight.onTime = false;
+
+  const key = (p: any) => (p.docNo ? `D:${p.docNo}` : `N:${normName(p.surname)}|${normName(p.given)}`);
+  for (const p of msg.passengers) {
+    const existing = flight.passengers.find((x: any) => (p.docNo && x.docNo === p.docNo) || key(x) === key(p));
+    const merged = { ...(existing || {}), ...Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== "" && v !== null)) };
+    merged.seat = merged.seat || "—";
+    if (existing) Object.assign(existing, merged); else flight.passengers.push(merged);
+  }
+  // Pré-contrôle (listes, règles, autorisation de voyage, données de réservation, réseau de coordonnées dans le vol).
+  const phoneKey = (v: any) => String(v || "").replace(/\D/g, "");
+  let flagged = 0;
+  for (const p of flight.passengers) {
+    const visa = activeVisa(d.evisas, p.docNo);
+    const shared = flight.passengers.filter((o: any) => o !== p && o.docNo !== p.docNo && ((p.email && o.email === p.email) || (phoneKey(p.phone).length >= 8 && phoneKey(o.phone) === phoneKey(p.phone))));
+    const r = assessRisk({ ...p, issuer: p.issuer || p.nat }, {
+      watchlist: d.watchlist, rules: d.rules, direction: flight.direction === "ARRIVEE" ? "ENTREE" : "SORTIE", channel: "APIS", origin: msg.origin,
+      visa: { required: !(d.settings.visaExempt || []).includes(p.nat), status: visa?.status ?? null },
+      network: shared.length ? { size: shared.length, via: ["coordonnées de réservation"] } : undefined,
+    });
+    const extra = pnrFactors(p, flight.eta);
+    const factors = [...r.factors, ...extra];
+    const score = Math.min(100, factors.reduce((s, f) => s + f.points, 0));
+    Object.assign(p, { score, level: score >= 60 ? "ELEVE" : score >= 30 ? "MODERE" : "FAIBLE", factors });
+    if (score >= 35) {
+      flagged++;
+      const exists = d.alerts.some((a: any) => a.flightId === flight.id && a.docNo === p.docNo && a.status !== "CLOTUREE");
+      if (!exists) d.alerts.unshift({ id: uid("AL"), ts: receivedAt, type: "APIS", title: `${format === "PNR" ? "PNR" : "API"} : ${alertType(factors)[1]}`, severity: severityOf(score), crossingId: null, flightId: flight.id, posteId: flight.posteId, traveler: `${p.surname} ${p.given}`, docNo: p.docNo, status: "NOUVELLE", assignee: null, resolution: null, history: [{ at: receivedAt, by: "APIS Monitor", text: `Pré-contrôle ${format} du vol ${flight.flight}` }] });
+    }
+  }
+  const status = errors.length ? "ACCEPTÉ AVEC AVERTISSEMENTS" : "ACCEPTÉ";
+  await Promise.all([save("flights", d.flights.slice(0, 300)), save("alerts", d.alerts)]);
+  await log({ id: reference, receivedAt, source, format, carrier: msg.carrier, flight: flight.flight, flightId: flight.id, passengers: msg.passengers.length, flagged, status, errors, size: raw.length, completeness, onTime });
+  await audit(actor, `APIS_${format}`, flight.id, `${flight.flight} · ${msg.passengers.length} passager(s) · ${flagged} signalé(s)`);
+  return { status, reference, flightId: flight.id, flight: flight.flight, passengers: msg.passengers.length, flagged, completeness, onTime, errors };
+}
+
+/** Point d'entrée machine-à-machine des compagnies aériennes (clé transporteur dans l'en-tête X-Carrier-Key). */
+on("POST", "/api/carrier/messages", async (req) => {
+  const carrier = carrierFromKey(req.headers.get("x-carrier-key") || "");
+  if (!carrier) return json({ status: "REJETÉ", errors: ["Clé transporteur invalide"] }, 401);
+  const { message, format } = await readCarrierBody(req);
+  if (!message.trim()) fail(400, "Message vide");
+  const ack = await ingestCarrierMessage(message, format, `Passerelle (${carrier})`, `Transporteur ${carrier}`, carrier);
+  return json(ack, ack.status === "REJETÉ" ? 422 : 202);
+});
+/** Envoi depuis le back-office (dépôt manuel d'un message reçu hors passerelle, ou démonstration). */
+on("POST", "/api/apis/ingest", async (req, _p, user) => {
+  need(user, "apis");
+  const { message, format } = await readCarrierBody(req);
+  if (!message.trim()) fail(400, "Message vide");
+  return json(await ingestCarrierMessage(message, format, `Dépôt manuel (${user.name})`, user.username));
+});
+on("GET", "/api/apis/samples", async (_r, _p, user) => {
+  need(user, "read");
+  return json(carrierSamples());
 });
 
 on("PATCH", "/api/connectors/:id", async (req, p, user) => {

@@ -8,7 +8,7 @@ export function render(el, ctx, rest, query) {
   const d = ctx.data;
   const groups = { instruire: ["SOUMISE", "EN_EXAMEN"], INFO_DEMANDEE: ["INFO_DEMANDEE"], APPROUVEE: ["APPROUVEE"], REFUSEE: ["REFUSEE"], toutes: null };
   const rows = d.evisas.filter((v) => !groups[tab] || groups[tab].includes(v.status));
-  el.innerHTML = `${pageHead({ title: "e-Visa — Visa Management System", sub: "Demandes déposées sur le portail voyageur, pré-contrôlées automatiquement (listes, règles) avant instruction.", crumbs: [[null, "APIS & e-Visa"]],
+  el.innerHTML = `${pageHead({ title: "e-Visa — Visa Management System", sub: "Demandes déposées sur le portail voyageur, pré-contrôlées automatiquement (listes, règles) avant instruction.", crumbs: [[null, "e-Visa & voyageurs"]],
     actions: `<a class="btn" href="../#evisa" target="_blank">${icon("globe")} Portail voyageur</a>` })}
   <nav class="space-tabs">${[["instruire", "À instruire"], ["INFO_DEMANDEE", "Info. demandée"], ["APPROUVEE", "Approuvées"], ["REFUSEE", "Refusées"], ["toutes", "Toutes"]].map(([k, l]) => `<button aria-selected="${tab === k}" data-tab="${k}">${l} (${d.evisas.filter((v) => !groups[k] || groups[k].includes(v.status)).length})</button>`).join("")}</nav>
   <section class="card" id="t"></section>`;
@@ -106,7 +106,7 @@ export function renderVerify(el, ctx) {
 export function renderPasses(el, ctx, _rest, query) {
   const tab = query.tab || "pass";
   const d = ctx.data;
-  el.innerHTML = `${pageHead({ title: "WawPass & enrôlements", sub: "Taxes de sécurité payées en ligne (QR validé à l'aéroport) et pré-enrôlements au programme eGate.", crumbs: [[null, "APIS & e-Visa"]] })}
+  el.innerHTML = `${pageHead({ title: "WawPass & enrôlements", sub: "Taxes de sécurité payées en ligne (QR validé à l'aéroport) et pré-enrôlements au programme eGate.", crumbs: [[null, "e-Visa & voyageurs"]] })}
   <nav class="space-tabs"><button aria-selected="${tab === "pass"}" data-tab="pass">WawPass (${d.passes.length})</button><button aria-selected="${tab === "enrol"}" data-tab="enrol">Pré-enrôlements eGate (${d.enrolments.length})</button></nav>
   <section class="card" id="t"></section>`;
   el.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => (location.hash = `#/wawpass?tab=${b.dataset.tab}`)));

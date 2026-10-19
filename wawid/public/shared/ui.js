@@ -68,7 +68,7 @@ const PATHS = {
 export const icon = (name, cls = "") => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${PATHS[name] || ""}</svg>`;
 
 // Logo WawID : écusson et empreinte stylisée (identité propre, indépendante de la charte de l'éditeur).
-export const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#0B1F33"/><path d="M20 7.2 30 11v7.8c0 6.5-4.2 11.4-10 13.4-5.8-2-10-6.9-10-13.4V11z" fill="none" stroke="#2DD4BF" stroke-width="2.3" stroke-linejoin="round"/><g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M14.6 19.4a5.6 5.6 0 0 1 10.8 0"/><path d="M16.9 25.4v-3.9a3.1 3.1 0 0 1 6.2 0v1.2"/><path d="M20 21.5v5.6"/><path d="M23.1 25.6v-.6"/></g></svg>`;
+export const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#14254B"/><path d="M20 7.2 30 11v7.8c0 6.5-4.2 11.4-10 13.4-5.8-2-10-6.9-10-13.4V11z" fill="none" stroke="#E4572E" stroke-width="2.3" stroke-linejoin="round"/><g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M14.6 19.4a5.6 5.6 0 0 1 10.8 0"/><path d="M16.9 25.4v-3.9a3.1 3.1 0 0 1 6.2 0v1.2"/><path d="M20 21.5v5.6"/><path d="M23.1 25.6v-.6"/></g></svg>`;
 export const WORDMARK = `Waw<b>ID</b>`;
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
