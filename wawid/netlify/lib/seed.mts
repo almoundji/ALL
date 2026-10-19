@@ -155,10 +155,10 @@ export function generateSeed(now = new Date()): Seed {
       });
       let decision = risk.recommendation, reason = "";
       if (channel === "EGATE") {
-        const g = gateDecision(p, risk, gate.config, ts);
+        const g = gateDecision(p, risk, gate.config, ts, { faceScore, liveness });
         if (g.outcome === "ORIENTATION") { decision = "SECONDAIRE"; reason = `eGate : ${g.message}`; }
       }
-      if (decision === "SECONDAIRE" && risk.score < 60 && rnd() < 0.6) { decision = "AUTORISE"; reason = "Levée de doute au contrôle secondaire"; }
+      if (channel === "GUICHET" && decision === "SECONDAIRE" && risk.score < 60 && rnd() < 0.6) { decision = "AUTORISE"; reason = "Levée de doute au contrôle secondaire"; }
       history.set(t.id, [...prev, ts.getTime()]);
       crossings.push({
         id: id("PX", ++n), ts: ts.toISOString(), posteId, channel, gateId: gate?.id ?? null, direction, travelerId: t.id,
@@ -171,7 +171,7 @@ export function generateSeed(now = new Date()): Seed {
       });
     }
   }
-  crossings.reverse();
+  crossings.sort((a, b) => b.ts.localeCompare(a.ts));
   for (const g of gates) {
     const today = crossings.filter((c) => c.gateId === g.id && now.getTime() - Date.parse(c.ts) < 86400000);
     g.stats = { today: today.length, rejected: today.filter((c) => c.decision !== "AUTORISE").length, avgSec: today.length ? Math.round(today.reduce((s, c) => s + c.durationSec, 0) / today.length) : 0 };

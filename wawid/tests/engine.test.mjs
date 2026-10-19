@@ -69,3 +69,26 @@ test("eGate : ouverture, mineur, risque", () => {
   const fr = parseMRZ(buildTD3({ issuer: "FRA", nat: "FRA", sex: "M", surname: "Martin", given: "Paul", docNo: "19AB12345", dob: "1980-01-01", expiry: "2032-01-01" }));
   assert.equal(gateDecision(fr, assessRisk(fr, {}), cfg).code, "ELIGIBILITE");
 });
+
+test("eGate : jamais d'ouverture sur correspondance, même avec un seuil de risque relevé ; biométrie obligatoire", () => {
+  const sltd = parseMRZ(buildTD3({ issuer: "SEN", nat: "SEN", sex: "M", surname: "Diatta", given: "Moustapha", docNo: "A04718823", dob: "1992-02-02", expiry: "2031-01-01" }));
+  const lax = { ...DEFAULT_GATE_CONFIG, maxRisk: 100 };
+  assert.equal(gateDecision(sltd, assessRisk(sltd, { watchlist, faceScore: 0.97, liveness: true }), lax).outcome, "ORIENTATION");
+  const low = [{ kind: "person", list: "POI", surname: "Diop", given: "Aminata", severity: "basse", active: true }];
+  const clean = parseMRZ(buildTD3({ issuer: "SEN", nat: "SEN", sex: "F", surname: "Diop", given: "Aminata", docNo: "A01234567", dob: "1991-05-14", expiry: "2031-05-13" }));
+  assert.equal(gateDecision(clean, assessRisk(clean, { watchlist: low, faceScore: 0.97, liveness: true })).outcome, "ORIENTATION");
+  assert.equal(gateDecision(clean, assessRisk(clean, {}), DEFAULT_GATE_CONFIG, new Date(), {}).code, "BIOMETRIE");
+  assert.equal(gateDecision(clean, assessRisk(clean, { faceScore: 0.97 }), DEFAULT_GATE_CONFIG, new Date(), { faceScore: 0.97 }).code, "LIVENESS");
+});
+
+test("pas de faux positifs sur les noms ouest-africains courants, variantes reconnues", () => {
+  for (const [a, b] of [["Ndiaye Awa", "Ndiaye Adama"], ["Ndiaye Awa", "Faye Awa"], ["Diop Fatou", "Diop Astou"], ["Sy Ali", "Sy Malick"]]) assert.ok(nameSimilarity(a, b) < 0.9, `${a} / ${b}`);
+  for (const [a, b] of [["Mohamed Diallo", "Mouhamed Diallo"], ["N'Diaye Awa", "Ndiaye Awa"], ["Abd Al Rahman Haddad", "Abdelrahman Haddad"]]) assert.ok(nameSimilarity(a, b) >= 0.9, `${a} / ${b}`);
+});
+
+test("dates MRZ impossibles refusées, SLTD tolérant aux espaces, translittération ICAO", () => {
+  const mrz = buildTD3({ issuer: "SEN", nat: "SEN", sex: "M", surname: "X", given: "Y", docNo: "A1", dob: "1990-02-28", expiry: "2030-01-01" });
+  assert.equal(parseMRZ(mrz.replace("900228", "900231")).checksOk, false);
+  assert.equal(screenWatchlist({ surname: "A", given: "B", docNo: "A04718823" }, [{ kind: "document", docNo: "A04 718823", active: true }]).length, 1);
+  assert.ok(buildTD3({ issuer: "D", nat: "D", sex: "M", surname: "Ødegård", given: "Jean-Pierre", docNo: "C01X00T47", dob: "1964-08-12", expiry: "2030-01-01" }).startsWith("P<D<<OEDEGAARD<<JEAN<PIERRE"));
+});

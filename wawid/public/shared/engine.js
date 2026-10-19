@@ -35,26 +35,32 @@ export function checkDigit(s) {
 }
 
 const pad = (s, n) => (s + "<".repeat(n)).slice(0, n);
-const clean = (s) => String(s).toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Z0-9 ]/g, "").trim();
+// Translittération ICAO 9303 partie 3 (Ä→AE, Ø→OE…) ; apostrophes supprimées, traits d'union → séparateurs.
+const TRANSLIT = { Ä: "AE", Æ: "AE", Å: "AA", Ö: "OE", Ø: "OE", Ü: "UE", ß: "SS", Œ: "OE", Ł: "L", Đ: "D", Þ: "TH" };
+const clean = (s) => String(s).toUpperCase().replace(/[ÄÆÅÖØÜßŒŁĐÞ]/g, (c) => TRANSLIT[c] || c).replace(/['’]/g, "").replace(/[-‐]/g, " ")
+  .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+const code3 = (c) => pad(String(c || "").toUpperCase(), 3);
 const ymd = (iso) => iso.slice(2, 4) + iso.slice(5, 7) + iso.slice(8, 10);
 
 /** Construit une MRZ de passeport TD3 (2 × 44 caractères). Dates au format AAAA-MM-JJ. */
 export function buildTD3({ issuer, surname, given, docNo, nat, dob, sex, expiry, personal = "" }) {
   const name = clean(surname).replace(/ +/g, "<") + "<<" + clean(given).replace(/ +/g, "<");
-  const l1 = pad("P<" + issuer + name, 44);
+  const l1 = pad("P<" + code3(issuer) + name, 44);
   const doc = pad(clean(docNo).replace(/ /g, ""), 9), per = pad(clean(personal).replace(/ /g, ""), 14);
   const b = ymd(dob), e = ymd(expiry);
-  const part = doc + checkDigit(doc) + nat + b + checkDigit(b) + (sex || "<") + e + checkDigit(e) + per + checkDigit(per);
+  const part = doc + checkDigit(doc) + code3(nat) + b + checkDigit(b) + (sex || "<") + e + checkDigit(e) + per + checkDigit(per);
   return l1 + "\n" + part + checkDigit(part.slice(0, 10) + part.slice(13, 20) + part.slice(21, 43));
 }
 
 function mrzDate(s, kind) {
   if (!/^\d{6}$/.test(s)) return null;
   const yy = +s.slice(0, 2), mm = +s.slice(2, 4), dd = +s.slice(4, 6);
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
-  const nowYY = new Date().getUTCFullYear() % 100;
-  const century = kind === "dob" ? (yy > nowYY ? 1900 : 2000) : 2000;
-  return `${century + yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  let year = 2000 + yy;
+  // Date de naissance : jamais dans le futur → siècle précédent.
+  if (kind === "dob" && Date.UTC(year, mm - 1, dd) > Date.now()) year -= 100;
+  const d = new Date(Date.UTC(year, mm - 1, dd));
+  if (mm < 1 || mm > 12 || d.getUTCMonth() !== mm - 1 || d.getUTCDate() !== dd) return null;
+  return `${year}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 }
 
 /** Analyse une MRZ TD3 (passeport) ou TD1 (carte d'identité, 3 × 30). */
@@ -92,7 +98,7 @@ function parseTD3([a, b]) {
   return finish({
     format: "TD3", docType: "Passeport", issuer: a.slice(2, 5).replace(/</g, ""), ...names(a.slice(5)),
     docNo: b.slice(0, 9).replace(/</g, ""), nat: b.slice(10, 13).replace(/</g, ""),
-    dobRaw: b.slice(13, 19), sex: b[20] === "<" ? "X" : b[20], expiryRaw: b.slice(21, 27),
+    dobRaw: b.slice(13, 19), sex: "MF".includes(b[20]) ? b[20] : "X", expiryRaw: b.slice(21, 27),
   }, checks);
 }
 
@@ -106,7 +112,7 @@ function parseTD1([a, b, c]) {
   return finish({
     format: "TD1", docType: "Carte d'identité", issuer: a.slice(2, 5).replace(/</g, ""), ...names(c),
     docNo: a.slice(5, 14).replace(/</g, ""), nat: b.slice(15, 18).replace(/</g, ""),
-    dobRaw: b.slice(0, 6), sex: b[7] === "<" ? "X" : b[7], expiryRaw: b.slice(8, 14),
+    dobRaw: b.slice(0, 6), sex: "MF".includes(b[7]) ? b[7] : "X", expiryRaw: b.slice(8, 14),
   }, checks);
 }
 
@@ -140,12 +146,50 @@ export function jaroWinkler(s1, s2) {
   return jaro + p * 0.1 * (1 - jaro);
 }
 
-/** Similarité de noms insensible à l'ordre (nom/prénoms inversés) et aux accents. */
-export function nameSimilarity(a, b) {
-  const x = normName(a), y = normName(b);
-  const sorted = (s) => s.split(" ").sort().join(" ");
-  return Math.max(jaroWinkler(x, y), jaroWinkler(sorted(x), sorted(y)));
+// Variantes orthographiques courantes (translittérations de l'arabe, usages ouest-africains).
+const VARIANTS = [
+  [/^(MOHAMED|MOHAMMED|MOUHAMED|MOUHAMMED|MUHAMMAD|MUHAMMED|MOHAMMAD|MOHAMADOU|MAHAMADOU|MAMADOU|MAMADU)$/, "MOHAMED"],
+  [/^(ABDOULAYE|ABDULAYE|ABDULLAHI|ABDALLAH|ABDULLAH)$/, "ABDOULAYE"],
+  [/^(OUSMANE|OUSMAN|USMAN)$/, "OUSMANE"],
+];
+const variant = (t) => { for (const [re, v] of VARIANTS) if (re.test(t)) return v; return t; };
+const tokens = (s) => normName(s).replace(/\b(ABD|ABDEL|ABDUL) (AL|EL) /g, "ABDEL").replace(/\bABD(EL|UL)? /g, "ABDEL")
+  .split(" ").filter(Boolean).map(variant);
+
+function levenshtein(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0]; row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return row[b.length];
 }
+// Jaro-Winkler seul est trop indulgent sur les prénoms courts (FATOU ≈ ASTOU) : on le tempère par la distance d'édition.
+const tokenSimilarity = (a, b) => (jaroWinkler(a, b) + 1 - levenshtein(a, b) / Math.max(a.length, b.length)) / 2;
+
+/**
+ * Similarité de noms jeton par jeton : chaque élément du nom le plus court doit trouver un équivalent proche
+ * dans l'autre (insensible à l'ordre, aux accents et aux variantes). Un nom de famille courant ne suffit
+ * donc pas à déclencher une correspondance (NDIAYE AWA ≠ NDIAYE ADAMA).
+ */
+export function nameSimilarity(a, b) {
+  let x = tokens(a), y = tokens(b);
+  if (!x.length || !y.length) return 0;
+  if (x.length > y.length) [x, y] = [y, x];
+  let total = 0, min = 1;
+  for (const t of x) {
+    const best = Math.max(...y.map((u) => tokenSimilarity(t, u)));
+    total += best; min = Math.min(min, best);
+  }
+  const avg = total / x.length;
+  return x.length < 2 ? Math.min(avg, 0.85) : (avg + min) / 2;
+}
+
+export const docKey = (v) => String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 
 /** Recherche un voyageur dans la liste de surveillance (biographique + documents SLTD). */
 export function screenWatchlist(p, watchlist) {
@@ -154,7 +198,9 @@ export function screenWatchlist(p, watchlist) {
   for (const w of watchlist || []) {
     if (w.active === false) continue;
     if (w.kind === "document") {
-      if (w.docNo && normName(w.docNo) === normName(p.docNo)) hits.push({ entry: w, score: 1, basis: "Numéro de document" });
+      const key = docKey(w.docNo);
+      const issuerOk = !w.issuer || !p.issuer || w.issuer === p.issuer;
+      if (key && key === docKey(p.docNo) && issuerOk) hits.push({ entry: w, score: 1, basis: "Numéro de document" });
       continue;
     }
     let score = nameSimilarity(full, `${w.surname} ${w.given}`);
@@ -190,13 +236,14 @@ export function ageAt(dob, now = new Date()) {
   return a;
 }
 
-const daysUntil = (iso, now) => (iso ? Math.floor((new Date(iso + "T00:00:00Z") - now) / 86400000) : null);
+const daysUntil = (iso, now) => (iso ? Math.round((Date.parse(iso + "T00:00:00Z") - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) / 86400000) : null);
 
 function ruleMatches(rule, facts) {
   return (rule.conditions || []).length > 0 && rule.conditions.every(({ field, op, value }) => {
     const v = facts[field];
     if (v === null || v === undefined) return false;
-    const list = String(value).toUpperCase().split(/[,;\s]+/).filter(Boolean);
+    const raw = String(value).toUpperCase();
+    const list = (/[,;]/.test(raw) ? raw.split(/[,;]/) : raw.split(/\s+/)).map((x) => x.trim()).filter(Boolean);
     if (op === "in") return list.includes(String(v).toUpperCase());
     if (op === "nin") return !list.includes(String(v).toUpperCase());
     if (op === "gt") return Number(v) > Number(value);
@@ -295,20 +342,28 @@ export const DEFAULT_GATE_CONFIG = {
 const ECOWAS = ["SEN", "MLI", "GIN", "CIV", "GMB", "BFA", "NGA", "GHA", "BEN", "TGO", "NER", "LBR", "SLE", "GNB", "CPV"];
 
 /** Décision d'une eGate : OUVERTURE ou ORIENTATION vers un guichet, avec motif. */
-export function gateDecision(p, risk, cfg = DEFAULT_GATE_CONFIG, now = new Date()) {
+export function gateDecision(p, risk, cfg = DEFAULT_GATE_CONFIG, now = new Date(), bio = null) {
   const deny = (code, message) => ({ outcome: "ORIENTATION", code, message });
   if (!p.ok) return deny("ILLISIBLE", "Document illisible — veuillez vous présenter au guichet.");
   if (!p.checksOk) return deny("MRZ", "Le document n'a pas pu être authentifié.");
   const age = ageAt(p.dob, now);
-  if (age !== null && age < cfg.minAge) return deny("AGE", "Les voyageurs mineurs sont traités au guichet.");
+  const minAge = Number.isFinite(cfg.minAge) ? cfg.minAge : DEFAULT_GATE_CONFIG.minAge;
+  if (age !== null && age < minAge) return deny("AGE", "Les voyageurs mineurs sont traités au guichet.");
   if (cfg.eligibility === "CEDEAO" && !ECOWAS.includes(p.nat)) return deny("ELIGIBILITE", "Nationalité non éligible au passage automatisé.");
   if (cfg.eligibility === "LISTE" && !String(cfg.eligibleNats).toUpperCase().split(/[,;\s]+/).includes(p.nat)) return deny("ELIGIBILITE", "Nationalité non éligible au passage automatisé.");
+  if (bio) {
+    if (typeof bio.faceScore !== "number") return deny("BIOMETRIE", "Capture du visage impossible — veuillez vous présenter au guichet.");
+    if (cfg.livenessRequired && bio.liveness !== true) return deny("LIVENESS", "Vérification biométrique impossible.");
+  }
   if (risk.factors.some((f) => f.code.startsWith("PUCE"))) return deny("PUCE", "La puce de votre passeport n'a pas pu être vérifiée.");
   if (risk.factors.some((f) => ["ATTAQUE", "DOC_REUTILISE"].includes(f.code))) return deny("FRAUDE", "Contrôle complémentaire requis — un agent va vous accompagner.");
   if (risk.factors.some((f) => f.code === "LIVENESS")) return deny("LIVENESS", "Vérification biométrique impossible.");
   if (risk.factors.some((f) => f.code === "FACE")) return deny("FACE", "Votre visage ne correspond pas suffisamment à la photo du document.");
   if (risk.factors.some((f) => f.code === "EXPIRE")) return deny("EXPIRE", "Document expiré.");
   if (cfg.requireVisaCheck && risk.factors.some((f) => f.code === "VISA")) return deny("VISA", "Autorisation de voyage introuvable.");
+  // Une correspondance sur liste ou une recommandation autre qu'« autoriser » interdit l'ouverture, quel que soit le seuil.
+  if (risk.critical || risk.recommendation !== "AUTORISE" || risk.factors.some((f) => ["SLTD", "WATCHLIST"].includes(f.code)))
+    return deny("RISQUE", "Contrôle complémentaire requis — un agent va vous accompagner.");
   if (risk.score > cfg.maxRisk) return deny("RISQUE", "Contrôle complémentaire requis — un agent va vous accompagner.");
   return { outcome: "OUVERTURE", code: "OK", message: "Bon voyage ! Les portes s'ouvrent." };
 }

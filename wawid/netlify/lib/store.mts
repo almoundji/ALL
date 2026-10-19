@@ -48,10 +48,12 @@ export async function audit(actor: string, action: string, target: string, detai
   const entry: any = { seq: (last?.seq ?? 0) + 1, ts: new Date().toISOString(), actor, action, target, details, prev: last?.hash ?? "0".repeat(64) };
   entry.hash = digest(entry);
   log.push(entry);
-  await save("audit", log.slice(-5000));
+  // Pas de troncature silencieuse : l'archivage du journal (export signé) relève de l'exploitation.
+  await save("audit", log);
 }
 
 export function verifyChain(log: any[]) {
+  if (log.length && log[0].prev !== "0".repeat(64)) return { ok: false, brokenAt: log[0].seq, reason: "Début de chaîne manquant (entrées anciennes supprimées)" };
   for (let i = 0; i < log.length; i++) {
     const e = log[i];
     if (digest(e) !== e.hash) return { ok: false, brokenAt: e.seq, reason: "Empreinte invalide (entrée modifiée)" };

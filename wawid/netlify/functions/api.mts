@@ -41,7 +41,7 @@ async function evaluate(input: any, extra: Record<string, unknown> = {}) {
   const ext = await externalHits(parsed, connectors);
   const monthAgo = Date.now() - 30 * 86400000;
   const crossings30d = d.crossings.filter((c: any) => c.traveler.docNo === parsed.docNo && Date.parse(c.ts) > monthAgo).length;
-  const visa = d.evisas.find((v: any) => v.applicant.docNo === parsed.docNo && v.status !== "REFUSEE");
+  const visa = activeVisa(d.evisas, parsed.docNo);
   // Contrôles de réutilisation d'identité sur l'historique des passages.
   const sameName = (t: any) => normName(t.surname) === normName(parsed.surname) && normName(t.given) === normName(parsed.given);
   const reused = d.crossings.find((c: any) => c.traveler.docNo === parsed.docNo && (!sameName(c.traveler) || c.traveler.dob !== parsed.dob));
@@ -61,14 +61,25 @@ async function evaluate(input: any, extra: Record<string, unknown> = {}) {
   return { parsed, risk, visa: visa ? { ref: visa.ref, status: visa.status, visaNo: visa.visaNo, validUntil: visa.validUntil } : null, crossings30d, externalErrors: ext.errors };
 }
 
+/** e-Visa utilisable pour ce document (une autorisation approuvée mais échue est signalée « EXPIREE »). */
+function activeVisa(evisas: any[], docNo: string) {
+  const v = evisas.find((x: any) => x.applicant.docNo === docNo && x.status !== "REFUSEE");
+  if (v?.status === "APPROUVEE" && v.validUntil && v.validUntil < nowIso().slice(0, 10)) return { ...v, status: "EXPIREE" };
+  return v;
+}
+
 /** Résultat de lecture NFC transmis par le terminal : la cohérence DG1 ↔ MRZ imprimée est recalculée ici. */
 function chipFacts(parsed: any, chip: any) {
   if (!chip || typeof chip !== "object") return undefined;
   if (chip.read === false) return { read: false };
   const dg1 = chip.dg1 ? parseMRZ(chip.dg1) : null;
-  const same = (a: any, b: any) => normName(String(a ?? "")).replace(/ /g, "") === normName(String(b ?? "")).replace(/ /g, "");
-  const dg1Match = dg1?.ok ? same(dg1.docNo, parsed.docNo) && same(dg1.dob, parsed.dob) && same(dg1.expiry, parsed.expiry) && same(dg1.surname, parsed.surname) && same(dg1.nat, parsed.nat) : undefined;
-  return { read: true, passiveAuth: chip.passiveAuth === undefined ? undefined : Boolean(chip.passiveAuth), dg1Match };
+  const key = (a: any) => normName(String(a ?? "")).replace(/ /g, "");
+  // La MRZ tronque les noms longs : on compare par préfixe. Les dates sont comparées sur AAMMJJ (siècle ambigu dans la MRZ).
+  const nameOk = (a: any, b: any) => { const x = key(a), y = key(b); return Boolean(x && y) && (x.startsWith(y) || y.startsWith(x)); };
+  const yymmdd = (d: any) => String(d ?? "").replace(/-/g, "").slice(2);
+  const dg1Match = !dg1?.ok || !dg1.checksOk ? false
+    : key(dg1.docNo) === key(parsed.docNo) && yymmdd(dg1.dob) === yymmdd(parsed.dob) && yymmdd(dg1.expiry) === yymmdd(parsed.expiry) && nameOk(dg1.surname, parsed.surname) && key(dg1.nat) === key(parsed.nat);
+  return { read: true, passiveAuth: typeof chip.passiveAuth === "boolean" ? chip.passiveAuth : undefined, dg1Match };
 }
 
 async function recordCrossing(c: any) {
@@ -88,6 +99,12 @@ async function recordCrossing(c: any) {
 }
 
 const chipSummary = (c: any) => (c && typeof c === "object" ? { read: c.read !== false, passiveAuth: c.passiveAuth ?? null, protocol: str(c.protocol, 10) || null, source: str(c.source, 20) || null } : null);
+const validRole = (r: unknown): r is string => typeof r === "string" && Object.hasOwn(ROLES, r);
+/** Nombre borné ; une valeur non numérique conserve l'ancienne valeur. */
+const bounded = (v: unknown, min: number, max: number, fallback: number) => {
+  const n = typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+};
 const travelerOf = (p: any) => ({ surname: p.surname, given: p.given, dob: p.dob, sex: p.sex, nat: p.nat, issuer: p.issuer, docNo: p.docNo, docType: p.docType, expiry: p.expiry });
 
 // ---------- Routes ----------
@@ -225,7 +242,7 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
   if (gate.status !== "EN_SERVICE" || gate.mode !== "AUTO") return json({ outcome: "INDISPONIBLE", message: "Cette porte est fermée. Merci de vous diriger vers un guichet." });
   const direction = gate.zone === "Départs" || gate.zone === "Embarquement" ? "SORTIE" : "ENTREE";
   const { parsed, risk, visa } = await evaluate({ ...b, direction, channel: "EGATE", faceThreshold: gate.config.faceThreshold });
-  const decision = gateDecision(parsed, risk ?? { score: 0, factors: [] }, gate.config);
+  const decision = gateDecision(parsed, risk ?? { score: 0, factors: [], recommendation: "AUTORISE" }, gate.config, new Date(), { faceScore: b.faceScore, liveness: b.liveness });
   gate.lastHeartbeat = nowIso();
   gate.stats = gate.stats || { today: 0, rejected: 0, avgSec: 0 };
   gate.stats.today++;
@@ -253,6 +270,12 @@ on("GET", "/api/data", async (_r, _p, user) => {
   const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments"]);
   d.crossings = d.crossings.slice(0, 4000);
   d.connectors = decorate(d.connectors);
+  // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
+  const dayAgo = Date.now() - 86400000;
+  d.gates = d.gates.map((g: any) => {
+    const tx = d.crossings.filter((c: any) => c.gateId === g.id && Date.parse(c.ts) > dayAgo);
+    return { ...g, stats: { today: tx.length, rejected: tx.filter((c: any) => c.decision !== "AUTORISE").length, avgSec: tx.length ? Math.round(tx.reduce((s: number, c: any) => s + c.durationSec, 0) / tx.length) : 0 } };
+  });
   d.evisas = d.evisas.map((v: any) => (v.status === "APPROUVEE" ? { ...v, token: signToken("EV", v.ref) } : v));
   d.passes = d.passes.map((p: any) => ({ ...p, token: signToken("WP", p.ref) }));
   return json({ ...d, postes: POSTES, countries: COUNTRIES, roles: ROLES, me: user, serverTime: nowIso() });
@@ -319,7 +342,7 @@ on("PATCH", "/api/cases/:id", async (req, p, user) => {
   const b = await body(req);
   const cases = (await load<any[]>("cases")) || [];
   const c = cases.find((x) => x.id === p.id) ?? fail(404, "Dossier introuvable");
-  if (b.interview) for (const k of Object.keys(c.interview)) if (k in b.interview) c.interview[k] = str(b.interview[k], 2000);
+  if (b.interview && typeof b.interview === "object") for (const k of Object.keys(c.interview)) if (k in b.interview) c.interview[k] = str(b.interview[k], 2000);
   if (str(b.note)) c.notes.push({ at: nowIso(), by: user.name, text: str(b.note, 1000) });
   if (["OUVERT", "CLOS"].includes(b.status) && b.status !== c.status) { c.status = b.status; c.notes.push({ at: nowIso(), by: user.name, text: b.status === "CLOS" ? "Dossier clos" : "Dossier rouvert" }); }
   await save("cases", cases);
@@ -336,7 +359,7 @@ on("POST", "/api/watchlist", async (req, _p, user) => {
   const list = (await load<any[]>("watchlist")) || [];
   const e = {
     id: uid("WL"), kind, source: str(b.source, 30) || "POI", list: str(b.list, 80) || "Personne d'intérêt", surname: str(b.surname, 60), given: str(b.given, 80),
-    dob: str(b.dob, 10), nat: str(b.nat, 3).toUpperCase(), docNo: str(b.docNo, 12).toUpperCase(), issuer: str(b.issuer, 3).toUpperCase(),
+    dob: str(b.dob, 10), nat: str(b.nat, 3).toUpperCase(), docNo: str(b.docNo, 20).toUpperCase().replace(/[^A-Z0-9]/g, ""), issuer: str(b.issuer, 3).toUpperCase(),
     severity: ["critique", "haute", "moyenne", "basse"].includes(b.severity) ? b.severity : "moyenne", reason: str(b.reason, 300), reference: str(b.reference, 60),
     active: true, addedBy: user.name, addedAt: nowIso(),
   };
@@ -360,11 +383,11 @@ on("POST", "/api/rules", async (req, _p, user) => {
   need(user, "rules");
   const b = await body(req);
   const rules = (await load<any[]>("rules")) || [];
-  const conditions = (Array.isArray(b.conditions) ? b.conditions : []).slice(0, 8)
+  const conditions = (Array.isArray(b.conditions) ? b.conditions : []).slice(0, 8).filter((c: any) => c && typeof c === "object")
     .map((c: any) => ({ field: str(c.field, 30), op: str(c.op, 4), value: str(c.value, 200) })).filter((c: any) => c.field && c.op && c.value);
   if (!str(b.name) || !conditions.length) fail(400, "Nom et au moins une condition requis");
   const existing = b.id ? rules.find((r) => r.id === b.id) : null;
-  const rule = { id: existing?.id || uid("R"), name: str(b.name, 120), enabled: b.enabled !== false, points: Math.max(0, Math.min(100, Number(b.points) || 10)), conditions, author: user.name, updatedAt: nowIso() };
+  const rule = { id: existing?.id || uid("R"), name: str(b.name, 120), enabled: b.enabled !== false, points: Math.max(0, Math.min(100, Number.isFinite(Number(b.points)) && b.points !== "" && b.points !== null ? Number(b.points) : 10)), conditions, author: user.name, updatedAt: nowIso() };
   if (existing) Object.assign(existing, rule); else rules.push(rule);
   await save("rules", rules);
   await audit(user.username, existing ? "REGLE_MODIFICATION" : "REGLE_CREATION", rule.id, rule.name);
@@ -429,10 +452,11 @@ on("PATCH", "/api/gates/:id", async (req, p, user) => {
     const c = b.config;
     g.config = {
       ...DEFAULT_GATE_CONFIG, ...g.config,
-      faceThreshold: Math.max(0.5, Math.min(0.99, Number(c.faceThreshold ?? g.config.faceThreshold))),
-      minAge: Math.max(0, Math.min(21, Number(c.minAge ?? g.config.minAge))), maxRisk: Math.max(0, Math.min(100, Number(c.maxRisk ?? g.config.maxRisk))),
+      faceThreshold: bounded(c.faceThreshold, 0.5, 0.99, g.config.faceThreshold),
+      minAge: bounded(c.minAge, 0, 21, g.config.minAge), maxRisk: bounded(c.maxRisk, 0, 100, g.config.maxRisk),
       eligibility: ["TOUS", "CEDEAO", "LISTE"].includes(c.eligibility) ? c.eligibility : g.config.eligibility, eligibleNats: str(c.eligibleNats ?? g.config.eligibleNats, 200),
-      livenessRequired: c.livenessRequired ?? g.config.livenessRequired, requireVisaCheck: c.requireVisaCheck ?? g.config.requireVisaCheck,
+      livenessRequired: typeof c.livenessRequired === "boolean" ? c.livenessRequired : g.config.livenessRequired,
+      requireVisaCheck: typeof c.requireVisaCheck === "boolean" ? c.requireVisaCheck : g.config.requireVisaCheck,
     };
     changes.push("paramètres");
   }
@@ -446,13 +470,13 @@ on("PATCH", "/api/gates/:id", async (req, p, user) => {
 on("POST", "/api/apis/manifest", async (req, _p, user) => {
   need(user, "apis");
   const b = await body(req);
-  const pax = Array.isArray(b.passengers) ? b.passengers.slice(0, 600) : [];
+  const pax = Array.isArray(b.passengers) ? b.passengers.slice(0, 600).filter((x: any) => x && typeof x === "object") : [];
   if (!str(b.flight) || !pax.length) fail(400, "Vol et passagers requis");
   const d = await loadMany(["watchlist", "rules", "evisas", "settings", "flights", "alerts"]);
   const direction = b.direction === "DEPART" ? "DEPART" : "ARRIVEE";
   const passengers = pax.map((x: any, i: number) => {
     const person = { surname: str(x.surname, 60), given: str(x.given, 80), dob: str(x.dob, 10), nat: str(x.nat, 3).toUpperCase(), issuer: str(x.nat, 3).toUpperCase(), docNo: str(x.docNo, 12).toUpperCase(), expiry: str(x.expiry, 10) || null, sex: str(x.sex, 1) };
-    const visa = d.evisas.find((v: any) => v.applicant.docNo === person.docNo);
+    const visa = activeVisa(d.evisas, person.docNo);
     const r = assessRisk(person, { watchlist: d.watchlist, rules: d.rules, direction: direction === "ARRIVEE" ? "ENTREE" : "SORTIE", channel: "APIS", visa: { required: !d.settings.visaExempt.includes(person.nat), status: visa?.status ?? null } });
     return { seat: str(x.seat, 4) || String(i + 1), ...person, pnr: str(x.pnr, 8), score: r.score, level: r.level, factors: r.factors };
   });
@@ -494,7 +518,7 @@ on("POST", "/api/users", async (req, _p, user) => {
   const username = str(b.username, 40).toLowerCase();
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) fail(400, "Identifiant : 3 à 40 caractères (a-z, 0-9, . _ -)");
   if (String(b.password || "").length < 10) fail(400, "Mot de passe : 10 caractères minimum");
-  if (!ROLES[b.role]) fail(400, "Rôle invalide");
+  if (!validRole(b.role)) fail(400, "Rôle invalide");
   const users = (await load<any[]>("users")) || [];
   if (users.some((u) => u.username === username)) fail(409, "Identifiant déjà utilisé");
   const u = { id: uid("U"), username, name: str(b.name, 80) || username, role: b.role, posteId: str(b.posteId, 6) || "AIBD", active: true, createdAt: nowIso(), lastLogin: null, ...hashPassword(String(b.password)) };
@@ -508,8 +532,9 @@ on("PATCH", "/api/users/:id", async (req, p, user) => {
   const b = await body(req);
   const users = (await load<any[]>("users")) || [];
   const u = users.find((x) => x.id === p.id) ?? fail(404, "Utilisateur introuvable");
-  if (u.id === user.id && (b.active === false || (b.role && b.role !== "admin"))) fail(400, "Vous ne pouvez pas désactiver ou rétrograder votre propre compte");
-  if (b.role && ROLES[b.role]) u.role = b.role;
+  if (b.role !== undefined && !validRole(b.role)) fail(400, "Rôle invalide");
+  if (u.id === user.id && (b.active === false || (b.role !== undefined && b.role !== "admin"))) fail(400, "Vous ne pouvez pas désactiver ou rétrograder votre propre compte");
+  if (b.role !== undefined) u.role = b.role;
   if (typeof b.active === "boolean") u.active = b.active;
   if (b.posteId) u.posteId = str(b.posteId, 6);
   if (b.password) { if (String(b.password).length < 10) fail(400, "Mot de passe : 10 caractères minimum"); Object.assign(u, hashPassword(String(b.password))); }

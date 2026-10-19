@@ -3,7 +3,7 @@ import { country, downloadCSV, esc, fmtDateTime, fmtNum, icon, riskBadge, status
 import { barChart, bindTooltips, hbars, legend, lineChart, pageHead, shareBar } from "./common.js";
 
 const PERIODS = { "24h": [1, "24 heures"], "7j": [7, "7 jours"], "14j": [14, "14 jours"] };
-const FRAUD_TYPES = { SLTD: "Document perdu / volé (SLTD)", WATCHLIST: "Personne recherchée / POI", FACE: "Non-correspondance faciale", LIVENESS: "Usurpation (détection du vivant)", MRZ: "Document falsifié (MRZ)", EXPIRE: "Document expiré", VISA: "Sans autorisation de voyage" };
+const FRAUD_TYPES = { SLTD: "Document perdu / volé (SLTD)", DOC_REUTILISE: "Document réutilisé (autre identité)", PUCE_PA: "Puce invalide (authentification passive)", PUCE_MRZ: "Puce ≠ MRZ imprimée", ATTAQUE: "Attaque de présentation / deepfake", WATCHLIST: "Personne recherchée / POI", FACE: "Non-correspondance faciale", LIVENESS: "Usurpation (détection du vivant)", MRZ: "Document falsifié (MRZ)", EXPIRE: "Document expiré", VISA: "Sans autorisation de voyage" };
 
 export function render(el, ctx, _rest, query) {
   const period = PERIODS[query.p] ? query.p : "7j";
@@ -11,9 +11,12 @@ export function render(el, ctx, _rest, query) {
   const channel = query.canal || "";
   const d = ctx.data;
   const [days] = PERIODS[period];
-  const since = Date.now() - days * 86400000;
+  // Fenêtre alignée sur les graphiques : 24 heures pleines, ou N jours calendaires (UTC) dont aujourd'hui.
+  const now = new Date();
+  const since = days === 1 ? Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 23) : Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (days - 1));
+  const span = Date.now() - since;
   const rows = d.crossings.filter((c) => Date.parse(c.ts) >= since && (!poste || c.posteId === poste) && (!channel || c.channel === channel));
-  const prevRows = d.crossings.filter((c) => { const t = Date.parse(c.ts); return t < since && t >= since - days * 86400000 && (!poste || c.posteId === poste) && (!channel || c.channel === channel); });
+  const prevRows = d.crossings.filter((c) => { const t = Date.parse(c.ts); return t < since && t >= since - span && (!poste || c.posteId === poste) && (!channel || c.channel === channel); });
 
   const entries = rows.filter((c) => c.direction === "ENTREE").length;
   const exits = rows.length - entries;
@@ -21,7 +24,7 @@ export function render(el, ctx, _rest, query) {
   const refused = rows.filter((c) => c.decision === "REFUSE").length;
   const egate = rows.filter((c) => c.channel === "EGATE");
   const avg = (list) => (list.length ? Math.round(list.reduce((s, c) => s + c.durationSec, 0) / list.length) : 0);
-  const delta = (cur, prev) => (prev ? `${cur >= prev ? "▲" : "▼"} ${fmtNum(Math.abs(((cur - prev) / prev) * 100), 0)} % vs période précédente` : "—");
+  const delta = (cur, prev) => (prev && cur === prev ? "= stable vs période précédente" : prev ? `${cur > prev ? "▲" : "▼"} ${fmtNum(Math.abs(((cur - prev) / prev) * 100), 0)} % vs période précédente` : "—");
   const openAlerts = d.alerts.filter((a) => a.status !== "CLOTUREE" && (!poste || a.posteId === poste));
 
   // Série temporelle : par heure (24 h) ou par jour.
