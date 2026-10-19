@@ -2,7 +2,7 @@
 
 Ce guide décrit la mise en place de WawID dans les postes frontière du Sénégal : phases de déploiement, hébergement, prérequis juridiques, matériel, installation des postes de travail, des kiosques eGate et de l'espace DPAF, installation logicielle de la plateforme, applications mobiles, raccordement des compagnies aériennes et du Trésor, formation, recette et mise en service. Il s'adresse aux équipes de projet de la DPAF, de l'exploitant et des intégrateurs.
 
-Pour les détails techniques déjà documentés, ce guide renvoie aux pages *Déploiement et configuration*, *Sécurité, données personnelles et conformité*, *Kiosque eGate : mise en service et parcours* et *Référence API (compagnies, équipements, connecteurs)*.
+L'infrastructure d'hébergement haute disponibilité (deux centres de données actifs au Sénégal et un site de sauvegarde), la stratégie de sauvegarde, les procédures de bascule et le phasage détaillé font l'objet de la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal* ; ce guide en reprend l'essentiel. Pour les autres détails techniques déjà documentés, il renvoie aux pages *Déploiement et configuration*, *Sécurité, données personnelles et conformité*, *Kiosque eGate : mise en service et parcours* et *Référence API (compagnies, équipements, connecteurs)*.
 
 ## Lire ce guide
 
@@ -21,7 +21,8 @@ Le déploiement actuel de WawID est un **démonstrateur** hébergé sur Netlify 
 
 | Composant | Aujourd'hui (Existant) | Cible nationale |
 | --- | --- | --- |
-| Hébergement | Netlify, hors du territoire | Centre de données national + site de secours au Sénégal (À développer) |
+| Hébergement | Netlify, hors du territoire | Deux centres de données actifs au Sénégal (site A : Datacenter national de Diamniadio ; site B : centre commercial certifié Tier III) + site C de sauvegarde (À développer) |
+| Sauvegardes | Aucune sauvegarde dédiée | Règle 3-2-1-1-0, copies immuables et hors ligne au site C, restauration testée chaque trimestre (À développer) |
 | Stockage | Une collection = un document JSON (Netlify Blobs) | PostgreSQL partitionné + bus d'événements (À développer) |
 | Identité des agents | Identifiant + mot de passe (scrypt), session 12 h | OIDC, MFA, cartes agents PKI (À développer) |
 | Biométrie | Scores simulés | SDK / ABIS certifiés, détection du vivant ISO/IEC 30107-3 (À développer) |
@@ -50,67 +51,91 @@ Les postes déclarés dans WawID sont ceux de la liste `POSTES` :
 
 Tout autre poste devra être ajouté à cette liste (modification du code, À développer) avant son raccordement.
 
-Le phasage ci-dessous est une **Recommandation**. Il reprend le principe de la note de proposition (`docs/PROPOSITION-REMPLACEMENT-SECURIPORT.md`) : pilote à l'AIBD en parallèle du système en place, puis bascule par vagues, sans interruption du contrôle. Les durées indiquées dans cette note sont indicatives ; aucun calendrier n'est arrêté.
+Le phasage ci-dessous est une **Recommandation** ; il reprend celui de la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*, qui détaille les critères d'entrée et de sortie et les tests de réception. Il suit le principe de la note de proposition (`docs/PROPOSITION-REMPLACEMENT-SECURIPORT.md`) : pilote à l'AIBD en parallèle du système en place, puis bascule par vagues, sans interruption du contrôle. Il ajoute la construction de l'infrastructure haute disponibilité et la migration de l'application, que la note ne comprenait pas. Aucun calendrier n'est arrêté ; les durées du plan sont indicatives.
 
 | Phase | Périmètre | Prérequis | Critère de sortie |
 | --- | --- | --- | --- |
-| 0. Cadrage | Juridique, contractuel, hébergement | Points « À vérifier » ci-dessous traités ; choix de l'hébergement | Décision écrite des autorités compétentes |
-| 1. Pilote | AIBD : quelques guichets et eGates aux arrivées et aux départs, en parallèle du système en place ; passerelle API/PNR ouverte à des compagnies volontaires ; rapprochement de la redevance | Hébergement national opérationnel ; lecteurs et SDK certifiés intégrés ; agents pilotes formés | Recette du pilote validée (voir le tableau de recette) ; aucun incident bloquant sur une période d'observation convenue |
-| 2. Vague aérienne et maritime | AIBD complet, Aéroport de Ziguinchor, Port Autonome de Dakar | Bilan du pilote ; serveurs de poste installés ; liaisons réseau validées | Recette par poste |
-| 3. Vague terrestre | Rosso, Kidira, Karang (lecteurs de plaques VRS, scanners) | Mode hors ligne validé ; secours 4G/VSAT en place | Recette par poste, dont un essai de coupure de liaison |
-| 4. Généralisation | Autres postes à déclarer, arrêt du système précédent | Reprise des données selon les clauses contractuelles applicables | Procès-verbal de mise en service définitive |
+| 0. Cadrage et juridique | Contrat, formalités CDP, conventions avec Sénégal Numérique (site A) et le centre de données commercial (site B), choix du site C, mandat d'encaissement de la redevance si le circuit `OPERATEUR` est retenu | Points « À vérifier » ci-dessous traités | Conventions signées ; décision écrite des autorités compétentes |
+| 1. Construction des sites A, B et C | Énergie, baies, réseau, liaisons entre sites, HSM, plateforme d'exécution, base de données, stockage objet, sauvegardes, supervision et SOC | Phase 0 terminée ; matériel livré | Bascule A → B et restauration depuis le site C réussies |
+| 2. Migration de l'application | Passage du démonstrateur Netlify à la pile souveraine (API conteneurisée, PostgreSQL et stockage objet, secrets en HSM, un domaine par plateforme), en parallèle de la phase 1 | Développements prioritaires lancés | Recette fonctionnelle en préproduction ; test de charge ; test d'intrusion |
+| 3. Pilote | AIBD : quelques guichets et eGates aux arrivées et aux départs, en parallèle du système en place ; serveur de poste de l'AIBD ; passerelle API/PNR ouverte à des compagnies volontaires ; rapprochement de la redevance | Phases 1 et 2 validées ; formalités CDP accomplies ; lecteurs et SDK certifiés intégrés ; agents pilotes formés | Recette du pilote validée (voir le tableau de recette) ; aucun incident bloquant sur une période d'observation convenue ; exercice de bascule réussi |
+| 4. Généralisation par vagues | Vague 1 : AIBD complet, Aéroport de Ziguinchor, Port Autonome de Dakar. Vague 2 : Rosso, Kidira, Karang (lecteurs de plaques VRS, scanners) ; arrêt du système précédent | Bilan du pilote ; serveurs de poste installés ; liaisons principale et de secours validées ; mode hors ligne validé pour la vague 2 | Recette par poste, dont un essai de coupure de liaison ; reprise des données selon les clauses contractuelles ; procès-verbal de mise en service définitive |
+| 5. Exploitation | Supervision 24 h/24, maintenance, exercices de reprise deux fois par an, restauration trimestrielle | Procès-verbal de mise en service | Revue annuelle |
 
 ## Hébergement au Sénégal
 
 ### Principes
 
-- **Souveraineté** : les données nominatives et biométriques sont hébergées sur le territoire national ; aucune donnée biométrique ne quitte le pays. L'hébergement actuel sur Netlify n'est pas acceptable pour des données réelles (voir *Sécurité, données personnelles et conformité*).
-- **Centre de données principal** : `docs/ARCHITECTURE.md` cite à titre d'exemple le centre de données national de Diamniadio, exploité pour le compte de l'État. Cette option est **À vérifier** : disponibilité de capacité, conditions d'hébergement, niveaux de service, sécurité physique et cadre conventionnel doivent être confirmés par l'opérateur du centre et par l'autorité de tutelle. Aucun engagement n'existe à ce jour.
-- **Site de secours** : un second site sur le territoire, avec la même pile logicielle (Recommandation de `docs/ARCHITECTURE.md`).
-- **Exposition minimale** : seuls la plateforme voyageurs (portail, aide, page des applications mobiles), la plateforme des compagnies aériennes (`/compagnies/`) et la passerelle transporteurs sont exposés sur Internet, en DMZ derrière un CDN/WAF anti-DDoS ; l'espace DPAF (`/dpaf/`), les kiosques et les services internes restent sur le réseau privé. Chaque plateforme peut recevoir son propre nom de domaine.
+- **Souveraineté** : les données nominatives et biométriques, ainsi que les clés qui les protègent, sont hébergées sur le territoire national ; aucune donnée personnelle n'est confiée à un cloud étranger. L'hébergement actuel sur Netlify n'est pas acceptable pour des données réelles (voir *Sécurité, données personnelles et conformité*).
+- **Deux centres de données actifs** (Recommandation) : les services web et API fonctionnent simultanément dans les deux sites ; la base de données est répliquée de manière synchrone du site A vers le site B ; chaque site peut porter seul toute la charge de pointe.
+- **Un site de sauvegarde (site C)** : il reçoit des copies chiffrées immuables et des copies hors ligne, sans héberger de production.
+- **Exposition minimale** : seuls la plateforme voyageurs (portail, aide, page des applications mobiles), la plateforme des compagnies aériennes (`/compagnies/`) et la passerelle transporteurs sont exposés sur Internet, derrière un WAF et une protection anti-DDoS ; l'espace DPAF (`/dpaf/`), les kiosques et les services internes restent sur le réseau privé. Chaque plateforme reçoit son propre nom de domaine (par exemple `dpaf.<domaine>`, `www.<domaine>`, `compagnies.<domaine>`, `app.<domaine>`).
+
+### Choix des sites (Recommandation, À vérifier)
+
+| Site | Rôle | Option recommandée | Points à confirmer |
+| --- | --- | --- | --- |
+| A | Principal, actif | Datacenter national de Diamniadio (État, exploité par Sénégal Numérique SA), inauguré en 2021 et présenté comme « de type Tier III » | Aucune certification Uptime Institute confirmée publiquement ; capacité, niveaux de service, sécurité physique et convention **À vérifier** ; aucun engagement à ce jour |
+| B | Secondaire, actif | Centre de données commercial certifié Tier III sur un site et un réseau électrique distincts : Sonatel (Orange) à Rufisque en premier choix, Yas (ex-Tigo) à Diamniadio en alternative | Certification de Rufisque annoncée mais **À vérifier** ; Yas Diamniadio certifié Tier III par l'Uptime Institute en 2017 (validité **À vérifier**) mais situé dans la même zone que le site A |
+| C | Coffre de sauvegarde | Site sécurisé de l'État ou installation distincte, hors de la zone Dakar–Diamniadio–Rufisque si possible | Site à identifier avec Sénégal Numérique (**À vérifier**) |
+
+La comparaison détaillée des options figure dans la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*.
 
 ### Objectifs de service (cibles de l'architecture)
 
 | Indicateur | Cible |
 | --- | --- |
-| Disponibilité du central | 99,95 % |
-| Perte de données maximale (RPO) | Moins de 5 minutes |
-| Délai de reprise (RTO) | Moins d'une heure |
-| Capacité de contrôle au poste | 100 %, y compris en mode dégradé |
-| Tests de bascule | Semestriels |
+| Disponibilité du central | 99,95 % ou plus |
+| Perte de données dans un site (RPO) | Nulle (réplication synchrone) |
+| Perte de données en cas de perte d'un site (RPO) | 5 minutes au plus (nulle tant que la réplication synchrone A → B est saine) |
+| Délai de reprise en cas de perte d'un site (RTO) | Une heure au plus |
+| Capacité de contrôle au poste | 100 %, y compris sans liaison avec le central |
+| Tests de bascule | Deux fois par an au minimum |
+| Tests de restauration | Chaque trimestre |
 
 Ces valeurs sont des objectifs de conception, pas des engagements contractuels.
 
-### Liaisons entre les postes et le centre de données
+### Liaisons réseau
 
 | Élément | Recommandation |
 | --- | --- |
-| Liaison principale | MPLS ou VPN chiffré entre chaque poste et le centre principal, avec bascule vers le site de secours |
-| Liaison de secours | 4G ou VSAT par poste, en particulier pour les postes terrestres éloignés (Kidira, Rosso, Karang) |
+| Internet des sites centraux | Deux opérateurs différents par site, sur des chemins physiques distincts |
+| Liaison entre les sites A et B | Fibre noire ou liaison dédiée sur deux chemins physiques distincts, chiffrée, à faible latence (réplication synchrone) |
+| Liaison vers le site C | Liaison chiffrée dédiée pour l'archivage continu ; copies hors ligne transportées selon une procédure sécurisée |
+| Liaison principale des postes | MPLS ou VPN chiffré entre chaque poste et les deux sites centraux, bascule automatique de l'un vers l'autre |
+| Liaison de secours des postes | 4G ou VSAT par poste, chez un opérateur différent de la liaison principale, en particulier pour les postes terrestres éloignés (Kidira, Rosso, Karang) |
+| Partenaires | Interpol via le BCN de Dakar (I-24/7), WAPIS, FPR, DAF et DGCPT par liaisons privées ou VPN, selon les accords (À vérifier) ; compagnies aériennes par Internet derrière le WAF |
 | Réseau du poste | Réseau local segmenté (guichets, eGates, CCTV, administration) ; aucun poste de contrôle directement exposé à Internet |
 | Flux sortants des postes | Limités au central WawID (HTTPS) ; le pont NFC n'écoute que sur la boucle locale de chaque poste de travail |
 | Supervision | Remontée de l'état des équipements vers **Supervision systèmes** et vers le SOC de l'exploitant |
 
 ### Mode hors ligne (À développer)
 
-Le démonstrateur n'a **pas** de mode hors ligne : un poste qui perd sa liaison ne peut plus enregistrer de passage. L'architecture cible prévoit un **serveur de poste** (type `SRV-` dans **Supervision systèmes**) qui :
+Le démonstrateur n'a **pas** de mode hors ligne : un poste qui perd sa liaison ne peut plus enregistrer de passage. L'architecture cible prévoit dans chaque poste un **serveur de poste** (type `SRV-` dans **Supervision systèmes**), composé de deux nœuds, auquel se rattachent les guichets et les eGates, et qui :
 
 - conserve une copie chiffrée des listes de surveillance, synchronisée en moins d'une minute ;
 - exécute le même moteur de décision que le central (`public/shared/engine.js`) ;
 - met les passages en file d'attente et les resynchronise au retour de la liaison ;
-- déclenche une alerte locale en cas de correspondance critique.
+- déclenche une alerte locale en cas de correspondance critique ;
+- permet au poste de poursuivre le contrôle même si les deux sites centraux sont indisponibles.
 
 Tant que ce serveur n'existe pas, chaque poste doit disposer d'une **procédure de contrôle manuel** écrite, validée par la DPAF.
 
 ### Sauvegardes et reprise
 
+La stratégie suit la règle **3-2-1-1-0** : trois copies, sur deux types de supports, dont une hors site (site C), une immuable ou hors ligne, et zéro erreur constatée lors des vérifications (Recommandation).
+
 | Élément | Recommandation |
 | --- | --- |
-| Base de données | Réplication vers le site de secours ; sauvegardes complètes et incrémentales chiffrées |
-| Copie hors ligne | Sauvegarde chiffrée déconnectée du réseau, conservée sur le territoire |
-| Journal d'audit | Archivage régulier ; ancrage périodique de la tête de chaîne par une signature HSM |
-| Clés et secrets | Conservés dans un HSM ; procédure de séquestre validée par la sécurité |
-| Essais | Restauration testée au moins avant chaque phase et à chaque test de bascule |
+| Base de données | Réplication synchrone du site A vers le site B ; archivage continu des journaux de transactions (restauration à un instant donné) ; sauvegarde complète quotidienne et incrémentale horaire, copiées vers le site C |
+| Stockage objet (biométrie, documents) | Réplication entre A et B, versionnement, copie quotidienne vers le site C |
+| Copie immuable et hors ligne | Stockage à écriture unique au site C ; copie hors ligne chiffrée hebdomadaire conservée en coffre, sur le territoire |
+| Journal d'audit | Export quotidien de la chaîne ; ancrage périodique de la tête de chaîne par une signature HSM (À développer) |
+| Clés et secrets | Conservés dans une paire de HSM par site central ; sauvegarde des clés partagée entre plusieurs dépositaires |
+| Conservation | 5 ans affichés dans WawID (`retentionDays`) ; durée légale **À vérifier** ; purge automatique **À développer** |
+| Essais | Restauration testée chaque trimestre ; restauration depuis le site C et bascule entre sites lors des exercices semestriels |
+
+Les scénarios de défaillance, la procédure de bascule et le retour à la normale sont décrits dans la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*.
 
 ## Prérequis juridiques et réglementaires
 
@@ -157,6 +182,21 @@ Les types d'équipements suivis dans **Supervision systèmes** sont : terminaux 
 | Aérien | AIBD, Ziguinchor | Guichets, eGates et kiosques ABC aux arrivées et aux départs, corridor biométrique d'embarquement, CCTV, scanners bagages | Pointes de trafic ; passerelle API/PNR ; redevance de sécurité |
 | Maritime | Port Autonome de Dakar | Guichets au terminal passagers, CCTV, scanners | Arrivées groupées de navires ; manifestes chargés en CSV si la compagnie n'est pas raccordée |
 | Terrestre | Rosso, Kidira, Karang | Guichets, lecteurs de plaques (VRS), CCTV | Liaison réseau fragile ; coupures d'électricité ; mode dégradé indispensable |
+
+### Sites centraux
+
+Les quantités sont à dimensionner lors de l'étude détaillée ; la nomenclature complète figure dans la page *Plan de déploiement — infrastructure haute disponibilité au Sénégal*.
+
+| Équipement | Site A | Site B | Site C |
+| --- | --- | --- | --- |
+| Routeurs (deux opérateurs), pare-feu, commutateurs | Par paires | Par paires | Selon le site |
+| Répartiteurs de charge et WAF | Paire | Paire | — |
+| Serveurs de la plateforme d'exécution (Kubernetes ou équivalent) | 3 nœuds de contrôle + nœuds de travail à dimensionner | Idem | — |
+| Serveurs de base de données | 2 au minimum | 2 au minimum | — |
+| Stockage objet | 4 nœuds au minimum | 4 nœuds au minimum | Stockage immuable |
+| HSM | 2 | 2 | Sauvegarde des clés en coffre |
+| Sauvegarde | Serveur de sauvegarde | Serveur de sauvegarde | Appliance immuable, bandes ou disques hors ligne |
+| Bastions et collecteurs de supervision | 2 | 2 | — |
 
 ### Alimentation électrique (Recommandation)
 
@@ -434,7 +474,7 @@ Les messages d'exemple de l'espace DPAF (**Recevoir un message → Exemple PAXLS
 | Agents DPAF (guichet) | Connexion, contrôle complet, lecture de puce, biométrie, décisions motivées, QR, situations courantes, mode dégradé | *Guide utilisateur par profil* ; scénarios de démonstration |
 | Superviseurs | Escalades, eGates, tableau de bord, dossiers, journal d'audit | *eGates et kiosques ABC* ; *Tableau de bord* |
 | Analystes | Threat Monitor, listes, règles, APIS/PNR, e-Visa, réseau d'identités | *Threat Monitor, dossiers, listes, règles et connecteurs* ; *APIS et PNR* |
-| Administrateurs | Comptes, paramètres, pont NFC, clés, sauvegardes, incidents | Ce guide ; *Déploiement et configuration* |
+| Administrateurs | Comptes, paramètres, pont NFC, clés, sauvegardes, incidents, bascule et restauration | Ce guide ; *Déploiement et configuration* ; *Plan de déploiement — infrastructure haute disponibilité au Sénégal* |
 | Techniciens de poste | Installation des postes et kiosques, diagnostic de premier niveau | Ce guide ; *Kiosque eGate : mise en service et parcours* |
 | Agents du Trésor | Calendrier, validation des paiements, encaissements, reversements à l'État, rapprochement, export | *Redevance de sécurité* |
 | Compagnies aériennes | Plateforme des compagnies, formats, calendrier, réponses, conformité, déclaration des paiements de redevance | *Plateforme des compagnies aériennes* ; `docs/API-TRANSPORTEURS.md` |
@@ -446,11 +486,12 @@ Organisez la formation sur un environnement de démonstration distinct de la pro
 | Niveau | Acteur | Périmètre |
 | --- | --- | --- |
 | N1 | Référent WawID du poste | Postes de travail, lecteurs, caméras, kiosques, procédures d'usage |
-| N2 | Support de l'exploitant | Comptes, paramètres, réseau, pont NFC, connecteurs, incidents applicatifs |
+| N2 | Support de l'exploitant et centre de supervision (NOC) 24 h/24 | Comptes, paramètres, réseau, pont NFC, connecteurs, incidents applicatifs, état des sites centraux et des liaisons |
 | N3 | Équipe de développement | Anomalies du logiciel, correctifs |
 | Sécurité | Responsable sécurité et SOC | Incident de sécurité, fuite de clé, rupture de la chaîne d'audit |
+| Crise | Cellule de crise (exploitant, DPAF) | Perte d'un site central, rançongiciel, mode dégradé prolongé |
 
-Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixés avec la DPAF avant la mise en service et affichés dans chaque poste.
+Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixés avec la DPAF avant la mise en service et affichés dans chaque poste. Les maintenances planifiées sont annoncées à l'avance aux postes, aux compagnies et au Trésor.
 
 ## Recette
 
@@ -473,22 +514,27 @@ Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixé
 | 15 | Vérification du **Journal d'audit** | **Chaîne intègre** |
 | 16 | Connexion d'un compte compagnie sur `/dpaf/`, puis sur `/compagnies/` | Refus sur l'espace DPAF ; sur la plateforme, seules les données de sa compagnie, sans passager signalé ni score |
 | 17 | Paiement déclaré par une compagnie, validé par un agent du Trésor, puis reversement de la part de l'État (circuit `OPERATEUR`) | Paiement **À valider** puis **Validé** ; facture **PARTIELLE** ou **PAYÉE** ; entrées `REDEVANCE_PAIEMENT_DECLARE`, `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_REVERSEMENT_ETAT` |
-| 16 | Coupure de la liaison d'un poste (après développement du mode hors ligne) | Contrôle poursuivi ; resynchronisation au retour de la liaison |
-| 17 | Coupure électrique d'un guichet | Bascule sur onduleur ; aucun passage perdu |
-| 18 | Restauration de sauvegarde et bascule vers le site de secours | RPO et RTO conformes aux objectifs |
+| 18 | Coupure de la liaison d'un poste (après développement du mode hors ligne) | Contrôle poursuivi ; resynchronisation au retour de la liaison, sans perte ni doublon |
+| 19 | Coupure électrique d'un guichet | Bascule sur onduleur ; aucun passage perdu |
+| 20 | Bascule du site A vers le site B, puis retour | RTO d'une heure au plus ; RPO conforme ; **Chaîne intègre** dans le **Journal d'audit** après bascule |
+| 21 | Restauration complète depuis une copie du site C en préproduction | Restauration réussie ; durée et perte de données mesurées |
+| 22 | Panne simulée d'un HSM | Aucune interruption des signatures |
+| 23 | Test de charge | Pointe de 15 000 voyageurs par heure à l'AIBD tenue par un seul site central |
+| 24 | Test d'intrusion | Aucune vulnérabilité critique ou élevée ouverte |
 
 ## Liste de contrôle de mise en service
 
 1. Formalités CDP accomplies et décisions écrites des autorités compétentes obtenues.
-2. Hébergement national opérationnel ; site de secours et sauvegardes testés.
-3. Jeu de démonstration désactivé ; aucune donnée fictive dans la base de production.
-4. `SESSION_SECRET`, `WAWID_ADMIN_PASSWORD`, `WAWID_GATE_KEY` et `WAWID_CARRIER_KEYS` définis ; `WAWID_DEMO_PASSWORD` absent.
-5. Comptes nominatifs créés ; mot de passe du compte `admin` changé ; revue des rôles faite.
-6. Ponts NFC installés avec `NFC_BRIDGE_ORIGIN` limité au domaine de production ; test **Connecté** sur chaque poste.
-7. Lecteurs, SDK biométriques et kiosques intégrés et testés ; simulateur masqué sur les kiosques.
-8. Connecteurs (Interpol, WAPIS, FPR, DAF) raccordés ou, à défaut, copie locale des listes à jour et procédure validée.
-9. Compagnies raccordées et testées, comptes de la plateforme des compagnies créés ; circuit de recouvrement de la redevance arrêté avec la base juridique correspondante ; agents du Trésor formés.
-10. Applications mobiles pointant vers l'API nationale ; fiches des magasins validées.
-11. Procédure de mode dégradé affichée dans chaque poste ; onduleurs testés.
-12. Agents formés ; référents désignés ; chaîne d'escalade diffusée.
-13. Recette signée ; procès-verbal de mise en service établi.
+2. Sites A et B opérationnels et conventions signées ; site C recevant les copies immuables et hors ligne ; bascule A → B, retour et restauration depuis le site C réussis.
+3. Centre de supervision 24 h/24, SOC, astreinte et cellule de crise en place ; procédures de bascule et de restauration rédigées.
+4. Jeu de démonstration désactivé ; aucune donnée fictive dans la base de production.
+5. `SESSION_SECRET`, `WAWID_ADMIN_PASSWORD`, `WAWID_GATE_KEY` et `WAWID_CARRIER_KEYS` définis ; `WAWID_DEMO_PASSWORD` absent.
+6. Comptes nominatifs créés ; mot de passe du compte `admin` changé ; revue des rôles faite.
+7. Ponts NFC installés avec `NFC_BRIDGE_ORIGIN` limité au domaine de production ; test **Connecté** sur chaque poste.
+8. Lecteurs, SDK biométriques et kiosques intégrés et testés ; simulateur masqué sur les kiosques.
+9. Connecteurs (Interpol, WAPIS, FPR, DAF) raccordés ou, à défaut, copie locale des listes à jour et procédure validée.
+10. Compagnies raccordées et testées, comptes de la plateforme des compagnies créés ; circuit de recouvrement de la redevance arrêté avec la base juridique correspondante ; agents du Trésor formés.
+11. Applications mobiles pointant vers l'API nationale ; fiches des magasins validées.
+12. Procédure de mode dégradé affichée dans chaque poste ; serveurs de poste, liaisons de secours, onduleurs et groupes électrogènes testés.
+13. Agents formés ; référents désignés ; chaîne d'escalade diffusée.
+14. Recette signée ; procès-verbal de mise en service établi.

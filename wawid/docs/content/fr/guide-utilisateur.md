@@ -189,7 +189,7 @@ Le rôle **Superviseur** cumule les droits de l'agent et de l'analyste et le pil
 | --- | --- |
 | Escalade pour une notice rouge | Assurez-vous de l'identité, appliquez les instructions de service (BCN Interpol, procureur), consignez tout dans le dossier, clôturez l'alerte avec la résolution adaptée (« Remis à la police aux frontières », « Signalement transmis à Interpol (BCN) »…). |
 | Agent qui ne peut plus se connecter | Session expirée (12 h) ou compte désactivé : faites vérifier par l'administrateur. |
-| Panne réseau du poste | Appliquez la consigne de mode dégradé du poste et prévenez le support. Dans le démonstrateur, il n'existe pas encore de mode hors ligne (prévu dans l'architecture cible). |
+| Panne réseau du poste | Appliquez la consigne de mode dégradé du poste et prévenez le support (voir « Continuité de service » ci-dessous). Dans le démonstrateur, il n'existe pas encore de mode hors ligne (prévu dans l'architecture cible). |
 | Intégrité du journal d'audit rompue | Ne touchez à rien, notez le numéro d'entrée affiché et prévenez immédiatement l'administrateur et le responsable sécurité. |
 
 ## Administrateur
@@ -316,13 +316,96 @@ L'application permet de déposer la demande en lisant la puce du passeport. Elle
 | Orientation par l'eGate vers un guichet | Présentez-vous au guichet : ce n'est pas une sanction. |
 | WawPass « Reçu déjà utilisé » | Un reçu ne sert qu'une fois ; présentez la preuve de paiement à l'agent. |
 
+## Continuité de service : mode dégradé, bascule et maintenance
+
+En exploitation nationale, WawID est hébergé dans **deux centres de données actifs au Sénégal**, avec un troisième site pour les sauvegardes, et chaque poste disposera d'un **serveur de poste** capable de fonctionner sans liaison (voir *Plan de déploiement — infrastructure haute disponibilité au Sénégal*). Cette section décrit ce que vous voyez et ce que vous faites dans chaque situation. Elle distingue ce qui existe aujourd'hui dans le démonstrateur et ce qui est prévu (Cible, À développer).
+
+### Les situations possibles
+
+| Situation | Ce que vous constatez | Ce que vous faites |
+| --- | --- | --- |
+| Maintenance planifiée | Annonce préalable par le chef de poste ou l'administrateur ; éventuellement une reconnexion demandée pendant la fenêtre | Terminez les contrôles en cours avant l'heure annoncée ; reconnectez-vous si l'écran de connexion s'affiche |
+| Bascule d'un centre de données vers l'autre | Quelques erreurs ou lenteurs pendant un court moment ; éventuellement retour à l'écran de connexion | Patientez, rechargez la page, reconnectez-vous ; vérifiez que votre dernière action a bien été enregistrée avant de la refaire |
+| Liaison du poste coupée | Messages d'erreur à l'enregistrement ; données qui ne se rafraîchissent plus ; kiosques affichant « Serveur WawID injoignable » | Appliquez la procédure de mode dégradé du poste (ci-dessous) et prévenez le support |
+| Les deux centres de données indisponibles | Même chose dans tous les postes | Mode dégradé ; les consignes sont données par la cellule de crise via le chef de poste |
+
+Le point devant le nom du poste, dans la barre supérieure, indique seulement que le navigateur de votre poste de travail dispose d'une connexion réseau. Il peut rester vert alors que le serveur WawID ne répond pas : en cas de doute, fiez-vous aux messages d'erreur et prévenez le support.
+
+### Mode dégradé au poste
+
+**Aujourd'hui (démonstrateur)** : il n'existe pas de mode hors ligne. Sans liaison, aucun passage ne peut être enregistré dans WawID. Le poste applique sa **procédure de contrôle manuel** écrite et validée par la DPAF.
+
+**Cible (À développer)** : le serveur de poste prendra le relais automatiquement. Avec lui :
+
+| Fonction | Sans liaison avec le central |
+| --- | --- |
+| Lecture de la MRZ et chiffres de contrôle | Disponible |
+| Lecture de la puce et authentification passive | Disponible (certificats CSCA copiés sur le serveur de poste) |
+| Comparaison du visage avec la photo de la puce (1:1) | Disponible |
+| Vérification sur les listes de surveillance | Disponible sur la **copie locale**, à jour de la dernière synchronisation |
+| Enregistrement des passages | Disponible ; passages mis en file puis transmis au retour de la liaison |
+| Vérification des e-Visa | Sur la copie locale des e-Visa approuvés ; un e-Visa approuvé après la coupure n'est pas connu du poste |
+| Vérification d'un reçu WawPass | Sur la copie locale ; l'utilisation du même reçu dans un autre poste n'est détectée qu'au retour de la liaison |
+| Interrogation en temps réel d'Interpol, du WAPIS ou d'autres sources | Indisponible |
+| Recherche biométrique 1:N, nouveaux messages API/PNR | Indisponibles |
+| eGates | Selon la politique fixée par la DPAF pour le mode dégradé (fermeture ou fonctionnement restreint) |
+
+### Procédure de contrôle manuel (tant que le mode hors ligne n'existe pas)
+
+1. Le chef de vacation déclare le passage en mode dégradé et note l'heure.
+2. Le superviseur ferme les eGates (**Fermer**) si l'espace DPAF est encore accessible ; sinon, il fait orienter les voyageurs vers les guichets.
+3. Les agents appliquent le contrôle documentaire visuel renforcé prévu par la procédure de la DPAF et consultent les listes disponibles hors WawID selon les instructions de service.
+4. Chaque passage est consigné sur le registre prévu (papier ou fichier local autorisé), avec l'heure, le document, la décision et le nom de l'agent.
+5. Au retour du service, le chef de vacation organise la saisie différée des passages selon les consignes de la DPAF et clôt le mode dégradé en notant l'heure.
+
+Les modalités exactes (registre, saisie différée, politique des eGates) sont fixées par la DPAF avant la mise en service (**À vérifier**).
+
+### Pendant une bascule de site central
+
+- La bascule est décidée et conduite par l'exploitant ; vous n'avez aucune action technique à faire.
+- Votre session peut rester valide, mais il peut vous être demandé de vous reconnecter : faites-le avec votre propre compte.
+- Si une action était en cours au moment de l'erreur (décision de passage, encaissement, déclaration, message), **vérifiez d'abord qu'elle n'a pas été enregistrée** (**Passages**, fiche de la facture, écran **Messages**) avant de la refaire, pour éviter les doublons.
+- Le superviseur de poste vérifie ensuite le **Journal d'audit** (**Chaîne intègre**).
+
+### Maintenance planifiée
+
+Les maintenances sont réalisées site par site et, sauf exception, sans interruption du service. Elles sont annoncées à l'avance aux postes, aux compagnies et au Trésor, de préférence aux heures creuses. Une maintenance qui impose une interruption est validée avec la DPAF.
+
+### Notes par profil
+
+| Profil | En cas de bascule, de coupure ou de maintenance |
+| --- | --- |
+| Agent DPAF au guichet | Appliquez les consignes du chef de vacation ; ne validez pas un passage deux fois ; notez l'heure et le message exact affiché |
+| Superviseur des eGates | Fermez les portes dont le kiosque affiche « Serveur WawID injoignable » ; rouvrez-les après un passage d'essai au retour du service |
+| Analyste renseignement | Les contrôles reposent sur la copie locale des listes : à la reprise, vérifiez les **Connecteurs** (**Tester**) et les alertes arrivées pendant la coupure |
+| Superviseur de poste | Déclarez et clôturez le mode dégradé ; après une bascule, vérifiez la **Chaîne intègre** et le retour des données de votre poste |
+| Administrateur | Relayez les annonces de maintenance ; après une bascule, vérifiez les connexions et les **Connecteurs** ; ne réinitialisez jamais la démonstration en exploitation |
+| Agent du Trésor | Avant de ressaisir un encaissement ou un reversement interrompu, vérifiez la fiche de la facture : un encaissement enregistré ne peut être ni modifié ni supprimé dans cette version |
+| Compagnie aérienne | Voir ci-dessous |
+| Voyageur | Le portail et l'application peuvent être brièvement indisponibles ; réessayez plus tard et conservez votre référence `EV…` |
+
+### Compagnies aériennes : renvoi des messages
+
+- Si la passerelle ne répond pas ou renvoie une erreur serveur (`500` ou absence de réponse), renvoyez le **même** message un peu plus tard. Une réponse `401` ou `422` ne se corrige pas en renvoyant le même message.
+- **Existant** : un renvoi crée un nouveau message avec une nouvelle référence `MSG-…` (les deux apparaissent dans l'écran **Messages**), mais les passagers d'un même vol, à la même date, sont fusionnés par numéro de document : le renvoi ne crée pas de passagers en double.
+- **À développer** : une clé d'idempotence explicite (même référence renvoyée pour un message déjà reçu) et des consignes de renvoi automatique documentées dans *Référence API (compagnies, équipements, connecteurs)*.
+- Déclaration d'un paiement de redevance : en cas d'erreur, vérifiez d'abord dans la facture si la déclaration apparaît ; une déclaration renvoyée crée une seconde déclaration, que le Trésor rejettera comme doublon.
+
+### Sauvegardes et restaurations (administrateur)
+
+- Les sauvegardes sont automatiques et gérées par l'exploitant ; aucun utilisateur n'a d'action à faire.
+- Une demande de restauration (donnée effacée ou modifiée par erreur, incident) est adressée par l'administrateur à l'exploitant (niveau N2), par écrit, avec l'objet, la date et l'heure concernées et le motif. Elle exige l'accord de la DPAF et l'intervention de deux personnes habilitées.
+- Une restauration ne doit jamais servir à effacer une trace du **Journal d'audit** ; après toute restauration, l'administrateur vérifie la **Chaîne intègre**.
+- Dans le démonstrateur, il n'existe pas de sauvegarde dédiée ; **Réinitialiser la démonstration** n'est pas une restauration.
+
 ## Assistance et escalade
 
 | Niveau | Qui | Pour quoi |
 | --- | --- | --- |
-| 1 | Chef de vacation du poste | Toute question opérationnelle, escalade d'un contrôle, fermeture d'une eGate |
-| 2 | Support technique du poste (référent WawID) | Lecteur, pont NFC, caméra, kiosque, réseau, compte bloqué |
-| 3 | Administrateur WawID central | Comptes et rôles, paramètres, connecteurs, clés d'équipements et de compagnies |
-| 4 | Responsable sécurité / exploitation | Incident de sécurité, rupture de la chaîne d'audit, fuite de clé, indisponibilité générale |
+| N1 | Chef de vacation et référent WawID du poste | Toute question opérationnelle, escalade d'un contrôle, fermeture d'une eGate ; lecteur, pont NFC, caméra, kiosque, réseau local, déclaration du mode dégradé |
+| N2 | Administrateur WawID central, support de l'exploitant et centre de supervision (NOC) 24 h/24 | Comptes et rôles, paramètres, connecteurs, clés d'équipements et de compagnies ; liaisons du poste ; état des centres de données ; demandes de restauration |
+| N3 | Experts de l'exploitant (infrastructure, base de données) et équipe de développement | Anomalies du logiciel, bascule d'un site central, restauration |
+| Sécurité | Responsable sécurité et SOC | Incident de sécurité, rupture de la chaîne d'audit, fuite de clé |
+| Crise | Cellule de crise (exploitant et DPAF) | Indisponibilité générale, perte d'un centre de données, rançongiciel, mode dégradé prolongé |
 
-Les coordonnées de chaque niveau sont fixées par la DPAF et l'exploitant lors de la mise en service (voir *Guide d'installation — Sénégal*). Pour tout incident, notez l'heure, le poste, l'équipement, le message exact affiché et, le cas échéant, la référence (`PX-…`, `EV…`, `MSG-…`).
+Les coordonnées de chaque niveau sont fixées par la DPAF et l'exploitant lors de la mise en service (voir *Guide d'installation — Sénégal*). Le centre de supervision (NOC) est joignable 24 h/24 et 7 j/7 ; il peut déjà être informé d'une panne générale avant votre appel, mais signalez toujours un incident constaté au poste. Pour tout incident, notez l'heure, le poste, l'équipement, le message exact affiché et, le cas échéant, la référence (`PX-…`, `EV…`, `MSG-…`).

@@ -2,7 +2,7 @@
 
 This guide describes how to set up WawID at Senegal's border posts: deployment phases, hosting, legal prerequisites, hardware, installation of counter workstations, eGate kiosks and the DPAF space, software installation of the platform, mobile apps, onboarding of airlines and the Treasury, training, acceptance testing and go-live. It is intended for the project teams of the DPAF, the operator and the integrators.
 
-For technical details already documented, this guide refers to the pages *Deployment and configuration*, *Security, personal data and compliance*, *eGate kiosk: setup and journey* and *API reference (airlines, devices, connectors)*.
+The high-availability hosting infrastructure (two active data centers in Senegal and a backup site), the backup strategy, failover procedures and detailed phasing are covered by the page *Deployment plan — high-availability infrastructure in Senegal*; this guide summarizes them. For other technical details already documented, it refers to the pages *Deployment and configuration*, *Security, personal data and compliance*, *eGate kiosk: setup and journey* and *API reference (airlines, devices, connectors)*.
 
 ## Reading this guide
 
@@ -21,7 +21,8 @@ The current WawID deployment is a **demonstrator** hosted on Netlify (Netlify Fu
 
 | Component | Today (Existing) | National target |
 | --- | --- | --- |
-| Hosting | Netlify, outside the national territory | National data center + backup site in Senegal (To be developed) |
+| Hosting | Netlify, outside the national territory | Two active data centers in Senegal (site A: national data center in Diamniadio; site B: Tier III-certified commercial data center) + backup site C (To be developed) |
+| Backups | No dedicated backup | 3-2-1-1-0 rule, immutable and offline copies at site C, restoration tested every quarter (To be developed) |
 | Storage | One collection = one JSON document (Netlify Blobs) | Partitioned PostgreSQL + event bus (To be developed) |
 | Officer identity | Username + password (scrypt), 12-hour session | OIDC, MFA, PKI officer cards (To be developed) |
 | Biometrics | Simulated scores | Certified SDK / ABIS, liveness detection ISO/IEC 30107-3 (To be developed) |
@@ -50,67 +51,91 @@ The posts declared in WawID are those of the `POSTES` list:
 
 Any other post must be added to this list (code change, To be developed) before it is connected.
 
-The phasing below is a **Recommendation**. It follows the principle of the proposal note (`docs/PROPOSITION-REMPLACEMENT-SECURIPORT.md`): a pilot at AIBD in parallel with the system in place, then a switchover in waves, without interrupting border checks. The durations given in that note are indicative; no schedule has been set.
+The phasing below is a **Recommendation**; it follows that of the page *Deployment plan — high-availability infrastructure in Senegal*, which details the entry and exit criteria and the acceptance tests. It follows the principle of the proposal note (`docs/PROPOSITION-REMPLACEMENT-SECURIPORT.md`): a pilot at AIBD in parallel with the system in place, then a switchover in waves, without interrupting border checks. It adds the build of the high-availability infrastructure and the application migration, which the note did not include. No schedule has been set; the durations in the plan are indicative.
 
 | Phase | Scope | Prerequisites | Exit criterion |
 | --- | --- | --- | --- |
-| 0. Scoping | Legal, contractual, hosting | "To be checked" items below handled; hosting chosen | Written decision of the competent authorities |
-| 1. Pilot | AIBD: a few counters and eGates at arrivals and departures, in parallel with the system in place; carrier gateway open to volunteer airlines; security fee reconciliation | National hosting operational; certified readers and SDKs integrated; pilot officers trained | Pilot acceptance passed (see the acceptance table); no blocking incident over an agreed observation period |
-| 2. Air and sea wave | Full AIBD, Ziguinchor Airport, Autonomous Port of Dakar | Pilot review; post servers installed; network links validated | Acceptance per post |
-| 3. Land wave | Rosso, Kidira, Karang (VRS plate readers, scanners) | Offline mode validated; 4G/VSAT backup in place | Acceptance per post, including a link-cut test |
-| 4. Generalization | Other posts to be declared, decommissioning of the previous system | Data takeover under the applicable contractual clauses | Final go-live report |
+| 0. Scoping and legal | Contract, CDP formalities, agreements with Sénégal Numérique (site A) and the commercial data center (site B), choice of site C, collection mandate for the security fee if the `OPERATEUR` flow is selected | "To be checked" items below handled | Agreements signed; written decision of the competent authorities |
+| 1. Build of sites A, B and C | Power, racks, network, inter-site links, HSMs, runtime platform, database, object storage, backups, monitoring and SOC | Phase 0 completed; hardware delivered | A → B failover and restoration from site C passed |
+| 2. Application migration | Move from the Netlify demonstrator to the sovereign stack (containerized API, PostgreSQL and object storage, secrets in HSM, one domain per platform), in parallel with phase 1 | Priority developments started | Functional acceptance in pre-production; load test; penetration test |
+| 3. Pilot | AIBD: a few counters and eGates at arrivals and departures, in parallel with the system in place; AIBD post server; carrier gateway open to volunteer airlines; security fee reconciliation | Phases 1 and 2 validated; CDP formalities completed; certified readers and SDKs integrated; pilot officers trained | Pilot acceptance passed (see the acceptance table); no blocking incident over an agreed observation period; failover drill passed |
+| 4. Rollout in waves | Wave 1: full AIBD, Ziguinchor Airport, Autonomous Port of Dakar. Wave 2: Rosso, Kidira, Karang (VRS plate readers, scanners); decommissioning of the previous system | Pilot review; post servers installed; main and backup links validated; offline mode validated for wave 2 | Acceptance per post, including a link-cut test; data takeover under the contractual clauses; final go-live report |
+| 5. Operations | 24/7 monitoring, maintenance, recovery drills twice a year, quarterly restoration | Go-live report | Annual review |
 
 ## Hosting in Senegal
 
 ### Principles
 
-- **Sovereignty**: nominative and biometric data is hosted on national territory; no biometric data leaves the country. The current Netlify hosting is not acceptable for real data (see *Security, personal data and compliance*).
-- **Main data center**: `docs/ARCHITECTURE.md` mentions, as an example, the national data center in Diamniadio, operated on behalf of the State. This option is **To be checked**: available capacity, hosting terms, service levels, physical security and the agreement framework must be confirmed by the data center operator and the supervising authority. No commitment exists to date.
-- **Backup site**: a second site on national territory, running the same software stack (Recommendation from `docs/ARCHITECTURE.md`).
-- **Minimal exposure**: only the traveler platform (portal, help, mobile apps page), the airline platform (`/compagnies/`) and the carrier gateway are exposed to the Internet, in a DMZ behind an anti-DDoS CDN/WAF; the DPAF space (`/dpaf/`), kiosks and internal services remain on the private network. Each platform can be given its own domain name.
+- **Sovereignty**: nominative and biometric data, as well as the keys that protect it, is hosted on national territory; no personal data is entrusted to a foreign cloud. The current Netlify hosting is not acceptable for real data (see *Security, personal data and compliance*).
+- **Two active data centers** (Recommendation): web and API services run simultaneously in both sites; the database is replicated synchronously from site A to site B; each site can carry the full peak load alone.
+- **A backup site (site C)**: it receives immutable encrypted copies and offline copies, without hosting production.
+- **Minimal exposure**: only the traveler platform (portal, help, mobile apps page), the airline platform (`/compagnies/`) and the carrier gateway are exposed to the Internet, behind a WAF and anti-DDoS protection; the DPAF space (`/dpaf/`), kiosks and internal services remain on the private network. Each platform gets its own domain name (for example `dpaf.<domain>`, `www.<domain>`, `compagnies.<domain>`, `app.<domain>`).
+
+### Choice of sites (Recommendation, To be checked)
+
+| Site | Role | Recommended option | Points to confirm |
+| --- | --- | --- | --- |
+| A | Primary, active | National data center in Diamniadio (State-owned, operated by Sénégal Numérique SA), inaugurated in 2021 and presented as "Tier III type" | No Uptime Institute certification publicly confirmed; capacity, service levels, physical security and agreement **To be checked**; no commitment to date |
+| B | Secondary, active | Tier III-certified commercial data center on a separate site and power grid: Sonatel (Orange) in Rufisque as first choice, Yas (formerly Tigo) in Diamniadio as the alternative | Rufisque certification announced but **To be checked**; Yas Diamniadio Uptime Institute Tier III certified in 2017 (validity **To be checked**) but located in the same area as site A |
+| C | Backup vault | Secure State site or separate facility, outside the Dakar–Diamniadio–Rufisque area if possible | Site to be identified with Sénégal Numérique (**To be checked**) |
+
+The detailed comparison of the options is in the page *Deployment plan — high-availability infrastructure in Senegal*.
 
 ### Service objectives (architecture targets)
 
 | Indicator | Target |
 | --- | --- |
-| Central availability | 99.95% |
-| Maximum data loss (RPO) | Less than 5 minutes |
-| Recovery time (RTO) | Less than one hour |
-| Checking capacity at the post | 100%, including in degraded mode |
-| Failover tests | Every six months |
+| Central availability | 99.95% or more |
+| Data loss within a site (RPO) | None (synchronous replication) |
+| Data loss if a site is lost (RPO) | 5 minutes at most (none while synchronous replication A → B is healthy) |
+| Recovery time if a site is lost (RTO) | One hour at most |
+| Checking capacity at the post | 100%, including without a link to the central system |
+| Failover tests | At least twice a year |
+| Restoration tests | Every quarter |
 
 These values are design objectives, not contractual commitments.
 
-### Links between posts and the data center
+### Network links
 
 | Item | Recommendation |
 | --- | --- |
-| Main link | MPLS or encrypted VPN between each post and the main center, with failover to the backup site |
-| Backup link | 4G or VSAT per post, especially for remote land posts (Kidira, Rosso, Karang) |
+| Internet for central sites | Two different carriers per site, over separate physical paths |
+| Link between sites A and B | Dark fiber or dedicated link over two separate physical paths, encrypted, low latency (synchronous replication) |
+| Link to site C | Dedicated encrypted link for continuous archiving; offline copies transported under a secure procedure |
+| Main link of posts | MPLS or encrypted VPN between each post and both central sites, automatic failover from one to the other |
+| Backup link of posts | 4G or VSAT per post, from a carrier other than that of the main link, especially for remote land posts (Kidira, Rosso, Karang) |
+| Partners | Interpol through the NCB in Dakar (I-24/7), WAPIS, FPR, DAF and DGCPT through private links or VPN, according to the agreements (To be checked); airlines over the Internet behind the WAF |
 | Post network | Segmented local network (counters, eGates, CCTV, administration); no control workstation directly exposed to the Internet |
 | Outbound flows from posts | Limited to the WawID central system (HTTPS); the NFC bridge only listens on the loopback interface of each workstation |
 | Monitoring | Device status reported to **System monitoring** and to the operator's SOC |
 
 ### Offline mode (To be developed)
 
-The demonstrator has **no** offline mode: a post that loses its link can no longer record crossings. The target architecture provides a **post server** (type `SRV-` in **System monitoring**) that:
+The demonstrator has **no** offline mode: a post that loses its link can no longer record crossings. The target architecture provides at each post a **post server** (type `SRV-` in **System monitoring**), made up of two nodes, to which counters and eGates are attached, and that:
 
 - keeps an encrypted copy of the watchlists, synchronized in under one minute;
 - runs the same decision engine as the central system (`public/shared/engine.js`);
 - queues crossings and resynchronizes them when the link returns;
-- raises a local alert on a critical match.
+- raises a local alert on a critical match;
+- allows the post to continue checks even if both central sites are unavailable.
 
 Until this server exists, each post must have a written **manual checking procedure**, validated by the DPAF.
 
 ### Backups and recovery
 
+The strategy follows the **3-2-1-1-0** rule: three copies, on two types of media, one of them off-site (site C), one immutable or offline, and zero errors found during verification (Recommendation).
+
 | Item | Recommendation |
 | --- | --- |
-| Database | Replication to the backup site; encrypted full and incremental backups |
-| Offline copy | Encrypted backup disconnected from the network, kept on national territory |
-| Audit log | Regular archiving; periodic anchoring of the chain head with an HSM signature |
-| Keys and secrets | Kept in an HSM; escrow procedure validated by security |
-| Tests | Restoration tested at least before each phase and at each failover test |
+| Database | Synchronous replication from site A to site B; continuous archiving of transaction logs (point-in-time recovery); daily full and hourly incremental backups, copied to site C |
+| Object storage (biometrics, documents) | Replication between A and B, versioning, daily copy to site C |
+| Immutable and offline copy | Write-once storage at site C; weekly encrypted offline copy kept in a safe, on national territory |
+| Audit log | Daily export of the chain; periodic anchoring of the chain head with an HSM signature (To be developed) |
+| Keys and secrets | Kept in a pair of HSMs per central site; key backup split among several custodians |
+| Retention | 5 years shown in WawID (`retentionDays`); legal period **To be checked**; automatic purge **To be developed** |
+| Tests | Restoration tested every quarter; restoration from site C and inter-site failover during the six-monthly drills |
+
+Failure scenarios, the failover procedure and the switchback are described in the page *Deployment plan — high-availability infrastructure in Senegal*.
 
 ## Legal and regulatory prerequisites
 
@@ -157,6 +182,21 @@ The device types tracked in **System monitoring** are: counter terminals (`TRM-`
 | Air | AIBD, Ziguinchor | Counters, eGates and ABC kiosks at arrivals and departures, biometric boarding corridor, CCTV, baggage scanners | Traffic peaks; carrier gateway; security fee |
 | Sea | Autonomous Port of Dakar | Counters at the passenger terminal, CCTV, scanners | Grouped ship arrivals; manifests uploaded as CSV if the operator is not connected |
 | Land | Rosso, Kidira, Karang | Counters, plate readers (VRS), CCTV | Fragile network link; power cuts; degraded mode essential |
+
+### Central sites
+
+Quantities are to be sized during the detailed study; the full bill of materials is in the page *Deployment plan — high-availability infrastructure in Senegal*.
+
+| Equipment | Site A | Site B | Site C |
+| --- | --- | --- | --- |
+| Routers (two carriers), firewalls, switches | In pairs | In pairs | Depending on the site |
+| Load balancers and WAF | Pair | Pair | — |
+| Runtime platform servers (Kubernetes or equivalent) | 3 control-plane nodes + worker nodes to be sized | Same | — |
+| Database servers | At least 2 | At least 2 | — |
+| Object storage | At least 4 nodes | At least 4 nodes | Immutable storage |
+| HSM | 2 | 2 | Key backup in a safe |
+| Backup | Backup server | Backup server | Immutable appliance, offline tapes or disks |
+| Bastions and monitoring collectors | 2 | 2 | — |
 
 ### Power supply (Recommendation)
 
@@ -434,7 +474,7 @@ The sample messages of the DPAF space (**Receive a message → PAXLST example / 
 | DPAF officers (counter) | Sign-in, full check, chip reading, biometrics, justified decisions, QR, common situations, degraded mode | *User guide by profile*; demo scenarios |
 | Supervisors | Escalations, eGates, dashboard, cases, audit log | *eGates and ABC kiosks*; *Dashboard* |
 | Analysts | Threat Monitor, lists, rules, APIS/PNR, e-Visa, identity networks | *Threat Monitor, cases, watchlists, rules and connectors*; *APIS and PNR* |
-| Administrators | Accounts, settings, NFC bridge, keys, backups, incidents | This guide; *Deployment and configuration* |
+| Administrators | Accounts, settings, NFC bridge, keys, backups, incidents, failover and restoration | This guide; *Deployment and configuration*; *Deployment plan — high-availability infrastructure in Senegal* |
 | Post technicians | Installation of workstations and kiosks, first-level diagnosis | This guide; *eGate kiosk: setup and journey* |
 | Treasury officers | Calendar, payment validation, collections, transfers to the State, reconciliation, export | *Security fee* |
 | Airlines | Airline platform, formats, schedule, responses, compliance, security fee payment declaration | *Airline platform*; `docs/API-TRANSPORTEURS.md` |
@@ -446,11 +486,12 @@ Run training on a demonstration environment separate from production, and appoin
 | Level | Actor | Scope |
 | --- | --- | --- |
 | L1 | Post WawID focal point | Workstations, readers, cameras, kiosks, usage procedures |
-| L2 | Operator support | Accounts, settings, network, NFC bridge, connectors, application incidents |
+| L2 | Operator support and 24/7 network operations center (NOC) | Accounts, settings, network, NFC bridge, connectors, application incidents, status of central sites and links |
 | L3 | Development team | Software defects, fixes |
 | Security | Security officer and SOC | Security incident, key leak, broken audit chain |
+| Crisis | Crisis unit (operator, DPAF) | Loss of a central site, ransomware, prolonged degraded mode |
 
-Contact details, hours and response times for each level are set with the DPAF before go-live and displayed in each post.
+Contact details, hours and response times for each level are set with the DPAF before go-live and displayed in each post. Planned maintenance is announced in advance to posts, airlines and the Treasury.
 
 ## Acceptance testing
 
@@ -473,22 +514,27 @@ Contact details, hours and response times for each level are set with the DPAF b
 | 15 | **Audit log** check | **Chain intact** |
 | 16 | Sign-in of an airline account on `/dpaf/`, then on `/compagnies/` | Refused on the DPAF space; on the platform, only its own airline's data, with no flagged passenger or score |
 | 17 | Payment declared by an airline, validated by a Treasury officer, then transfer of the State's share (`OPERATEUR` flow) | Payment **Awaiting validation** then **Validated**; invoice **PARTIELLE** (partial) or **PAYÉE** (paid); `REDEVANCE_PAIEMENT_DECLARE`, `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_REVERSEMENT_ETAT` entries |
-| 16 | Link cut at a post (after offline mode is developed) | Checks continue; resynchronization when the link returns |
-| 17 | Power cut at a counter | Switch to UPS; no crossing lost |
-| 18 | Backup restoration and failover to the backup site | RPO and RTO meet the objectives |
+| 18 | Link cut at a post (after offline mode is developed) | Checks continue; resynchronization when the link returns, with no loss or duplicate |
+| 19 | Power cut at a counter | Switch to UPS; no crossing lost |
+| 20 | Failover from site A to site B, then back | RTO of one hour at most; RPO met; **Chain intact** in the **Audit log** after failover |
+| 21 | Full restoration from a site C copy in pre-production | Restoration successful; duration and data loss measured |
+| 22 | Simulated HSM failure | No interruption of signing |
+| 23 | Load test | AIBD peak of 15,000 travelers per hour carried by a single central site |
+| 24 | Penetration test | No open critical or high vulnerability |
 
 ## Go-live checklist
 
 1. CDP formalities completed and written decisions of the competent authorities obtained.
-2. National hosting operational; backup site and backups tested.
-3. Demo dataset disabled; no fictitious data in the production database.
-4. `SESSION_SECRET`, `WAWID_ADMIN_PASSWORD`, `WAWID_GATE_KEY` and `WAWID_CARRIER_KEYS` set; `WAWID_DEMO_PASSWORD` absent.
-5. Nominative accounts created; `admin` account password changed; role review done.
-6. NFC bridges installed with `NFC_BRIDGE_ORIGIN` limited to the production domain; **Connected** test on each workstation.
-7. Readers, biometric SDKs and kiosks integrated and tested; simulator hidden on kiosks.
-8. Connectors (Interpol, WAPIS, FPR, DAF) connected or, failing that, local copy of the lists up to date and procedure validated.
-9. Airlines connected and tested, airline platform accounts created; security fee collection flow settled with the matching legal basis; Treasury officers trained.
-10. Mobile apps pointing to the national API; store listings validated.
-11. Degraded-mode procedure displayed in each post; UPS units tested.
-12. Officers trained; focal points appointed; escalation chain shared.
-13. Acceptance signed; go-live report drawn up.
+2. Sites A and B operational and agreements signed; site C receiving immutable and offline copies; A → B failover, switchback and restoration from site C passed.
+3. 24/7 monitoring center, SOC, on-call duty and crisis unit in place; failover and restoration procedures written.
+4. Demo dataset disabled; no fictitious data in the production database.
+5. `SESSION_SECRET`, `WAWID_ADMIN_PASSWORD`, `WAWID_GATE_KEY` and `WAWID_CARRIER_KEYS` set; `WAWID_DEMO_PASSWORD` absent.
+6. Nominative accounts created; `admin` account password changed; role review done.
+7. NFC bridges installed with `NFC_BRIDGE_ORIGIN` limited to the production domain; **Connected** test on each workstation.
+8. Readers, biometric SDKs and kiosks integrated and tested; simulator hidden on kiosks.
+9. Connectors (Interpol, WAPIS, FPR, DAF) connected or, failing that, local copy of the lists up to date and procedure validated.
+10. Airlines connected and tested, airline platform accounts created; security fee collection flow settled with the matching legal basis; Treasury officers trained.
+11. Mobile apps pointing to the national API; store listings validated.
+12. Degraded-mode procedure displayed in each post; post servers, backup links, UPS units and generators tested.
+13. Officers trained; focal points appointed; escalation chain shared.
+14. Acceptance signed; go-live report drawn up.
