@@ -46,47 +46,46 @@ body { min-height: 100vh; background: var(--bg); }
 .card, .grid-main > *, .grid-2 > * { min-width: 0; }
 
 /* ---------- Launchpad (accueil par tuiles) ---------- */
-.home-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 14px 0 22px; }
-.home-head h1 { font: 800 30px/1.2 var(--display); color: var(--heading); letter-spacing: -.01em; }
-.home-head h1 span { font: 400 17px var(--font); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+.home-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0 14px; }
+.home-head h1 { font: 800 24px/1.2 var(--display); color: var(--heading); letter-spacing: -.01em; }
+.home-head h1 span { font: 400 14px var(--font); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
 .home-head .btn { margin-left: auto; }
-.space-tabs { display: flex; flex-wrap: wrap; gap: 0 4px; border-bottom: 2px solid var(--line-strong); margin-bottom: 26px; }
-.space-tabs button { border: 0; background: none; padding: 14px 20px 12px; font: 400 17px var(--font); color: var(--ink-2); cursor: pointer; position: relative; white-space: nowrap; }
+.space-tabs { display: flex; flex-wrap: wrap; gap: 0 2px; border-bottom: 2px solid var(--line-strong); margin-bottom: 20px; }
+.space-tabs button { border: 0; background: none; padding: 10px 14px 9px; font: 400 14px var(--font); color: var(--ink-2); cursor: pointer; position: relative; white-space: nowrap; }
 .space-tabs button:hover { color: var(--heading); }
 .space-tabs button[aria-selected="true"] { color: var(--heading); font-weight: 700; }
-.space-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 4px; border-radius: 4px 4px 0 0; background: var(--accent); }
-.tile-group { margin-bottom: 30px; }
-.tile-group h2 { font: 700 19px var(--display); color: var(--heading); margin-bottom: 14px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 262px)); gap: 18px; }
-.tile { position: relative; display: flex; flex-direction: column; aspect-ratio: 1 / 1; min-height: 210px; padding: 20px 22px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); text-decoration: none; color: inherit; transition: box-shadow .15s, border-color .15s, transform .15s; }
+.space-tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -2px; height: 3px; border-radius: 4px 4px 0 0; background: var(--accent); }
+.tile-group { margin-bottom: 22px; }
+.tile-group h2 { font: 700 15px var(--display); color: var(--heading); margin-bottom: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, 176px); gap: 12px; }
+.tile { position: relative; display: flex; flex-direction: column; width: 176px; height: 176px; padding: 14px 16px 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); text-decoration: none; color: inherit; transition: box-shadow .15s, border-color .15s, transform .15s; }
 .tile:hover { box-shadow: var(--shadow-2); border-color: var(--line-strong); transform: translateY(-1px); }
 .tile:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-.tile-title { font: 500 19px/1.3 var(--font); color: var(--ink); }
-.tile-sub { font-size: 15px; line-height: 1.4; color: var(--muted); margin-top: 4px; }
+.tile-title { font: 600 14px/1.3 var(--font); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tile-sub { font-size: 12px; line-height: 1.35; color: var(--muted); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .tile-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
-.tile-glyph { color: var(--icon); padding-bottom: 26px; }
-.tile-glyph .icon { width: 34px; height: 34px; stroke-width: 1.5; }
+.tile-glyph { color: var(--icon); padding-bottom: 18px; }
+.tile-glyph .icon { width: 24px; height: 24px; stroke-width: 1.6; }
 .tile-num { display: grid; justify-items: end; text-align: right; min-width: 0; }
-.tile-kpi { font: 300 42px/1.05 var(--font); color: var(--ink); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.tile-kpi { font: 300 32px/1.05 var(--font); color: var(--ink); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .tile-kpi.critical { color: var(--critical-text); }
 .tile-kpi.warning { color: var(--warning-text); }
 .tile-kpi.good { color: var(--good-text); }
-.tile-info { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.tile-info { font-size: 11px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
 .tile.create { border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent); background: linear-gradient(180deg, var(--surface) 40%, var(--accent-soft)); box-shadow: none; }
 .tile-plus { color: var(--accent); }
-.tile-plus .icon { width: 30px; height: 30px; stroke-width: 1.8; }
+.tile-plus .icon { width: 24px; height: 24px; stroke-width: 1.8; }
 .tile.off { opacity: .45; }
-.tile-toggle { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); display: grid; place-items: center; cursor: pointer; }
+.tile-toggle { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); display: grid; place-items: center; cursor: pointer; }
 .tile:not(.off) .tile-toggle { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
 .tile-toggle .icon { width: 16px; height: 16px; }
 .tile-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-soft); display: grid; place-items: center; color: var(--brand); }
 @media (max-width: 760px) {
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .tile { aspect-ratio: auto; min-height: 170px; padding: 16px; }
-  .tile-title { font-size: 16px; } .tile-sub { font-size: 13px; } .tile-kpi { font-size: 32px; }
-  .tile-glyph { padding-bottom: 18px; } .tile-glyph .icon { width: 26px; height: 26px; }
-  .space-tabs button { padding: 10px 12px; font-size: 15px; }
-  .home-head h1 { font-size: 24px; } .home-head h1 span { display: block; margin: 4px 0 0; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { width: auto; height: 150px; padding: 12px; }
+  .tile-kpi { font-size: 26px; }
+  .space-tabs button { padding: 8px 10px; font-size: 13px; }
+  .home-head h1 { font-size: 20px; } .home-head h1 span { display: block; margin: 4px 0 0; }
 }
 
 /* ---------- KPI & graphiques ---------- */
