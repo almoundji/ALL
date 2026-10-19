@@ -6,7 +6,7 @@ import { LOGO, WORDMARK, api, countryOptions, country, esc, fmtDate, fmtDateTime
 initTheme();
 const app = document.getElementById("app");
 let info = null;
-const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["egate", "eGate"]];
+const NAV = [["accueil", "Accueil"], ["evisa", "e-Visa"], ["suivi", "Suivi"], ["egate", "eGate"], ["delegation", "Délégations"]];
 
 function shell(page, html) {
   app.innerHTML = `
@@ -49,6 +49,7 @@ function home() {
     ${card("suivi", "search", "Suivi de demande", "Consultez l'état de votre dossier et répondez aux demandes de l'administration.")}
     ${card("redevance", "creditCard", "Redevance de sécurité", "Incluse dans le prix de votre billet d'avion : aucun paiement à effectuer sur place ni en ligne.")}
     ${card("egate", "gate", "Passage eGate", "Pré-enregistrez votre passeport pour passer par les portes automatiques.")}
+    ${card("delegation", "users", "Délégations", "Organisateurs : déclarez une délégation officielle, sportive ou de conférence et suivez sa validation.")}
   </div>`);
   const nat = app.querySelector("#nat");
   nat.onchange = () => {
@@ -176,6 +177,56 @@ function redevance() {
     </div></section>`);
 }
 
+// ---------- Délégations (organisateurs) ----------
+const DL_TYPES = { VISITE_OFFICIELLE: "Visite officielle", COMPETITION: "Compétition sportive", CONFERENCE: "Conférence / sommet", CULTUREL: "Événement culturel", AUTRE: "Autre" };
+const DL_STATUS = { SOUMISE: ["info", "Soumise — en cours d'examen"], VALIDEE: ["good", "Validée"], REFUSEE: ["critical", "Refusée"], CLOTUREE: ["", "Clôturée"] };
+function parseMembers(text) {
+  return text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !/^nom\s*[;,\t]/i.test(l)).map((l) => {
+    const [surname, given, nat, sex, dob, docNo, role, passportType] = l.split(/[;\t]/).map((x) => (x || "").trim());
+    return { surname, given, nat: (nat || "").toUpperCase(), sex: (sex || "").toUpperCase(), dob, docNo, role, passportType: (passportType || "ORDINAIRE").toUpperCase() };
+  });
+}
+function delegation(q) {
+  shell("delegation", `<section class="p-section"><h2>Déclarer une délégation</h2>
+    <p class="muted">Ministères, ambassades, fédérations sportives, comités d'organisation : annoncez votre délégation (visite officielle, compétition, conférence…) au moins 72 h avant l'arrivée. La Police de l'Air et des Frontières examine la demande et peut accorder une autorisation collective d'entrée.</p>
+    <form class="card p-form" id="f"><div class="form-grid">
+      <label class="field" style="grid-column:1/-1"><span>Nom de la délégation *</span><input class="input" name="name" required></label>
+      <label class="field"><span>Type *</span><select class="select" name="type">${Object.entries(DL_TYPES).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
+      <label class="field"><span>Événement</span><input class="input" name="event"></label>
+      <label class="field"><span>Hôte / organisateur au Sénégal</span><input class="input" name="host"></label>
+      <label class="field"><span>Pays de provenance</span><select class="select" name="originCountry">${countryOptions()}</select></label>
+      ${field("arrival", "Date d'arrivée", "", "date")}${field("departure", "Date de départ", "", "date")}
+      <label class="field"><span>Point d'entrée</span><select class="select" name="posteId">${info.postes.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select></label>
+      <label class="field"><span>Vol / moyen de transport</span><input class="input" name="flight"></label>
+      ${field("cname", "Contact (nom)")}${field("cemail", "Contact (e-mail)", "", "email")}${field("cphone", "Contact (téléphone)", "", "tel", false)}
+      <label class="field" style="grid-column:1/-1"><span>Membres *</span><textarea class="textarea mono" name="members" rows="7" required data-no-i18n placeholder="Okafor;Grace;NGA;F;1998-05-12;A09981234;Athlète;ORDINAIRE"></textarea>
+        <small class="muted">Une ligne par membre : Nom;Prénoms;Nationalité (code à 3 lettres);Sexe (M/F);Date de naissance (AAAA-MM-JJ);N° de passeport;Fonction;Type de passeport (DIPLOMATIQUE/SERVICE/ORDINAIRE). Copier-coller possible depuis Excel.</small></label>
+      <label class="check" style="grid-column:1/-1"><input type="checkbox" name="consent" required> Je certifie l'exactitude des informations et dispose du consentement des membres au traitement de leurs données (loi n° 2008-12).</label>
+    </div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary btn-lg">${icon("send")} Déclarer la délégation</button></div></form>
+    <h2 style="margin-top:36px">Suivre une délégation</h2>
+    <form class="card p-form" id="st"><div class="form-grid">${field("ref", "Référence (DL…)", q.ref || "")}${field("email", "E-mail du contact", "", "email")}</div><div class="row" style="justify-content:flex-end"><button class="btn">${icon("search")} Consulter</button></div><div id="res"></div></form></section>`);
+  app.querySelector("#f").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    try {
+      const r = await api("/api/public/delegations", { method: "POST", body: { ...f, consent: Boolean(f.consent), contact: { name: f.cname, email: f.cemail, phone: f.cphone }, members: parseMembers(f.members) } });
+      e.target.outerHTML = `<div class="card p-receipt"><span class="status info">Délégation déclarée</span><b class="mono" style="font-size:26px">${esc(r.ref)}</b><p class="muted">${r.members} membre(s). Conservez cette référence : la décision de la DPAF s'affiche dans « Suivre une délégation ».</p></div>`;
+    } catch (err) { toast(err.message, "critical"); }
+  };
+  app.querySelector("#st").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    try {
+      const r = await api("/api/public/delegations/status", { method: "POST", body: f });
+      const [tone, label] = DL_STATUS[r.status] || ["", r.status];
+      app.querySelector("#res").innerHTML = `<div class="card card-pad stack" style="margin-top:12px"><b>${esc(r.name)}</b><span><span class="status ${tone}">${esc(label)}</span></span>
+        <span class="muted">${fmtDate(r.arrival)} → ${fmtDate(r.departure)} · ${r.members} membre(s)</span>
+        ${r.status === "VALIDEE" ? `<span>${r.collectiveAuthorization ? "Autorisation collective d'entrée accordée : présentez les passeports à l'arrivée." : "Chaque membre soumis à visa doit obtenir un e-Visa individuel."}</span>` : ""}
+        ${r.reason ? `<span class="muted">Motif : ${esc(r.reason)}</span>` : ""}</div>`;
+    } catch (err) { app.querySelector("#res").innerHTML = `<div class="msg critical" style="margin-top:12px">${icon("alert")}<span>${esc(err.message)}</span></div>`; }
+  };
+}
+
 // ---------- eGate ----------
 function egate() {
   shell("egate", `<section class="p-section"><h2>Passer par les eGates</h2>
@@ -205,6 +256,7 @@ async function route() {
   if (page === "suivi") return track(q);
   if (page === "redevance" || page === "wawpass") return redevance();
   if (page === "egate") return egate();
+  if (page === "delegation") return delegation(q);
   return home();
 }
 

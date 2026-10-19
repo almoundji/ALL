@@ -325,11 +325,36 @@ export function generateSeed(now = new Date()): Seed {
     if (collected && at < now) reversements.push({ id: `REV-${month.replace("-", "")}`, month, at: at.toISOString(), amount: Math.round(collected * (1 - share)), ref: `VIR-TRESOR-${month.replace("-", "")}`, by: "Service financier WawID", beneficiary: "Receveur général du Trésor (DGCPT)" });
   }
 
+  // ----- Délégations (visites officielles, compétitions, conférences) — noms fictifs -----
+  const day = (n: number) => new Date(now.getTime() + n * 86400000).toISOString().slice(0, 10);
+  const mkMember = (surname: string, given: string, nat: string, sex: string, dob: string, docNo: string, role: string, passportType: string) => {
+    const r = assessRisk({ surname, given, nat, issuer: nat, sex, dob, docNo, expiry: "2031-01-01" }, { watchlist, rules, direction: "ENTREE", channel: "DELEGATION" });
+    return { id: `M-${docNo}`, surname, given, nat, sex, dob, docNo, role, passportType, prescreen: { score: r.score, level: r.level, factors: r.factors }, arrivedAt: null };
+  };
+  const delegations = [
+    { id: "DL-0001", ref: "DL260001", name: "Visite officielle du ministre des Affaires étrangères de la République de Gambie", type: "VISITE_OFFICIELLE", event: "Commission mixte Sénégal–Gambie", host: "Ministère de l'Intégration africaine et des Affaires étrangères",
+      originCountry: "GMB", posteId: "AIBD", arrival: day(2), departure: day(5), flight: "HC 302", protocol: "VIP", contact: { name: "Direction du Protocole", email: "protocole@example.sn", phone: "+221 33 000 00 00" },
+      status: "VALIDEE", collectiveAuthorization: true, source: "Espace DPAF", createdAt: new Date(now.getTime() - 5 * 86400000).toISOString(), createdBy: "Fatou Sarr", decidedBy: "Fatou Sarr",
+      members: [mkMember("Jallow", "Mamadou", "GMB", "M", "1968-03-14", "GD0012345", "Chef de délégation", "DIPLOMATIQUE"), mkMember("Ceesay", "Awa", "GMB", "F", "1979-07-02", "GD0012399", "Conseillère", "DIPLOMATIQUE"), mkMember("Jobe", "Lamine", "GMB", "M", "1985-11-21", "GS0045120", "Sécurité rapprochée", "SERVICE"), mkMember("Sanneh", "Fatou", "GMB", "F", "1990-01-09", "GP1180034", "Journaliste", "ORDINAIRE")],
+      history: [{ at: new Date(now.getTime() - 5 * 86400000).toISOString(), by: "Fatou Sarr", text: "Délégation enregistrée" }, { at: new Date(now.getTime() - 4 * 86400000).toISOString(), by: "Fatou Sarr", text: "Délégation validée — autorisation collective d'entrée" }] },
+    { id: "DL-0002", ref: "DL260002", name: "Équipe nationale de basket-ball féminin du Nigeria", type: "COMPETITION", event: "Tournoi international de Dakar", host: "Fédération sénégalaise de basket-ball",
+      originCountry: "NGA", posteId: "AIBD", arrival: day(6), departure: day(16), flight: "ET 909", protocol: "STANDARD", contact: { name: "Comité d'organisation", email: "accreditation@example.sn", phone: "+221 77 000 00 00" },
+      status: "SOUMISE", collectiveAuthorization: false, source: "Portail organisateurs", createdAt: new Date(now.getTime() - 2 * 86400000).toISOString(), createdBy: "Comité d'organisation", decidedBy: null,
+      members: [mkMember("Okafor", "Grace", "NGA", "F", "1998-05-12", "A09981234", "Athlète", "ORDINAIRE"), mkMember("Adeyemi", "Blessing", "NGA", "F", "2000-09-30", "A09981777", "Athlète", "ORDINAIRE"), mkMember("Eze", "Chiamaka", "NGA", "F", "1999-02-17", "A09982001", "Athlète", "ORDINAIRE"), mkMember("Bello", "Musa", "NGA", "M", "1975-12-01", "A07760011", "Entraîneur", "ORDINAIRE"), mkMember("Kabore", "Issouf Malick", "BFA", "M", "1981-04-12", "BF7712093", "Staff médical", "ORDINAIRE")],
+      history: [{ at: new Date(now.getTime() - 2 * 86400000).toISOString(), by: "Portail organisateurs", text: "Délégation déclarée par l'organisateur" }] },
+    { id: "DL-0003", ref: "DL260003", name: "Délégation de la Banque africaine de développement", type: "CONFERENCE", event: "Forum régional sur les infrastructures", host: "Ministère de l'Économie, du Plan et de la Coopération",
+      originCountry: "CIV", posteId: "AIBD", arrival: day(-1), departure: day(3), flight: "HF 410", protocol: "STANDARD", contact: { name: "Secrétariat du forum", email: "forum@example.sn", phone: "+221 33 111 11 11" },
+      status: "VALIDEE", collectiveAuthorization: true, source: "Espace DPAF", createdAt: new Date(now.getTime() - 10 * 86400000).toISOString(), createdBy: "Moussa Diallo", decidedBy: "Fatou Sarr",
+      members: [mkMember("Kouassi", "Yao", "CIV", "M", "1972-06-25", "20CI88123", "Chef de délégation", "SERVICE"), mkMember("Koné", "Mariama", "CIV", "F", "1983-03-03", "20CI88456", "Experte", "ORDINAIRE"), mkMember("Martin", "Claire", "FRA", "F", "1978-12-24", "21CX88341", "Consultante", "ORDINAIRE")],
+      history: [{ at: new Date(now.getTime() - 10 * 86400000).toISOString(), by: "Moussa Diallo", text: "Délégation enregistrée" }, { at: new Date(now.getTime() - 9 * 86400000).toISOString(), by: "Fatou Sarr", text: "Délégation validée — autorisation collective d'entrée" }] },
+  ];
+  delegations[2].members[0].arrivedAt = new Date(now.getTime() - 20 * 3600000).toISOString();
+
   return {
     meta: { seededAt: now.toISOString(), version: 1 },
     settings: { visaExempt: VISA_EXEMPT, faceThreshold: 0.8, retentionDays: 1825, evisaFee: 50000, passFee: 15000,
       redevance: { rateUSD: 12, operatorShare: 0.75, penaltyRate: 0.05, fx, circuit: "OPERATEUR" } },
-    invoices, reversements,
+    invoices, reversements, delegations,
     watchlist, rules, travelers: travelers.map(({ mrz, ...t }) => t), crossings, alerts, cases, evisas, gates, flights, passes, vehicles, devices, connectors,
     enrolments: [], carrierMessages: [],
   };

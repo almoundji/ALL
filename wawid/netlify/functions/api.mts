@@ -37,13 +37,16 @@ function need(user: any, perm: string) {
 async function evaluate(input: any, extra: Record<string, unknown> = {}) {
   const parsed = parseMRZ(input.mrz);
   if (!parsed.ok) return { parsed, risk: null, externalErrors: [] };
-  const d = await loadMany(["watchlist", "rules", "crossings", "evisas", "settings", "connectors"]);
+  const d = await loadMany(["watchlist", "rules", "crossings", "evisas", "settings", "connectors", "delegations"]);
   const connectors = decorate(d.connectors);
   const disabled = new Set(connectors.filter((c: any) => c.status === "DÉSACTIVÉ").map((c: any) => c.source));
   const ext = await externalHits(parsed, connectors);
   const monthAgo = Date.now() - 30 * 86400000;
   const crossings30d = d.crossings.filter((c: any) => c.traveler.docNo === parsed.docNo && Date.parse(c.ts) > monthAgo).length;
-  const visa = activeVisa(d.evisas, parsed.docNo);
+  const delegation = delegationOf(d.delegations || [], parsed.docNo);
+  // Membre d'une délégation validée avec autorisation collective : vaut autorisation de voyage pendant la période du séjour.
+  const visa = activeVisa(d.evisas, parsed.docNo)
+    ?? (delegation?.collectiveAuthorization ? { ref: delegation.ref, status: "APPROUVEE", visaNo: `Autorisation collective ${delegation.ref}`, validUntil: delegation.departure } : null);
   // Contrôles de réutilisation d'identité sur l'historique des passages.
   const sameName = (t: any) => normName(t.surname) === normName(parsed.surname) && normName(t.given) === normName(parsed.given);
   const reused = d.crossings.find((c: any) => c.traveler.docNo === parsed.docNo && (!sameName(c.traveler) || c.traveler.dob !== parsed.dob));
@@ -60,7 +63,20 @@ async function evaluate(input: any, extra: Record<string, unknown> = {}) {
     attack: typeof input.attack === "string" ? input.attack : undefined,
     identity: { docOtherIdentity: reused ? `${reused.traveler.surname} ${reused.traveler.given} (${reused.id})` : null, otherDocs }, ...extra,
   });
-  return { parsed, risk, visa: visa ? { ref: visa.ref, status: visa.status, visaNo: visa.visaNo, validUntil: visa.validUntil } : null, crossings30d, externalErrors: ext.errors };
+  return { parsed, risk, visa: visa ? { ref: visa.ref, status: visa.status, visaNo: visa.visaNo, validUntil: visa.validUntil } : null, crossings30d, externalErrors: ext.errors,
+    delegation: delegation ? { id: delegation.id, ref: delegation.ref, name: delegation.name, type: delegation.type, protocol: delegation.protocol, role: delegation.member.role, passportType: delegation.member.passportType, arrival: delegation.arrival, departure: delegation.departure, collectiveAuthorization: Boolean(delegation.collectiveAuthorization) } : null };
+}
+
+/** Délégation validée dont ce document fait partie, pendant la fenêtre du séjour (arrivée − 3 j à départ + 3 j). */
+function delegationOf(list: any[], docNo: string) {
+  const today = Date.now();
+  for (const g of list) {
+    if (g.status !== "VALIDEE" && g.status !== "EN_COURS") continue;
+    if (today < Date.parse(g.arrival) - 3 * 86400000 || today > Date.parse(g.departure) + 4 * 86400000) continue;
+    const member = g.members.find((m: any) => m.docNo === docNo);
+    if (member) return { ...g, member };
+  }
+  return null;
 }
 
 /** e-Visa utilisable pour ce document (une autorisation approuvée mais échue est signalée « EXPIREE »). */
@@ -310,8 +326,9 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
 // --- Back-office ---
 on("GET", "/api/data", async (_r, _p, user) => {
   need(user, "read");
-  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices", "reversements"]);
+  const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments", "carrierMessages", "invoices", "reversements", "delegations"]);
   d.reversements ||= [];
+  d.delegations ||= [];
   d.crossings = d.crossings.sort((a: any, b: any) => b.ts.localeCompare(a.ts)).slice(0, 4000);
   d.connectors = decorate(d.connectors);
   // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
@@ -465,6 +482,116 @@ on("PATCH", "/api/evisas/:ref", async (req, p, user) => {
   await save("evisas", evisas);
   await audit(user.username, `EVISA_${String(b.action).toUpperCase()}`, app.ref);
   return json(app);
+});
+
+// --- Délégations : visites officielles, compétitions, conférences, autres ---
+
+const DELEGATION_TYPES = ["VISITE_OFFICIELLE", "COMPETITION", "CONFERENCE", "CULTUREL", "AUTRE"];
+const PASSPORT_TYPES = ["DIPLOMATIQUE", "SERVICE", "ORDINAIRE"];
+const isoDay = (v: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v) : "");
+
+/** Membre normalisé + pré-contrôle (listes de surveillance, règles) au moment de l'enregistrement. */
+function delegationMember(m: any, ctx: { watchlist: any[]; rules: any[] }) {
+  const member = {
+    id: uid("M"), surname: titleCase(str(m.surname, 60)), given: titleCase(str(m.given, 80)), nat: str(m.nat, 3).toUpperCase(), sex: ["M", "F"].includes(m.sex) ? m.sex : "X",
+    dob: isoDay(m.dob), docNo: str(m.docNo, 12).toUpperCase().replace(/\s/g, ""), role: str(m.role, 60) || "Membre",
+    passportType: PASSPORT_TYPES.includes(m.passportType) ? m.passportType : "ORDINAIRE", arrivedAt: null as string | null,
+  };
+  if (!member.surname || !member.docNo || !/^[A-Z]{3}$/.test(member.nat)) fail(400, `Membre incomplet (nom, nationalité, n° de passeport obligatoires) : ${member.surname || "?"} ${member.docNo || ""}`);
+  const r = assessRisk({ ...member, issuer: member.nat, expiry: "2099-12-31" }, { ...ctx, direction: "ENTREE", channel: "DELEGATION" });
+  return { ...member, prescreen: { score: r.score, level: r.level, factors: r.factors } };
+}
+
+async function createDelegation(b: any, source: string, actor: string) {
+  const name = str(b.name, 160), type = DELEGATION_TYPES.includes(b.type) ? b.type : "AUTRE";
+  const arrival = isoDay(b.arrival), departure = isoDay(b.departure);
+  if (!name) fail(400, "Nom de la délégation obligatoire");
+  if (!arrival || !departure || departure < arrival) fail(400, "Dates d'arrivée et de départ invalides");
+  const members = Array.isArray(b.members) ? b.members.slice(0, 500) : [];
+  if (!members.length) fail(400, "Au moins un membre est requis");
+  const d = await loadMany(["watchlist", "rules", "delegations", "alerts"]);
+  const list = members.map((m: any) => delegationMember(m, d));
+  const dupes = list.filter((m: any, i: number) => list.findIndex((x: any) => x.docNo === m.docNo) !== i);
+  if (dupes.length) fail(400, `Passeport en double : ${dupes[0].docNo}`);
+  const seq = String((d.delegations || []).length + 1).padStart(4, "0");
+  const g = {
+    id: uid("DL"), ref: `DL${new Date().getFullYear().toString().slice(2)}${seq}`, name, type, event: str(b.event, 160), host: str(b.host, 160),
+    originCountry: str(b.originCountry, 3).toUpperCase(), posteId: POSTES.some((p: any) => p.id === b.posteId) ? b.posteId : "AIBD", arrival, departure,
+    flight: str(b.flight, 12).toUpperCase(), protocol: b.protocol === "VIP" ? "VIP" : "STANDARD",
+    contact: { name: str(b.contact?.name, 80), email: str(b.contact?.email, 120), phone: str(b.contact?.phone, 30) },
+    status: "SOUMISE", collectiveAuthorization: false, source, createdAt: nowIso(), createdBy: actor, decidedBy: null, members: list,
+    history: [{ at: nowIso(), by: actor, text: source === "Portail organisateurs" ? "Délégation déclarée par l'organisateur" : "Délégation enregistrée" }],
+  };
+  // Membre signalé au pré-contrôle : alerte pour les analystes (jamais communiquée à l'organisateur).
+  for (const m of list.filter((x: any) => x.prescreen.score >= 60)) {
+    d.alerts.unshift({ id: uid("AL"), ts: nowIso(), type: "DELEGATION", title: `Délégation ${g.ref} : ${alertType(m.prescreen.factors)[1]}`, severity: severityOf(m.prescreen.score), crossingId: null, delegationId: g.id, posteId: g.posteId,
+      traveler: `${m.surname} ${m.given}`, docNo: m.docNo, status: "NOUVELLE", assignee: null, resolution: null, history: [{ at: nowIso(), by: "Pré-contrôle délégations", text: `${g.name} — ${m.role}` }] });
+  }
+  d.delegations.unshift(g);
+  await Promise.all([save("delegations", d.delegations), save("alerts", d.alerts)]);
+  await audit(actor, "DELEGATION_CREATION", g.ref, `${g.name} · ${list.length} membre(s)`);
+  return g;
+}
+
+on("POST", "/api/delegations", async (req, _p, user) => {
+  need(user, "evisa");
+  const g = await createDelegation(await body(req), "Espace DPAF", user.name);
+  return json(g);
+});
+
+on("PATCH", "/api/delegations/:id", async (req, p, user) => {
+  const b = await body(req);
+  const list = (await load<any[]>("delegations")) || [];
+  const g = list.find((x) => x.id === p.id) ?? fail(404, "Délégation introuvable");
+  const log = (text: string) => g.history.push({ at: nowIso(), by: user.name, text });
+  if (b.action === "valider" || b.action === "refuser") {
+    need(user, "evisa");
+    if (g.status !== "SOUMISE") fail(409, "Seule une délégation soumise peut être validée ou refusée");
+    g.status = b.action === "valider" ? "VALIDEE" : "REFUSEE";
+    g.collectiveAuthorization = b.action === "valider" && b.collectiveAuthorization !== false;
+    g.decidedBy = user.name;
+    if (b.action === "refuser") g.reason = str(b.reason, 300) || "Refus motivé par la DPAF";
+    log(b.action === "valider" ? `Délégation validée${g.collectiveAuthorization ? " — autorisation collective d'entrée" : " — sans autorisation collective (e-Visa individuels requis)"}` : `Délégation refusée : ${g.reason}`);
+  } else if (b.action === "cloturer") {
+    need(user, "evisa");
+    g.status = "CLOTUREE"; log("Délégation clôturée (séjour terminé)");
+  } else if (b.action === "arrivee") {
+    need(user, "control");
+    const m = g.members.find((x: any) => x.id === b.memberId) ?? fail(404, "Membre introuvable");
+    m.arrivedAt = nowIso(); log(`Arrivée pointée : ${m.surname} ${m.given}`);
+  } else if (b.action === "ajouter") {
+    need(user, "evisa");
+    if (!["SOUMISE", "VALIDEE"].includes(g.status)) fail(409, "Délégation close");
+    const ctx = await loadMany(["watchlist", "rules"]);
+    const added = (Array.isArray(b.members) ? b.members.slice(0, 200) : []).map((m: any) => delegationMember(m, ctx));
+    if (!added.length) fail(400, "Aucun membre à ajouter");
+    if (added.some((m: any) => g.members.some((x: any) => x.docNo === m.docNo))) fail(400, "Un des passeports figure déjà dans la délégation");
+    g.members.push(...added); log(`${added.length} membre(s) ajouté(s)`);
+  } else if (b.action === "retirer") {
+    need(user, "evisa");
+    const i = g.members.findIndex((x: any) => x.id === b.memberId);
+    if (i < 0) fail(404, "Membre introuvable");
+    log(`Membre retiré : ${g.members[i].surname} ${g.members[i].given}`); g.members.splice(i, 1);
+  } else fail(400, "Action inconnue");
+  await save("delegations", list);
+  await audit(user.username, `DELEGATION_${String(b.action).toUpperCase()}`, g.ref);
+  return json(g);
+});
+
+/** Déclaration d'une délégation par un organisateur (ministère, fédération, comité) depuis le portail public. */
+on("POST", "/api/public/delegations", async (req) => {
+  const b = await body(req);
+  if (!b.consent) fail(400, "Le consentement au traitement des données est requis");
+  if (!/^\S+@\S+\.\S+$/.test(str(b.contact?.email))) fail(400, "E-mail de contact invalide");
+  const g = await createDelegation(b, "Portail organisateurs", str(b.contact?.name, 80) || "Organisateur");
+  return json({ ref: g.ref, status: g.status, members: g.members.length });
+});
+on("POST", "/api/public/delegations/status", async (req) => {
+  const b = await body(req);
+  const g = ((await load<any[]>("delegations")) || []).find((x) => x.ref === str(b.ref, 12).toUpperCase() && x.contact?.email?.toLowerCase() === str(b.email, 120).toLowerCase());
+  if (!g) { await new Promise((r) => setTimeout(r, 400)); fail(404, "Aucune délégation ne correspond à cette référence et cet e-mail."); }
+  // L'organisateur voit l'état de la délégation, jamais le résultat du pré-contrôle de ses membres.
+  return json({ ref: g.ref, name: g.name, status: g.status, arrival: g.arrival, departure: g.departure, members: g.members.length, collectiveAuthorization: g.collectiveAuthorization, reason: g.status === "REFUSEE" ? g.reason : undefined });
 });
 
 on("POST", "/api/verify-token", async (req, _p, user) => {

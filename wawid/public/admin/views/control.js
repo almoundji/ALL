@@ -191,11 +191,12 @@ async function stepChecks(host, ctx, next, back) {
     host.querySelector("[data-next]").onclick = () => stepChecks(host, ctx, next, back);
     return;
   }
-  const { risk, visa, crossings30d, externalErrors } = s.result;
+  const { risk, visa, crossings30d, externalErrors, delegation } = s.result;
   const has = (code) => risk.factors.filter((f) => f.code === code);
   const live = ctx.data.connectors.filter((c) => c.status !== "DÉSACTIVÉ");
   const row = (label, ok, detail, warn = false) => `<div class="check-row">${ok ? `<span class="status good">OK</span>` : `<span class="status ${warn ? "warning" : "critical"}">${warn ? "Attention" : "Alerte"}</span>`}<div class="grow"><b>${esc(label)}</b><div class="small muted">${esc(detail)}</div></div></div>`;
-  host.innerHTML = `<div class="grid-main">
+  const TYPES_DL = { VISITE_OFFICIELLE: "Visite officielle", COMPETITION: "Compétition sportive", CONFERENCE: "Conférence / sommet", CULTUREL: "Événement culturel", AUTRE: "Autre" };
+  host.innerHTML = `${delegation ? `<div class="msg info" style="margin-bottom:12px">${icon("users")}<span><b>Membre de la délégation ${esc(delegation.ref)}${delegation.protocol === "VIP" ? " (VIP — accueil protocolaire)" : ""}</b> — <span>${esc(delegation.name)}</span> · ${esc(TYPES_DL[delegation.type] || delegation.type)} · ${esc(delegation.role)} · passeport ${esc(delegation.passportType.toLowerCase())}. ${delegation.collectiveAuthorization ? "<span>Autorisation collective d'entrée valide pendant le séjour.</span>" : ""} <a href="#/delegations/${esc(delegation.id)}">Voir la délégation</a></span></div>` : ""}<div class="grid-main">
     <section class="card"><div class="card-head"><h3>Vérifications</h3><span class="small muted" style="margin-left:auto">${live.length} sources interrogées</span></div><div class="card-body">
       ${row("Authenticité MRZ (ICAO 9303)", !has("MRZ").length, has("MRZ")[0]?.detail || "Chiffres de contrôle valides")}
       ${row("Puce électronique (NFC)", !has("PUCE_PA").length && !has("PUCE_MRZ").length && !has("PUCE_ABSENTE").length, s.chip ? [has("PUCE_PA")[0]?.label, has("PUCE_MRZ")[0]?.label].filter(Boolean).join(" · ") || (s.chip.read ? "Authentification passive valide, données concordantes" : "Puce non lue") : "Non lue au guichet", !s.chip)}

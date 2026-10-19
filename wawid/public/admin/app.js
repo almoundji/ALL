@@ -13,6 +13,7 @@ import * as ses from "./views/ses.js";
 import * as scrum from "./views/scrum.js";
 import * as redevance from "./views/redevance.js";
 import * as help from "./views/help.js";
+import * as delegations from "./views/delegations.js";
 
 initTheme();
 const root = document.getElementById("root");
@@ -52,6 +53,8 @@ const APPS = [
 
   { space: "e-Visa & voyageurs", id: "evisa", path: "evisa", title: "e-Visa", sub: "Instruction des demandes", icon: "file", perm: "read", view: evisa, kpi: (d) => [d.evisas.filter((v) => ["SOUMISE", "EN_EXAMEN"].includes(v.status)).length, "demandes à instruire"], tone: "warning" },
   { space: "e-Visa & voyageurs", id: "wawpass", path: "wawpass", title: "Pré-enrôlements eGate", sub: "Programme de passage automatisé", icon: "gate", perm: "read", view: evisa, fn: "renderPasses", kpi: (d) => [d.enrolments.length, "pré-enrôlements"] },
+  { space: "e-Visa & voyageurs", id: "delegations", path: "delegations", title: "Délégations", sub: "Visites officielles, compétitions", icon: "users", perm: "read", view: delegations, kpi: (d) => [(d.delegations || []).filter((g) => g.status === "SOUMISE").length, "à valider"], tone: "warning" },
+  { space: "e-Visa & voyageurs", id: "new-delegation", create: true, href: "#/delegations?new=1", title: "Enregistrer une délégation", sub: "Visite, compétition, conférence", perm: "evisa" },
   { space: "e-Visa & voyageurs", id: "kiosque", href: "../gate/", external: true, title: "Kiosque eGate", sub: "Écran des portes", icon: "gate", perm: "read" },
 
   { space: "Finances", id: "redevance", path: "redevance", title: "Redevance de sécurité", sub: "Synthèse 6 mois", icon: "creditCard", perm: "finance", view: redevance, kpi: (d) => [Math.round((d.invoices || []).reduce((s, i) => s + i.amountXOF, 0) / 1e9 * 10) / 10, "Mds FCFA facturés"] },
