@@ -38,6 +38,10 @@ You need an iPhone 7 or newer and a biometric passport. Check the MRZ (a single 
 
 ### Airlines
 
+#### Where do we sign in?
+
+On the **airline platform** (`/compagnies/`), with a named account created by WawID and bound to your airline's IATA code. There you submit your messages and view your acknowledgments, the completeness of your flights and your security fee invoices. Airline accounts do not open the DPAF space. See *Airline platform*.
+
 #### How do we get a key for the API/PNR gateway?
 
 The `X-Carrier-Key` is issued by the administration to each airline and bound to its IATA code. It only allows sending that airline's flights.
@@ -52,9 +56,17 @@ PNR 48 h then 24 h before departure; API at check-in close, no later than gate c
 
 #### Do we receive the screening result for our passengers?
 
-No. The gateway returns an acknowledgment (`MSG-…` reference, number of passengers, completeness, punctuality, errors), but **no targeting result** is shared with the carrier.
+No. The gateway and the platform return an acknowledgment (`MSG-…` reference, flight, number of passengers, completeness, punctuality, errors), but **no targeting result** is shared with the carrier: no flagged passengers, no score.
+
+#### How do we pay the security fee?
+
+Transfer the invoice amount to the beneficiary shown on the platform (by default: WawID, security fee collection account; WawID then transfers the State's share to the Public Treasury), with the invoice reference in the description. Then declare the payment in the **Security fee** screen: it shows as **Awaiting validation** until bank reconciliation, then **Validated** or **Rejected** (with a reason). This flow differs from the framework set by Decree No. 2012-519 (collection by the DGCPT) and requires a new regulatory text and a collection-mandate agreement with the State.
 
 ### Officers
+
+#### Where do I sign in?
+
+On the **DPAF space** (`/dpaf/`; the former `/admin/` address still works). The traveler portal has no link to the DPAF space: bookmark the address.
 
 #### The chip is shown as "simulated" at the counter. Is that normal?
 
@@ -62,7 +74,7 @@ Yes, if the NFC bridge is not running or no reader is connected. Check the bridg
 
 #### How do I verify an e-Visa or WawPass QR code?
 
-Use the QR verification feature of the back office (session required). The signature is checked, then the e-Visa status or WawPass usage is verified in real time.
+Use the QR verification feature of the DPAF space (session required). The signature is checked, then the e-Visa status or WawPass usage is verified in real time.
 
 #### Why must I enter a reason for some decisions?
 
@@ -78,6 +90,7 @@ Sessions last 12 hours (one shift). Sign in again. If your account was deactivat
 | --- | --- |
 | ABC (Automated Border Control) | Automated border control: eGates, kiosks and biometric corridors that allow crossing without an officer. |
 | Active authentication (AA) / chip authentication | Mechanism proving that the chip has not been cloned (private key stored in the chip, DG15/DG14). |
+| Airline platform | WawID platform reserved for airlines (`/compagnies/`): API/PNR submission, acknowledgments, completeness, security fee invoices and payments. |
 | Alert | Signal raised when a crossing or an announced passenger has a high risk score or a watchlist match. |
 | API (Advance Passenger Information) | Passenger identity and document data sent by the airline before the flight arrives or departs. |
 | APIS | System processing API data: receiving manifests and pre-screening announced passengers. |
@@ -86,6 +99,7 @@ Sessions last 12 hours (one shift). Sign in again. If your account was deactivat
 | Check digits | MRZ digits computed according to ICAO 9303 to detect reading or typing errors. |
 | CSCA / ICAO PKD | Root certificates of passport-issuing states; the ICAO PKD distributes them for passive authentication. |
 | DG1, DG2 | Chip data groups: DG1 holds the MRZ, DG2 the holder's photo. |
+| DPAF space | WawID platform for border officers, analysts, supervisors, Treasury officers and administrators (`/dpaf/`), formerly called the back office. |
 | e-Visa | Travel authorization applied for and issued online, shown at the border as a signed QR code. |
 | eGate | Automated gate that reads the passport, compares the traveler's face with the chip photo, and opens or refers to a counter. |
 | eKYC | Remote identity verification: document authenticity, face match with a selfie, liveness detection. |
@@ -102,7 +116,7 @@ Sessions last 12 hours (one shift). Sign in again. If your account was deactivat
 | POI (person of interest) | Person flagged by intelligence services on a watchlist. |
 | Pre-enrollment | Registering a passport in advance on the portal in order to use the eGates. |
 | Risk score | Score from 0 to 100 computed from explainable factors (lists, rules, document, biometrics); it produces a recommendation: Cleared, Secondary inspection or Refused. |
-| Security fee | Fee collected from airlines on passengers of commercial flights, tracked in the Finance module. In the traveler portal, WawPass also refers to the airport security fee paid by the traveler. |
+| Security fee | Fee collected by airlines in the ticket price on passengers of international commercial flights (12 USD), paid to WawID (collection account), which transfers the State's share to the Public Treasury, or directly to the Treasury depending on the flow in force; tracked in the Finance module. In the traveler portal, WawPass also refers to the airport security fee paid by the traveler. |
 | SLTD (Stolen and Lost Travel Documents) | Interpol database of lost or stolen travel documents. |
 | SSR DOCS | PNR element holding the passenger's travel document data. |
 | WAPIS | West African Police Information System, a regional program supported by Interpol. |

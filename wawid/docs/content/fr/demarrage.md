@@ -1,29 +1,33 @@
 # Démarrer avec WawID
 
-WawID est la plateforme de gestion des identités et des frontières : contrôle des voyageurs aux guichets et aux eGates, renseignement (Threat Monitor, listes de surveillance, règles de ciblage), pré-contrôle des passagers aériens (APIS / PNR), autorisations de voyage (e-Visa), taxe de sécurité (WawPass), redevance de sécurité et administration. Cette page présente les interfaces, la connexion, les rôles et les éléments communs à tous les écrans du back-office.
+WawID est la plateforme de gestion des identités et des frontières : contrôle des voyageurs aux guichets et aux eGates, renseignement (Threat Monitor, listes de surveillance, règles de ciblage), pré-contrôle des passagers aériens (APIS / PNR), autorisations de voyage (e-Visa), taxe de sécurité (WawPass), redevance de sécurité et administration. Cette page présente les plateformes, la connexion, les rôles et les éléments communs à tous les écrans de l'espace DPAF.
 
-## Les interfaces de WawID
+## Les plateformes de WawID
 
-| Interface | Adresse | Pour qui | Usage |
+WawID est organisé en **quatre plateformes dissociées**. Chacune a sa propre adresse (et peut recevoir son propre nom de domaine en production) ; aucune ne renvoie vers une autre plateforme réservée.
+
+| Plateforme | Adresse | Pour qui | Usage |
 | --- | --- | --- | --- |
-| Back-office | `/admin/` | Agents, analystes, superviseurs, administrateurs, agents du Trésor | Contrôle guichet, supervision des eGates, renseignement, APIS, e-Visa, finances, administration |
-| Portail voyageur | `/` | Voyageurs (public) | Demande et suivi d'e-Visa, paiement du WawPass, pré-enrôlement eGate |
-| Kiosque eGate | `/gate/` | Écran des portes automatiques et kiosques ABC | Parcours voyageur en libre-service (passeport, puce, visage, ouverture ou orientation) |
-| App iPhone | application iOS | Voyageurs | Demande d'e-Visa avec lecture NFC de la puce du passeport |
+| Espace DPAF | `/dpaf/` (alias de `/admin/`) | Agents, analystes, superviseurs, agents du Trésor, administrateurs | Contrôle guichet, supervision des eGates, renseignement, APIS, e-Visa, finances, administration |
+| Plateforme voyageurs | `/` (portail) et `/aide/` (aide publique) | Voyageurs (public) | Demande et suivi d'e-Visa, paiement du WawPass, pré-enrôlement eGate, centre d'aide |
+| Applications mobiles | `/app/` | Voyageurs | Téléchargement de l'application WawID e-Visa : Android (APK en téléchargement direct) et iPhone (TestFlight) ; demande d'e-Visa avec lecture NFC de la puce du passeport |
+| Plateforme des compagnies aériennes | `/compagnies/` | Personnel des compagnies aériennes | Transmission des données API / PNR, accusés de réception, qualité des données, factures et paiements de la redevance de sécurité (voir *Plateforme des compagnies aériennes*) |
 
-Le back-office est accessible depuis un navigateur récent (Chrome, Edge, Safari, Firefox). Les liens **Portail voyageur** et **Ouvrir le kiosque eGate** du menu utilisateur ouvrent les deux autres interfaces dans un nouvel onglet.
+S'y ajoute le **Kiosque eGate** (`/gate/`), l'écran des portes automatiques et kiosques ABC (parcours voyageur en libre-service : passeport, puce, visage, ouverture ou orientation).
+
+L'espace DPAF est accessible depuis un navigateur récent (Chrome, Edge, Safari, Firefox). Le lien **Ouvrir le kiosque eGate** du menu utilisateur ouvre le kiosque dans un nouvel onglet. Le portail voyageur ne propose aucun lien vers l'espace DPAF, et l'espace DPAF aucun lien vers le portail.
 
 ## Se connecter
 
-1. Ouvrez `/admin/` dans votre navigateur.
+1. Ouvrez `/dpaf/` dans votre navigateur (l'ancienne adresse `/admin/` reste valable).
 2. Saisissez votre **Identifiant** et votre **Mot de passe**, fournis par l'administrateur.
 3. Cliquez sur **Se connecter**.
 
-En cas d'erreur, le message « Identifiant ou mot de passe incorrect » s'affiche. Chaque tentative, réussie ou non, est inscrite au journal d'audit, et une tentative échouée est volontairement ralentie pour décourager les essais en série.
+En cas d'erreur, le message « Identifiant ou mot de passe incorrect » s'affiche. Un compte de compagnie aérienne est refusé sur l'espace DPAF avec le message « Ce compte est un compte compagnie : connectez-vous sur la plateforme des compagnies aériennes. » Chaque tentative, réussie ou non, est inscrite au journal d'audit, et une tentative échouée est volontairement ralentie pour décourager les essais en série.
 
 Pour vous déconnecter, cliquez sur votre avatar (vos initiales, en haut à droite) puis sur **Se déconnecter**.
 
-> **Démonstration en local** : les comptes `admin` (mot de passe `admin`) et `agent`, `analyste`, `superviseur`, `tresor` (mot de passe `demo`) sont créés automatiquement. En production, les mots de passe sont définis par l'administrateur.
+> **Démonstration en local** : les comptes `admin` (mot de passe `admin`) et `agent`, `analyste`, `superviseur`, `tresor` (mot de passe `demo`) sont créés automatiquement, ainsi que les comptes compagnie `airsenegal` et `airfrance` (mot de passe `demo`), utilisables uniquement sur `/compagnies/`. En production, les mots de passe sont définis par l'administrateur.
 
 ### Durée de session
 
@@ -54,7 +58,9 @@ En pratique :
 - **Analyste renseignement** : traite les alertes et les dossiers, alimente les listes de surveillance et les règles de ciblage, instruit les e-Visa et exploite les données APIS / PNR. Il ne réalise pas de contrôle guichet.
 - **Superviseur** : cumule les droits de l'agent et de l'analyste, et pilote à distance les eGates et kiosques ABC (ouverture, fermeture, maintenance, paramètres).
 - **Administrateur** : tous les droits, y compris la gestion des utilisateurs, les paramètres système et le module finances.
-- **Agent du Trésor** : consultation et module **Redevance de sécurité** (factures, encaissements, rapprochement, répartition). Il n'a accès à aucune action de contrôle.
+- **Agent du Trésor** : consultation et module **Redevance de sécurité** (factures, validation des paiements déclarés par les compagnies, encaissements, reversements à l'État, rapprochement, répartition). Il n'a accès à aucune action de contrôle.
+
+Un sixième rôle, **Compagnie aérienne**, est réservé à la plateforme des compagnies : il est rattaché au code IATA d'une compagnie, n'ouvre pas l'espace DPAF et ne donne accès qu'aux données de cette compagnie.
 
 ## La page d'accueil
 
@@ -68,7 +74,7 @@ Les applications sont rangées par espace, présentés sous forme d'onglets : **
 
 Chaque tuile ouvre une application et affiche son titre, une description et, le plus souvent, un indicateur chiffré : par exemple **Tableau de bord** (passages sur 24 h), **eGates & ABC** (portes ouvertes sur le total), **Threat Monitor** (nouvelles alertes), **e-Visa** (demandes à instruire) ou **Factures compagnies** (factures en retard). Un indicateur non nul s'affiche en rouge (critique) ou en orange (attention) lorsque la tuile le prévoit. Les données sont actualisées automatiquement toutes les 30 secondes.
 
-Les tuiles à **bordure pointillée** sont des tuiles de création qui lancent directement une action : **Nouveau contrôle**, **Ajouter une entrée** (liste de surveillance), **Recevoir un message** (APIS / PNR), **Créer un utilisateur**. Les tuiles **Portail voyageur** et **Kiosque eGate** ouvrent ces interfaces dans un nouvel onglet.
+Les tuiles à **bordure pointillée** sont des tuiles de création qui lancent directement une action : **Nouveau contrôle**, **Ajouter une entrée** (liste de surveillance), **Recevoir un message** (APIS / PNR), **Créer un utilisateur**. La tuile **Kiosque eGate** ouvre le kiosque dans un nouvel onglet.
 
 ### Personnaliser l'accueil
 
@@ -88,7 +94,7 @@ Les tuiles masquées disparaissent seulement de **Mon accueil** : elles restent 
 | Poste | Votre poste de rattachement, précédé d'un point vert (connecté) ou gris (hors ligne). |
 | Thème (lune) | Bascule entre thème clair et thème sombre. |
 | Cloche | Notifications des nouvelles alertes. |
-| Avatar | Nom, rôle et poste ; liens vers le kiosque eGate et le portail voyageur ; déconnexion. |
+| Avatar | Nom, rôle et poste ; lien vers le kiosque eGate ; déconnexion. |
 
 ### Recherche globale
 

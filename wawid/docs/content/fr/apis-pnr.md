@@ -63,7 +63,7 @@ L'onglet **Passerelle transporteurs** présente le journal des messages reçus e
 
 ### Journal des messages
 
-Colonnes : **Reçu**, **Format** (`PAXLST`, `PNR` ou `INCONNU`), **Vol** (et source : passerelle de la compagnie ou dépôt manuel), **Passagers**, **Signalés** (score ≥ 35), **Complétude**, **Statut**. Un clic sur un message accepté ouvre le vol.
+Colonnes : **Reçu**, **Format** (`PAXLST`, `PNR` ou `INCONNU`), **Vol** (et source : passerelle de la compagnie, plateforme des compagnies — « Portail compagnie » — ou dépôt manuel), **Passagers**, **Signalés** (score ≥ 35, visible uniquement dans l'espace DPAF), **Complétude**, **Statut**. Un clic sur un message accepté ouvre le vol.
 
 | Statut | Signification |
 |---|---|
@@ -77,9 +77,10 @@ La **complétude** est la part des passagers ayant un numéro de document, une d
 
 - **Point d'accès** : `POST https://<domaine>/api/carrier/messages`
 - **Authentification** : en-tête `X-Carrier-Key`, une clé par compagnie, définie par la variable `WAWID_CARRIER_KEYS` (ex. `HC:clé1,AF:clé2`). La clé est liée au code IATA : un message portant sur le vol d'une autre compagnie est rejeté.
-- **Réponses** : 202 et accusé (référence `MSG-…`, passagers, signalés, complétude, ponctualité) ; 422 en cas de rejet ; 401 si la clé est invalide.
+- **Réponses** : 202 et accusé (référence `MSG-…`, vol, passagers, complétude, ponctualité, avertissements) ; 422 en cas de rejet ; 401 si la clé est invalide. L'accusé ne contient **ni le nombre de passagers signalés, ni l'identifiant interne du vol** : aucun résultat de pré-contrôle n'est communiqué à la compagnie.
+- **Plateforme des compagnies** (`/compagnies/`) : chaque compagnie dispose aussi de comptes du rôle **Compagnie aérienne** pour transmettre des messages à la main, relire ses accusés, suivre la complétude de ses vols et sa redevance. Les messages envoyés depuis la plateforme apparaissent dans ce journal avec la source « Portail compagnie » et sont traités exactement comme ceux de la passerelle.
 
-La spécification complète destinée aux compagnies se trouve dans `docs/API-TRANSPORTEURS.md` et dans la page *Référence API*.
+La spécification complète destinée aux compagnies se trouve dans `docs/API-TRANSPORTEURS.md` et dans les pages *Référence API* et *Plateforme des compagnies aériennes*.
 
 ### Recevoir un message API / PNR manuellement
 

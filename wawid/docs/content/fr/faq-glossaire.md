@@ -38,6 +38,10 @@ Il faut un iPhone 7 ou plus récent et un passeport biométrique. Vérifiez la M
 
 ### Compagnies aériennes
 
+#### Où nous connecter ?
+
+Sur la **plateforme des compagnies aériennes** (`/compagnies/`), avec un compte nominatif créé par WawID et rattaché au code IATA de votre compagnie. Vous y transmettez vos messages, consultez vos accusés de réception, la complétude de vos vols et vos factures de redevance. Les comptes compagnie n'ouvrent pas l'espace DPAF. Voir *Plateforme des compagnies aériennes*.
+
 #### Comment obtenir une clé de la passerelle API/PNR ?
 
 La clé `X-Carrier-Key` est remise par l'administration à chaque compagnie et liée à son code IATA. Elle ne permet de transmettre que les vols de cette compagnie.
@@ -52,9 +56,17 @@ PNR à H-48 puis H-24 avant le départ ; API à la clôture de l'enregistrement,
 
 #### Recevons-nous le résultat du contrôle de nos passagers ?
 
-Non. La passerelle renvoie un accusé de réception (référence `MSG-…`, nombre de passagers, complétude, ponctualité, erreurs) mais **aucun résultat de ciblage** n'est communiqué au transporteur.
+Non. La passerelle et la plateforme renvoient un accusé de réception (référence `MSG-…`, vol, nombre de passagers, complétude, ponctualité, erreurs) mais **aucun résultat de ciblage** n'est communiqué au transporteur : ni passagers signalés, ni score.
+
+#### Comment payer la redevance de sécurité ?
+
+Virez le montant de la facture au bénéficiaire affiché sur la plateforme (par défaut : WawID, compte de collecte de la redevance de sécurité ; WawID reverse ensuite la part de l'État au Trésor public), avec la référence de la facture dans le libellé. Déclarez ensuite le paiement dans l'écran **Redevance** : il apparaît **À valider** jusqu'au rapprochement bancaire, puis **Validé** ou **Rejeté** (avec un motif). Ce circuit diffère du cadre fixé par le décret n° 2012-519 (recouvrement par la DGCPT) et suppose un nouveau texte réglementaire et une convention de mandat d'encaissement avec l'État.
 
 ### Agents
+
+#### Où se connecter ?
+
+Sur l'**espace DPAF** (`/dpaf/`, l'ancienne adresse `/admin/` reste valable). Le portail voyageur ne contient pas de lien vers l'espace DPAF : enregistrez l'adresse dans vos favoris.
 
 #### La puce est indiquée « simulée » au guichet. Est-ce normal ?
 
@@ -62,7 +74,7 @@ Oui, si le pont NFC n'est pas lancé ou si aucun lecteur n'est branché. Vérifi
 
 #### Comment vérifier un QR code e-Visa ou WawPass ?
 
-Utilisez la fonction de vérification des QR du back-office (session requise). La signature est contrôlée, puis le statut de l'e-Visa ou l'usage du WawPass est vérifié en temps réel.
+Utilisez la fonction de vérification des QR de l'espace DPAF (session requise). La signature est contrôlée, puis le statut de l'e-Visa ou l'usage du WawPass est vérifié en temps réel.
 
 #### Pourquoi dois-je saisir un motif pour certaines décisions ?
 
@@ -88,6 +100,7 @@ Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte 
 | CSCA / ICAO PKD | Certificats racines des États émetteurs de passeports ; le PKD de l'OACI les distribue pour l'authentification passive. |
 | DG1, DG2 | Groupes de données de la puce : DG1 contient la MRZ, DG2 la photo du titulaire. |
 | Détection du vivant (liveness) | Vérification qu'un visage présenté est celui d'une personne réelle et non une photo, un écran ou un masque. |
+| Espace DPAF | Plateforme WawID des agents, analystes, superviseurs, agents du Trésor et administrateurs (`/dpaf/`), anciennement appelée back-office. |
 | e-Visa | Autorisation de voyage demandée et délivrée en ligne, présentée à la frontière sous forme de QR code signé. |
 | eGate | Porte automatique qui lit le passeport, compare le visage du voyageur à la photo de la puce et s'ouvre ou oriente vers un guichet. |
 | eKYC | Vérification d'identité à distance : authenticité du document, comparaison faciale avec un selfie, détection du vivant. |
@@ -96,12 +109,13 @@ Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte 
 | MRZ (Machine Readable Zone) | Bande de 2 lignes (passeport, format TD3) ou 3 lignes (carte, TD1) en bas de la page d'identité, lisible par machine. |
 | NFC | Communication sans contact à courte portée utilisée pour lire la puce des passeports biométriques. |
 | PACE (Password Authenticated Connection Establishment) | Protocole d'accès à la puce plus robuste que BAC, également fondé sur la MRZ. |
+| Plateforme des compagnies aériennes | Plateforme WawID réservée aux compagnies (`/compagnies/`) : transmission API/PNR, accusés de réception, complétude, factures et paiements de la redevance de sécurité. |
 | PAXLST | Message UN/EDIFACT « Passenger List » utilisé par les compagnies pour transmettre les données API. |
 | PNR (Passenger Name Record) | Dossier de réservation : itinéraire, date de réservation, moyen de paiement, coordonnées. |
 | PNRGOV | Format UN/EDIFACT de transmission des PNR aux autorités publiques. |
 | POI (personne d'intérêt) | Personne signalée par les services de renseignement sur une liste de surveillance. |
 | Pré-enrôlement | Enregistrement préalable du passeport sur le portail pour pouvoir utiliser les eGates. |
-| Redevance de sécurité | Redevance perçue auprès des compagnies sur les passagers des vols commerciaux, suivie dans le module Finances. |
+| Redevance de sécurité | Redevance perçue par les compagnies dans le prix du billet sur les passagers des vols commerciaux internationaux (12 USD), payée à WawID (compte de collecte) qui reverse la part de l'État au Trésor public, ou directement au Trésor selon le circuit retenu ; suivie dans le module Finances. |
 | Score de risque | Note de 0 à 100 calculée à partir de facteurs explicables (listes, règles, document, biométrie) ; elle produit une recommandation : Autorisé, Contrôle secondaire ou Refusé. |
 | SLTD (Stolen and Lost Travel Documents) | Base Interpol des documents de voyage perdus ou volés. |
 | SSR DOCS | Élément du PNR contenant les données du document de voyage du passager. |

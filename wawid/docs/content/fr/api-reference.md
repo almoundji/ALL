@@ -1,6 +1,6 @@
 # Référence API (compagnies, équipements, connecteurs)
 
-Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le portail voyageur et l'app iPhone, la passerelle des compagnies aériennes (API/PNR), les eGates et kiosques ABC, et le contrat des connecteurs externes.
+Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le portail voyageur et l'app iPhone, la passerelle des compagnies aériennes (API/PNR) et les routes de la plateforme des compagnies, les eGates et kiosques ABC, et le contrat des connecteurs externes.
 
 ## Généralités
 
@@ -18,11 +18,13 @@ Cette page décrit les interfaces de WawID ouvertes aux systèmes tiers : le por
 | Famille | Authentification | Public visé |
 | --- | --- | --- |
 | `/api/public/*` | Aucune | Portail voyageur, app iPhone |
-| `/api/carrier/messages` | En-tête `X-Carrier-Key` | Compagnies aériennes |
+| `/api/carrier/messages` | En-tête `X-Carrier-Key` | Compagnies aériennes (systèmes) |
+| `/api/compagnie/*` | Session d'un compte **Compagnie aérienne** (cookie signé, connexion avec `platform: "compagnies"`) | Plateforme des compagnies aériennes (`/compagnies/`) |
 | `/api/gate/*` | En-tête `X-Gate-Key` | eGates, kiosques ABC |
-| Autres routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Session agent (cookie signé) | Back-office uniquement |
+| `/api/docs`, `/api/docs/:lang/:slug` | Aucune pour les pages publiques ; session de l'espace DPAF pour les pages internes | Centre d'aide |
+| Autres routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Session agent (cookie signé) | Espace DPAF uniquement |
 
-Les routes du back-office ne sont pas documentées ici : elles exigent une session authentifiée et un rôle disposant de la permission correspondante, et ne constituent pas une interface d'intégration.
+Les routes de l'espace DPAF ne sont pas documentées ici : elles exigent une session authentifiée et un rôle disposant de la permission correspondante, et ne constituent pas une interface d'intégration. Un compte compagnie n'a accès à aucune d'entre elles (`403`), ni aux pages internes de la documentation (`403` ; `401` sans session).
 
 ### Format des erreurs
 
@@ -36,7 +38,7 @@ Toute erreur renvoie un objet JSON avec un champ `error` :
 | --- | --- |
 | 400 | Requête invalide (JSON mal formé, champ manquant ou incorrect) |
 | 401 | Clé d'équipement / de transporteur ou session invalide |
-| 403 | Rôle insuffisant (back-office) |
+| 403 | Rôle insuffisant (espace DPAF), compte refusé sur cette plateforme, ou page de documentation interne demandée par un compte compagnie |
 | 404 | Ressource introuvable ou route inconnue (`{"error":"Route inconnue"}`) |
 | 409 | Action incompatible avec l'état (ex. réponse alors qu'aucune information n'est attendue) |
 | 413 | Corps trop volumineux |
@@ -287,10 +289,8 @@ Exemple `202` :
 {
   "status": "ACCEPTÉ AVEC AVERTISSEMENTS",
   "reference": "MSG-MH3K9Z01",
-  "flightId": "FL-MH3K9Z0A",
   "flight": "HC 404",
   "passengers": 3,
-  "flagged": 0,
   "completeness": 67,
   "onTime": true,
   "errors": ["PNR QX7K2P : passager 2 sans SSR DOCS"]
@@ -300,7 +300,7 @@ Exemple `202` :
 - `reference` identifie le message dans le journal de l'Unité ; conservez-la pour tout échange.
 - `completeness` : pourcentage de passagers ayant numéro de document, date de naissance et nationalité. Objectif : **≥ 98 %**.
 - `onTime` : respect du délai de transmission.
-- `flagged` : nombre de passagers signalés en interne. **Aucun résultat de ciblage n'est communiqué au transporteur** ; ce compteur ne doit pas être exploité opérationnellement.
+- **Aucun résultat de ciblage n'est communiqué au transporteur** : l'accusé ne contient ni le nombre de passagers signalés, ni l'identifiant interne du vol. Le résultat du pré-contrôle reste dans l'espace DPAF.
 
 Les messages API et PNR d'un même vol sont **fusionnés** (rapprochement par numéro de document, à défaut par nom).
 
@@ -321,6 +321,20 @@ curl -X POST https://wawid-waw-telecom.netlify.app/api/carrier/messages \
   -H "Content-Type: text/plain" \
   --data-binary @paxlst.edi
 ```
+
+## Plateforme des compagnies : routes de session
+
+Ces routes servent la *Plateforme des compagnies aériennes* (`/compagnies/`). Elles exigent la session d'un compte du rôle **Compagnie aérienne**, ouverte par `POST /api/session` avec `{ "username": "…", "password": "…", "platform": "compagnies" }`, et ne portent que sur la compagnie du compte (son code IATA). Tout autre compte reçoit `403`. Pour l'intégration de système à système, utilisez la passerelle `POST /api/carrier/messages`.
+
+| Route | Rôle | Réponse |
+| --- | --- | --- |
+| `GET /api/compagnie/overview` | Vue d'ensemble de la compagnie | `carrier` (code, nom), `flights` (200 derniers vols : trajet, horaire, sens, sources, passagers, complétude, ponctualité), `messages` (300 derniers accusés), `invoices` (factures de redevance et paiements), `redevance` (`rateUSD`, `penaltyRate`, `circuit`, `beneficiary`) |
+| `GET /api/compagnie/flights/:id` | Détail d'un vol de la compagnie | Vol et liste des passagers (`surname`, `given`, `docNo`, `nat`, `seat`, `missing` : champs manquants parmi `docNo`, `dob`, `nat`) ; `404` pour le vol d'une autre compagnie |
+| `POST /api/compagnie/messages` | Transmission d'un message PAXLST ou PNR | Même corps et même accusé que la passerelle (`202`, `422`) |
+| `GET /api/compagnie/samples` | Messages d'exemple | `{ "PAXLST": "…", "PNR": "…" }` adaptés au code de la compagnie |
+| `POST /api/compagnie/payments` | Déclaration d'un paiement de redevance | Corps `{ "invoiceId": "RS-…", "amount": 1000000, "ref": "VIR-…", "method": "Virement" }` (`method` : `Virement`, `SWIFT`, `Mobile money` ou `Chèque`) ; renvoie la facture avec le paiement au statut `DECLARE` ; `400` si le montant est invalide ou la référence absente, `404` si la facture n'est pas celle de la compagnie |
+
+Aucune de ces réponses ne contient de résultat de pré-contrôle (score, facteurs, passagers signalés). Un paiement déclaré reste au statut `DECLARE` jusqu'à sa validation (`CONFIRME`) ou son rejet (`REJETE`, avec un motif `reason`) par le service financier ; seuls les paiements `CONFIRME` soldent la facture.
 
 ## Équipements eGate et kiosques ABC
 

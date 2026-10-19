@@ -610,7 +610,7 @@ on("PATCH", "/api/redevance/payments/:invoiceId/:index", async (req, p, user) =>
   pay.status = b.decision;
   pay.checkedBy = user.name;
   pay.checkedAt = nowIso();
-  if (b.decision === "REJETE") pay.reason = str(b.reason, 200) || "Non retrouvé sur le relevé du compte de collecte";
+  if (b.decision === "REJETE") pay.reason = str(b.reason, 200) || "Paiement non retrouvé sur le relevé bancaire";
   await save("invoices", invoices);
   await audit(user.username, b.decision === "CONFIRME" ? "REDEVANCE_PAIEMENT_CONFIRME" : "REDEVANCE_PAIEMENT_REJETE", inv.id, `${pay.amount} FCFA · ${pay.ref}`);
   return json(inv);
@@ -642,7 +642,7 @@ on("PATCH", "/api/redevance/settings", async (req, _p, user) => {
   if (b.circuit === "OPERATEUR" || b.circuit === "TRESOR") r.circuit = b.circuit;
   if (/^\d{4}-\d{2}$/.test(String(b.fxMonth)) && Number(b.fx) > 0) r.fx[b.fxMonth] = Number(b.fx);
   await save("settings", settings);
-  await audit(user.username, "REDEVANCE_PARAMETRES", "redevance", `taux ${r.rateUSD} USD, part opérateur ${Math.round(r.operatorShare * 100)} %`);
+  await audit(user.username, "REDEVANCE_PARAMETRES", "redevance", `taux ${r.rateUSD} USD, part opérateur ${Math.round(r.operatorShare * 100)} %, circuit ${r.circuit || "OPERATEUR"}`);
   return json(r);
 });
 

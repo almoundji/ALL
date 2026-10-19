@@ -12,6 +12,8 @@ This guide is for travelers going to or leaving Senegal. It describes the WawID 
 
 Portal address: `https://wawid-waw-telecom.netlify.app`
 
+The traveler platform consists of the portal (`/`) and the public help center (`/aide/`). The mobile apps are downloaded from the `/app/` page (**Mobile app** link on the portal): Android by direct APK download, iPhone through TestFlight. The spaces for DPAF officers and airlines are separate platforms, reserved for their users; the portal gives no access to them.
+
 > Demonstrator: on the demonstration version, **no real payment is made** and all displayed data is fictitious.
 
 ## Do I need a visa?
@@ -140,7 +142,7 @@ Conditions: valid MRZ, **adult** traveler, **unexpired** passport. A passport th
 
 ## The WawID e-Visa iPhone app
 
-The app lets you apply for an e-Visa by reading your passport's **electronic chip** directly, which strengthens verification and speeds up processing.
+The app lets you apply for an e-Visa by reading your passport's **electronic chip** directly, which strengthens verification and speeds up processing. Install it from the portal's `/app/` page (iPhone: TestFlight; an Android version is also offered as a direct download).
 
 > The app interface is currently in French. The button and screen names below are English translations; the original French label is given in parentheses where useful.
 

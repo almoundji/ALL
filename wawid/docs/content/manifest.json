@@ -19,6 +19,7 @@
     ]},
     { "group": { "fr": "APIS, e-Visa et finances", "en": "APIS, e-Visa and finance" }, "pages": [
       { "slug": "apis-pnr", "public": false, "routes": ["apis"], "fr": "APIS et PNR", "en": "APIS and PNR" },
+      { "slug": "plateforme-compagnies", "public": true, "routes": [], "fr": "Plateforme des compagnies aériennes", "en": "Airline platform" },
       { "slug": "evisa-wawpass", "public": false, "routes": ["evisa", "wawpass"], "fr": "e-Visa, WawPass et pré-enrôlements", "en": "e-Visa, WawPass and pre-enrollments" },
       { "slug": "finances-redevance", "public": false, "routes": ["redevance"], "fr": "Redevance de sécurité", "en": "Security fee" }
     ]},

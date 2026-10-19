@@ -1,6 +1,6 @@
 # Installation guide — Senegal
 
-This guide describes how to set up WawID at Senegal's border posts: deployment phases, hosting, legal prerequisites, hardware, installation of counter workstations, eGate kiosks and the back office, software installation of the platform, mobile apps, onboarding of airlines and the Treasury, training, acceptance testing and go-live. It is intended for the project teams of the DPAF, the operator and the integrators.
+This guide describes how to set up WawID at Senegal's border posts: deployment phases, hosting, legal prerequisites, hardware, installation of counter workstations, eGate kiosks and the DPAF space, software installation of the platform, mobile apps, onboarding of airlines and the Treasury, training, acceptance testing and go-live. It is intended for the project teams of the DPAF, the operator and the integrators.
 
 For technical details already documented, this guide refers to the pages *Deployment and configuration*, *Security, personal data and compliance*, *eGate kiosk: setup and journey* and *API reference (airlines, devices, connectors)*.
 
@@ -67,7 +67,7 @@ The phasing below is a **Recommendation**. It follows the principle of the propo
 - **Sovereignty**: nominative and biometric data is hosted on national territory; no biometric data leaves the country. The current Netlify hosting is not acceptable for real data (see *Security, personal data and compliance*).
 - **Main data center**: `docs/ARCHITECTURE.md` mentions, as an example, the national data center in Diamniadio, operated on behalf of the State. This option is **To be checked**: available capacity, hosting terms, service levels, physical security and the agreement framework must be confirmed by the data center operator and the supervising authority. No commitment exists to date.
 - **Backup site**: a second site on national territory, running the same software stack (Recommendation from `docs/ARCHITECTURE.md`).
-- **Minimal exposure**: only the traveler portal and the carrier gateway are exposed to the Internet, in a DMZ behind an anti-DDoS CDN/WAF; the back office, kiosks and internal services remain on the private network.
+- **Minimal exposure**: only the traveler platform (portal, help, mobile apps page), the airline platform (`/compagnies/`) and the carrier gateway are exposed to the Internet, in a DMZ behind an anti-DDoS CDN/WAF; the DPAF space (`/dpaf/`), kiosks and internal services remain on the private network. Each platform can be given its own domain name.
 
 ### Service objectives (architecture targets)
 
@@ -120,7 +120,7 @@ The following checks are **To be checked** with the competent authorities. They 
 | --- | --- | --- |
 | Personal data protection | Personal Data Protection Commission (CDP) | Determine the regime applicable to the processing under Law No. 2008-12 of 25 January 2008 (declaration or authorization request, in particular for biometrics and public security processing) and complete the formalities **before** any production use; set the retention period (5 years by default in WawID), the contact point for access and rectification rights, and the hosting conditions. |
 | Border control ownership | Ministry of the Interior, Air and Border Police Directorate (DPAF) | Appointment of the data controller; validation of procedures (escalation, entry refusal, degraded mode); check whether a regulatory act creating the processing is required. |
-| Security fee | Ministry of Economy and Finance, General Directorate of Public Accounting and Treasury (DGCPT) | Application of Decree No. 2011-652 of 26 May 2011, the interministerial order of 3 February 2012, Decree No. 2012-519 of 18 May 2012 and the decision of 4 December 2012; new allocation act if the operator share changes; flow of receipts from the Receiver General of the Treasury. |
+| Security fee | Ministry of Economy and Finance, General Directorate of Public Accounting and Treasury (DGCPT) | Application of Decree No. 2011-652 of 26 May 2011, the interministerial order of 3 February 2012, Decree No. 2012-519 of 18 May 2012 and the decision of 4 December 2012; new allocation act if the operator share changes; flow of receipts from the Receiver General of the Treasury. The "airlines → WawID → Public Treasury" flow (WawID's default setting) differs from this framework: it requires a **new regulatory text** and a **collection-mandate agreement** between the State and WawID before any implementation. |
 | API and PNR data | Airlines, civil aviation authority (ANACIM), DPAF | National legal basis requiring API/PNR transmission (reference: ICAO Annex 9); transmission and retention conditions; information of airlines. |
 | Police files | Interpol NCB, national WAPIS platform, departments holding the FPR and the passport register (DAF) | Access agreements, connection conditions, clearances. |
 | Existing contract | Contracting authorities, State Judicial Agency | Transfer, reversibility and data ownership clauses of the system currently in place (see the proposal note). |
@@ -134,7 +134,7 @@ The following checks are **To be checked** with the competent authorities. They 
 
 The manufacturer references cited in the code (Regula, Thales/Gemalto, ARH, Innovatrics) are examples, not decisions. Hardware selection is a matter for the procurement procedure; biometric SDKs must be certified (NIST performance, ISO/IEC 30107-3).
 
-| Equipment | Counter | eGate / ABC kiosk | Back office | Post server |
+| Equipment | Counter | eGate / ABC kiosk | DPAF space | Post server |
 | --- | --- | --- | --- | --- |
 | Computer with a recent browser (Chrome or Edge recommended) | Yes | Yes (kiosk mode) | Yes | — |
 | Node.js 22 (for the NFC bridge) | Yes | Yes | — | Yes |
@@ -181,7 +181,7 @@ Copy `tools/nfc-bridge.mjs` to the workstation, for example to `C:\WawID\` or `/
 | --- | --- |
 | `NFC_BRIDGE_PORT` | `8765` (default), unless there is a conflict on the workstation |
 | `NFC_BRIDGE_MODE` | `simulation` for tests; the driver name once the real reader is integrated |
-| `NFC_BRIDGE_ORIGIN` | The exact production address of the back office and kiosk, for example `https://<wawid-domain>`; do not leave demo origins or `localhost` in operations |
+| `NFC_BRIDGE_ORIGIN` | The exact production address of the DPAF space and kiosk, for example `https://<wawid-domain>`; do not leave demo origins or `localhost` in operations |
 
 Then start the bridge:
 
@@ -212,7 +212,7 @@ WantedBy=multi-user.target
 
 ### 3. Configure the workstation in WawID
 
-1. Open `https://<wawid-domain>/admin/` and sign in with an administrator account (the **Settings** page is reserved for it).
+1. Open `https://<wawid-domain>/dpaf/` and sign in with an administrator account (the **Settings** page is reserved for it).
 2. Open **Settings → NFC reader on this workstation**.
 3. Enter the **Bridge address** (`http://127.0.0.1:8765` by default), click **Save** then **Test**. The expected result is "Connected" followed by the reader name.
 4. The setting belongs to the workstation's browser: redo it if the browser or the user profile changes.
@@ -238,7 +238,7 @@ Then:
 
 1. On the **Device activation** screen, enter the **Device key** (value of `WAWID_GATE_KEY`) and click **Activate**. The key is stored in the kiosk browser. Only an authorized technician enters it; it is never displayed or written down at the kiosk.
 2. If the address does not specify the device, choose it on **Choose device**. Check the name and zone shown at the top right.
-3. In the back office, open **eGates & ABC** and check that the device card is **In service**, in automatic mode, with a recent heartbeat.
+3. In the DPAF space, open **eGates & ABC** and check that the device card is **In service**, in automatic mode, with a recent heartbeat.
 4. Test a remote close and reopen: the kiosk must show **Gate closed** and then return to the welcome screen within 15 seconds.
 5. Set the gate parameters (face threshold, minimum age, eligibility, liveness detection, travel authorization check) according to the policy validated by the DPAF, with **Settings → Apply remotely**.
 
@@ -250,13 +250,13 @@ Open points for production:
 
 For the traveler journey and messages, see *eGate kiosk: setup and journey*.
 
-## Installing the back office
+## Installing the DPAF space
 
-The back office only requires a recent browser on a workstation of the private network.
+The DPAF space only requires a recent browser on a workstation of the private network.
 
 1. Provide analysts, supervisors, administrators and Treasury officers with a maintained workstation, recent browser and screen locking.
-2. Give them the address `https://<wawid-domain>/admin/`; add it to the bookmarks.
-3. In production, restrict back office access to the private network or a VPN (Recommendation); the `X-Robots-Tag: noindex, nofollow` header is already applied (Existing).
+2. Give them the address `https://<wawid-domain>/dpaf/` (the former `/admin/` address still works); add it to the bookmarks. The traveler portal has no link to the DPAF space.
+3. In production, restrict DPAF space access to the private network or a VPN (Recommendation); the `noindex, nofollow` tag is already applied (Existing).
 4. For Treasury officers, provide access from DGCPT premises according to the chosen security policy.
 
 ## Software installation of the platform
@@ -401,6 +401,7 @@ The GitHub Actions workflow "WawID mobile (Flutter) → APK / TestFlight" (`.git
 2. **Appoint** a technical contact and a security contact per airline.
 3. **Generate** one key per airline and add it to `WAWID_CARRIER_KEYS` (format `HC:<HC_KEY>,AF:<AF_KEY>`), then redeploy.
 4. **Send** the key through a secure channel.
+5. **Create** the airline's named accounts in **Users & roles** (role **Airline**, airline selected from the list) and send the address of the airline platform (`https://<wawid-domain>/compagnies/`) with the *Airline platform* page.
 5. **Test** on the acceptance environment: the airline sends a test PAXLST and PNR, for example:
 
 ```bash
@@ -414,14 +415,14 @@ Then:
 1. **Check** the **202** response and the `MSG-…` reference, then, in **Carrier gateway**, the **ACCEPTÉ** (accepted) status and completeness.
 2. **Monitor** the **Carrier compliance** tab during the first weeks (targets: 95% punctuality, 98% completeness).
 
-The back office sample messages (**Receive a message → PAXLST example / PNR example**) serve as a format reference. PNRGOV (EDIFACT) messages go through a converter. A compromised key is replaced without delay.
+The sample messages of the DPAF space (**Receive a message → PAXLST example / PNR example**) and of the airline platform (**PAXLST example** / **PNR example**) serve as a format reference. PNRGOV (EDIFACT) messages go through a converter. A compromised key is replaced without delay.
 
 ## Treasury (DGCPT) onboarding
 
 1. Designate, with the DGCPT, the authorized officers; the administrator creates their accounts with the **Treasury officer (fee)** role.
-2. The administrator checks in **Revenue split → Settings** the rate per passenger, the operator share and the monthly penalty, and enters the **IATA rate of the month** every month, in accordance with the texts in force.
-3. Define the flow of receipts from the Receiver General of the Treasury (who enters them, within what time, with which reference).
-4. Train officers on the monthly calendar (collection from the 1st to the 9th, invoices on the 10th, due date at the end of the following month) and on **Reconciliation**.
+2. The administrator checks in **Revenue split → Settings** the rate per passenger, the operator share, the monthly penalty and the **Collection flow**, and enters the **IATA rate of the month** every month, in accordance with the texts in force.
+3. Choose the collection flow. `OPERATEUR` flow (airlines → WawID → Treasury): open the WawID collection account, send its details to the airlines, define who validates declared payments (**Payments to validate** tab) and the schedule of transfers of the State's share to the Receiver General of the Treasury (**Transfers to the State** tab, on the 15th of month M+2). This flow only applies once a new regulatory text has been adopted and a collection-mandate agreement signed with the State. `TRESOR` flow (Decree No. 2012-519): define the flow of receipts from the Receiver General of the Treasury (who enters them, within what time, with which reference).
+4. Train officers on the monthly calendar (collection from the 1st to the 9th, invoices on the 10th, due date at the end of the following month), on validating declared payments and on **Reconciliation**.
 5. Validate the CSV export format (`wawid-redevance.csv`) with public accounting.
 
 > **To be developed**: in the demonstrator, invoices come from the demo dataset. Issuing real invoices (airline declarations, IATA rate, WawID count) must be implemented before operations.
@@ -435,8 +436,8 @@ The back office sample messages (**Receive a message → PAXLST example / PNR ex
 | Analysts | Threat Monitor, lists, rules, APIS/PNR, e-Visa, identity networks | *Threat Monitor, cases, watchlists, rules and connectors*; *APIS and PNR* |
 | Administrators | Accounts, settings, NFC bridge, keys, backups, incidents | This guide; *Deployment and configuration* |
 | Post technicians | Installation of workstations and kiosks, first-level diagnosis | This guide; *eGate kiosk: setup and journey* |
-| Treasury officers | Calendar, collections, reconciliation, export | *Security fee* |
-| Airlines | Formats, schedule, responses, compliance | `docs/API-TRANSPORTEURS.md` |
+| Treasury officers | Calendar, payment validation, collections, transfers to the State, reconciliation, export | *Security fee* |
+| Airlines | Airline platform, formats, schedule, responses, compliance, security fee payment declaration | *Airline platform*; `docs/API-TRANSPORTEURS.md` |
 
 Run training on a demonstration environment separate from production, and appoint in each post a **WawID focal point** trained in first-level diagnosis.
 
@@ -464,12 +465,14 @@ Contact details, hours and response times for each level are set with the DPAF b
 | 7 | eGate crossing by a minor | Referral to the counter with the expected reason |
 | 8 | Remote closing of an eGate | **Gate closed** shown within 15 seconds |
 | 9 | e-Visa application on the portal, information request, reply, approval | Correct successive statuses; signed QR verified at the counter |
-| 10 | e-Visa application from the iPhone and Android app | Chip read; application visible in the back office with the **Chip (NFC)** field |
+| 10 | e-Visa application from the iPhone and Android app | Chip read; application visible in the DPAF space with the **Chip (NFC)** field |
 | 11 | WawPass verified twice | First verification **Valid**, second "Receipt already used" |
-| 12 | PAXLST and PNR message from an airline with its key | 202; API + PNR merge; flagged passengers |
+| 12 | PAXLST and PNR message from an airline with its key | 202 with no pre-screening result in the acknowledgment; API + PNR merge; flagged passengers visible in the DPAF space |
 | 13 | Message with another airline's key | Rejection (422) |
 | 14 | Collection recorded on an invoice by a Treasury officer | **PARTIELLE** (partial) or **PAYÉE** (paid) status; `REDEVANCE_ENCAISSEMENT` entry |
 | 15 | **Audit log** check | **Chain intact** |
+| 16 | Sign-in of an airline account on `/dpaf/`, then on `/compagnies/` | Refused on the DPAF space; on the platform, only its own airline's data, with no flagged passenger or score |
+| 17 | Payment declared by an airline, validated by a Treasury officer, then transfer of the State's share (`OPERATEUR` flow) | Payment **Awaiting validation** then **Validated**; invoice **PARTIELLE** (partial) or **PAYÉE** (paid); `REDEVANCE_PAIEMENT_DECLARE`, `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_REVERSEMENT_ETAT` entries |
 | 16 | Link cut at a post (after offline mode is developed) | Checks continue; resynchronization when the link returns |
 | 17 | Power cut at a counter | Switch to UPS; no crossing lost |
 | 18 | Backup restoration and failover to the backup site | RPO and RTO meet the objectives |
@@ -484,7 +487,7 @@ Contact details, hours and response times for each level are set with the DPAF b
 6. NFC bridges installed with `NFC_BRIDGE_ORIGIN` limited to the production domain; **Connected** test on each workstation.
 7. Readers, biometric SDKs and kiosks integrated and tested; simulator hidden on kiosks.
 8. Connectors (Interpol, WAPIS, FPR, DAF) connected or, failing that, local copy of the lists up to date and procedure validated.
-9. Airlines connected and tested; Treasury officers trained.
+9. Airlines connected and tested, airline platform accounts created; security fee collection flow settled with the matching legal basis; Treasury officers trained.
 10. Mobile apps pointing to the national API; store listings validated.
 11. Degraded-mode procedure displayed in each post; UPS units tested.
 12. Officers trained; focal points appointed; escalation chain shared.

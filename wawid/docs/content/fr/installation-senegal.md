@@ -1,6 +1,6 @@
 # Guide d'installation — Sénégal
 
-Ce guide décrit la mise en place de WawID dans les postes frontière du Sénégal : phases de déploiement, hébergement, prérequis juridiques, matériel, installation des postes de travail, des kiosques eGate et du back-office, installation logicielle de la plateforme, applications mobiles, raccordement des compagnies aériennes et du Trésor, formation, recette et mise en service. Il s'adresse aux équipes de projet de la DPAF, de l'exploitant et des intégrateurs.
+Ce guide décrit la mise en place de WawID dans les postes frontière du Sénégal : phases de déploiement, hébergement, prérequis juridiques, matériel, installation des postes de travail, des kiosques eGate et de l'espace DPAF, installation logicielle de la plateforme, applications mobiles, raccordement des compagnies aériennes et du Trésor, formation, recette et mise en service. Il s'adresse aux équipes de projet de la DPAF, de l'exploitant et des intégrateurs.
 
 Pour les détails techniques déjà documentés, ce guide renvoie aux pages *Déploiement et configuration*, *Sécurité, données personnelles et conformité*, *Kiosque eGate : mise en service et parcours* et *Référence API (compagnies, équipements, connecteurs)*.
 
@@ -67,7 +67,7 @@ Le phasage ci-dessous est une **Recommandation**. Il reprend le principe de la n
 - **Souveraineté** : les données nominatives et biométriques sont hébergées sur le territoire national ; aucune donnée biométrique ne quitte le pays. L'hébergement actuel sur Netlify n'est pas acceptable pour des données réelles (voir *Sécurité, données personnelles et conformité*).
 - **Centre de données principal** : `docs/ARCHITECTURE.md` cite à titre d'exemple le centre de données national de Diamniadio, exploité pour le compte de l'État. Cette option est **À vérifier** : disponibilité de capacité, conditions d'hébergement, niveaux de service, sécurité physique et cadre conventionnel doivent être confirmés par l'opérateur du centre et par l'autorité de tutelle. Aucun engagement n'existe à ce jour.
 - **Site de secours** : un second site sur le territoire, avec la même pile logicielle (Recommandation de `docs/ARCHITECTURE.md`).
-- **Exposition minimale** : seuls le portail voyageur et la passerelle transporteurs sont exposés sur Internet, en DMZ derrière un CDN/WAF anti-DDoS ; le back-office, les kiosques et les services internes restent sur le réseau privé.
+- **Exposition minimale** : seuls la plateforme voyageurs (portail, aide, page des applications mobiles), la plateforme des compagnies aériennes (`/compagnies/`) et la passerelle transporteurs sont exposés sur Internet, en DMZ derrière un CDN/WAF anti-DDoS ; l'espace DPAF (`/dpaf/`), les kiosques et les services internes restent sur le réseau privé. Chaque plateforme peut recevoir son propre nom de domaine.
 
 ### Objectifs de service (cibles de l'architecture)
 
@@ -120,7 +120,7 @@ Les vérifications suivantes sont **À vérifier** auprès des autorités compé
 | --- | --- | --- |
 | Protection des données personnelles | Commission de Protection des Données Personnelles (CDP) | Déterminer le régime applicable au traitement au titre de la loi n° 2008-12 du 25 janvier 2008 (déclaration ou demande d'autorisation, notamment pour la biométrie et les traitements de sécurité publique) et accomplir les formalités **avant** toute mise en production ; fixer la durée de conservation (5 ans par défaut dans WawID), le point de contact pour les droits d'accès et de rectification, et les conditions d'hébergement. |
 | Maîtrise d'ouvrage du contrôle frontière | Ministère de l'Intérieur, Direction de la Police de l'Air et des Frontières (DPAF) | Désignation du responsable de traitement ; validation des procédures (escalade, refus d'entrée, mode dégradé) ; vérification de la nécessité d'un acte réglementaire créant le traitement. |
-| Redevance de sécurité | Ministère de l'Économie et des Finances, Direction générale de la Comptabilité publique et du Trésor (DGCPT) | Application du décret n° 2011-652 du 26 mai 2011, de l'arrêté interministériel du 3 février 2012, du décret n° 2012-519 du 18 mai 2012 et de la décision du 4 décembre 2012 ; nouvel acte de répartition si la part opérateur change ; circuit des quittances du Receveur général du Trésor. |
+| Redevance de sécurité | Ministère de l'Économie et des Finances, Direction générale de la Comptabilité publique et du Trésor (DGCPT) | Application du décret n° 2011-652 du 26 mai 2011, de l'arrêté interministériel du 3 février 2012, du décret n° 2012-519 du 18 mai 2012 et de la décision du 4 décembre 2012 ; nouvel acte de répartition si la part opérateur change ; circuit des quittances du Receveur général du Trésor. Le circuit « compagnies → WawID → Trésor public » (paramètre par défaut de WawID) diffère de ce cadre : il exige un **nouveau texte réglementaire** et une **convention de mandat d'encaissement** entre l'État et WawID avant toute mise en œuvre. |
 | Données API et PNR | Compagnies aériennes, autorité de l'aviation civile (ANACIM), DPAF | Base juridique nationale imposant la transmission API/PNR (référence : OACI annexe 9) ; conditions de transmission et de conservation ; information des compagnies. |
 | Fichiers de police | BCN Interpol, plateforme nationale WAPIS, services détenteurs du FPR et du registre des passeports (DAF) | Accords d'accès, conditions de raccordement, habilitations. |
 | Contrat existant | Autorités contractantes, Agence judiciaire de l'État | Clauses de transfert, de réversibilité et de propriété des données du système actuellement en place (voir la note de proposition). |
@@ -134,7 +134,7 @@ Les vérifications suivantes sont **À vérifier** auprès des autorités compé
 
 Les références de constructeurs citées dans le code (Regula, Thales/Gemalto, ARH, Innovatrics) sont des exemples, pas des choix arrêtés. Le choix du matériel relève de la procédure d'achat ; les SDK biométriques doivent être certifiés (performances NIST, ISO/IEC 30107-3).
 
-| Équipement | Guichet | Kiosque eGate / ABC | Back-office | Serveur de poste |
+| Équipement | Guichet | Kiosque eGate / ABC | Espace DPAF | Serveur de poste |
 | --- | --- | --- | --- | --- |
 | Ordinateur avec navigateur récent (Chrome ou Edge recommandés) | Oui | Oui (mode kiosque) | Oui | — |
 | Node.js 22 (pour le pont NFC) | Oui | Oui | — | Oui |
@@ -181,7 +181,7 @@ Copiez `tools/nfc-bridge.mjs` sur le poste, par exemple dans `C:\WawID\` ou `/op
 | --- | --- |
 | `NFC_BRIDGE_PORT` | `8765` (défaut), sauf conflit sur le poste |
 | `NFC_BRIDGE_MODE` | `simulation` pour les essais ; le nom du pilote une fois le lecteur réel intégré |
-| `NFC_BRIDGE_ORIGIN` | L'adresse exacte du back-office et du kiosque en production, par exemple `https://<domaine-wawid>` ; ne laissez pas les origines de démonstration ou `localhost` en exploitation |
+| `NFC_BRIDGE_ORIGIN` | L'adresse exacte de l'espace DPAF et du kiosque en production, par exemple `https://<domaine-wawid>` ; ne laissez pas les origines de démonstration ou `localhost` en exploitation |
 
 Lancez ensuite le pont :
 
@@ -212,7 +212,7 @@ WantedBy=multi-user.target
 
 ### 3. Configurer le poste dans WawID
 
-1. Ouvrez `https://<domaine-wawid>/admin/` et connectez-vous avec un compte administrateur (la page **Paramètres** lui est réservée).
+1. Ouvrez `https://<domaine-wawid>/dpaf/` et connectez-vous avec un compte administrateur (la page **Paramètres** lui est réservée).
 2. Ouvrez **Paramètres → Lecteur NFC de ce poste**.
 3. Saisissez l'**Adresse du pont** (`http://127.0.0.1:8765` par défaut), cliquez sur **Enregistrer** puis **Tester**. Le résultat attendu est « Connecté » suivi du nom du lecteur.
 4. Le réglage est propre au navigateur du poste : refaites-le si le navigateur ou le profil utilisateur change.
@@ -238,7 +238,7 @@ Puis :
 
 1. À l'écran **Activation de l'équipement**, saisissez la **Clé d'équipement** (valeur de `WAWID_GATE_KEY`) et cliquez sur **Activer**. La clé est mémorisée dans le navigateur du kiosque. Seul un technicien habilité la saisit ; elle n'est jamais affichée ni notée sur le kiosque.
 2. Si l'adresse ne précise pas l'équipement, choisissez-le dans **Choisir l'équipement**. Vérifiez le nom et la zone affichés en haut à droite.
-3. Dans le back-office, ouvrez **eGates & ABC** et vérifiez que la carte de l'équipement est **En service**, en mode automatique, avec un signal de vie récent.
+3. Dans l'espace DPAF, ouvrez **eGates & ABC** et vérifiez que la carte de l'équipement est **En service**, en mode automatique, avec un signal de vie récent.
 4. Faites un essai de fermeture et de réouverture à distance : le kiosque doit afficher **Porte fermée** puis revenir à l'accueil en moins de 15 secondes.
 5. Réglez les paramètres de la porte (seuil facial, âge minimal, éligibilité, détection du vivant, vérification de l'autorisation de voyage) selon la politique validée par la DPAF, avec **Paramètres → Appliquer à distance**.
 
@@ -250,13 +250,13 @@ Points ouverts pour la production :
 
 Pour le parcours voyageur et les messages, voir *Kiosque eGate : mise en service et parcours*.
 
-## Installation du back-office
+## Installation de l'espace DPAF
 
-Le back-office ne demande qu'un navigateur récent sur un poste du réseau privé.
+L'espace DPAF ne demande qu'un navigateur récent sur un poste du réseau privé.
 
 1. Fournissez aux analystes, superviseurs, administrateurs et agents du Trésor un poste maintenu, avec navigateur récent et verrouillage d'écran.
-2. Donnez l'adresse `https://<domaine-wawid>/admin/` ; ajoutez-la aux favoris.
-3. En production, limitez l'accès au back-office au réseau privé ou à un VPN (Recommandation) ; l'en-tête `X-Robots-Tag: noindex, nofollow` est déjà appliqué (Existant).
+2. Donnez l'adresse `https://<domaine-wawid>/dpaf/` (l'ancienne adresse `/admin/` reste valable) ; ajoutez-la aux favoris. Le portail voyageur ne contient aucun lien vers l'espace DPAF.
+3. En production, limitez l'accès à l'espace DPAF au réseau privé ou à un VPN (Recommandation) ; la balise `noindex, nofollow` est déjà appliquée (Existant).
 4. Pour les agents du Trésor, prévoyez un accès depuis les locaux de la DGCPT selon la politique de sécurité retenue.
 
 ## Installation logicielle de la plateforme
@@ -401,6 +401,7 @@ Le workflow GitHub Actions « WawID mobile (Flutter) → APK / TestFlight » (`.
 2. **Désigner** un correspondant technique et un correspondant sûreté par compagnie.
 3. **Générer** une clé par compagnie et l'ajouter à `WAWID_CARRIER_KEYS` (format `HC:<CLE_HC>,AF:<CLE_AF>`), puis redéployer.
 4. **Transmettre** la clé par un canal sûr.
+5. **Créer** les comptes nominatifs de la compagnie dans **Utilisateurs & rôles** (rôle **Compagnie aérienne**, compagnie choisie dans la liste) et communiquer l'adresse de la plateforme des compagnies (`https://<domaine-wawid>/compagnies/`) avec la page *Plateforme des compagnies aériennes*.
 5. **Tester** sur l'environnement de recette : la compagnie envoie un PAXLST et un PNR d'essai, par exemple :
 
 ```bash
@@ -414,14 +415,14 @@ Ensuite :
 1. **Vérifier** la réponse **202** et la référence `MSG-…`, puis, dans **Passerelle transporteurs**, le statut **ACCEPTÉ** et la complétude.
 2. **Suivre** pendant les premières semaines l'onglet **Conformité transporteurs** (objectifs : ponctualité 95 %, complétude 98 %).
 
-Les messages d'exemple du back-office (**Recevoir un message → Exemple PAXLST / Exemple PNR**) servent de référence de format. Les messages PNRGOV (EDIFACT) passent par un convertisseur. Une clé compromise est remplacée sans délai.
+Les messages d'exemple de l'espace DPAF (**Recevoir un message → Exemple PAXLST / Exemple PNR**) et de la plateforme des compagnies (**Exemple PAXLST** / **Exemple PNR**) servent de référence de format. Les messages PNRGOV (EDIFACT) passent par un convertisseur. Une clé compromise est remplacée sans délai.
 
 ## Raccordement du Trésor (DGCPT)
 
 1. Désigner, avec la DGCPT, les agents habilités ; l'administrateur crée leurs comptes avec le rôle **Agent du Trésor (redevance)**.
-2. L'administrateur vérifie dans **Répartition → Paramètres** le taux par passager, la part opérateur, la pénalité mensuelle et saisit chaque mois le **taux IATA du mois**, conformément aux textes en vigueur.
-3. Définir le circuit des quittances du Receveur général du Trésor (qui saisit, dans quel délai, quelle référence).
-4. Former les agents au calendrier mensuel (collecte du 1er au 9, factures le 10, échéance fin du mois suivant) et au **Rapprochement**.
+2. L'administrateur vérifie dans **Répartition → Paramètres** le taux par passager, la part opérateur, la pénalité mensuelle et le **Circuit de recouvrement**, et saisit chaque mois le **taux IATA du mois**, conformément aux textes en vigueur.
+3. Choisir le circuit de recouvrement. Circuit `OPERATEUR` (compagnies → WawID → Trésor) : ouvrir le compte de collecte WawID, communiquer ses coordonnées aux compagnies, définir qui valide les paiements déclarés (onglet **Paiements à valider**) et le calendrier des reversements de la part de l'État au Receveur général du Trésor (onglet **Reversements à l'État**, le 15 du mois M+2). Ce circuit n'est applicable qu'après adoption d'un nouveau texte réglementaire et signature d'une convention de mandat d'encaissement avec l'État. Circuit `TRESOR` (décret n° 2012-519) : définir le circuit des quittances du Receveur général du Trésor (qui saisit, dans quel délai, quelle référence).
+4. Former les agents au calendrier mensuel (collecte du 1er au 9, factures le 10, échéance fin du mois suivant), à la validation des paiements déclarés et au **Rapprochement**.
 5. Valider le format de l'export CSV (`wawid-redevance.csv`) avec la comptabilité publique.
 
 > **À développer** : dans le démonstrateur, les factures proviennent du jeu de démonstration. L'émission des factures réelles (déclarations des compagnies, taux IATA, comptage WawID) doit être réalisée avant l'exploitation.
@@ -435,8 +436,8 @@ Les messages d'exemple du back-office (**Recevoir un message → Exemple PAXLST 
 | Analystes | Threat Monitor, listes, règles, APIS/PNR, e-Visa, réseau d'identités | *Threat Monitor, dossiers, listes, règles et connecteurs* ; *APIS et PNR* |
 | Administrateurs | Comptes, paramètres, pont NFC, clés, sauvegardes, incidents | Ce guide ; *Déploiement et configuration* |
 | Techniciens de poste | Installation des postes et kiosques, diagnostic de premier niveau | Ce guide ; *Kiosque eGate : mise en service et parcours* |
-| Agents du Trésor | Calendrier, encaissements, rapprochement, export | *Redevance de sécurité* |
-| Compagnies aériennes | Formats, calendrier, réponses, conformité | `docs/API-TRANSPORTEURS.md` |
+| Agents du Trésor | Calendrier, validation des paiements, encaissements, reversements à l'État, rapprochement, export | *Redevance de sécurité* |
+| Compagnies aériennes | Plateforme des compagnies, formats, calendrier, réponses, conformité, déclaration des paiements de redevance | *Plateforme des compagnies aériennes* ; `docs/API-TRANSPORTEURS.md` |
 
 Organisez la formation sur un environnement de démonstration distinct de la production, et désignez dans chaque poste un **référent WawID** formé au diagnostic de premier niveau.
 
@@ -464,12 +465,14 @@ Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixé
 | 7 | Passage eGate d'un mineur | Orientation au guichet avec le motif attendu |
 | 8 | Fermeture d'une eGate à distance | **Porte fermée** affiché en moins de 15 secondes |
 | 9 | Demande e-Visa sur le portail, demande d'information, réponse, approbation | Statuts successifs corrects ; QR signé vérifié au guichet |
-| 10 | Demande e-Visa depuis l'application iPhone et Android | Puce lue ; demande visible dans le back-office avec le champ **Puce (NFC)** |
+| 10 | Demande e-Visa depuis l'application iPhone et Android | Puce lue ; demande visible dans l'espace DPAF avec le champ **Puce (NFC)** |
 | 11 | WawPass vérifié deux fois | Première vérification **Valide**, seconde « Reçu déjà utilisé » |
-| 12 | Message PAXLST et PNR d'une compagnie avec sa clé | 202 ; fusion API + PNR ; passagers signalés |
+| 12 | Message PAXLST et PNR d'une compagnie avec sa clé | 202 sans résultat de pré-contrôle dans l'accusé ; fusion API + PNR ; passagers signalés visibles dans l'espace DPAF |
 | 13 | Message avec la clé d'une autre compagnie | Rejet (422) |
 | 14 | Encaissement d'une facture par un agent du Trésor | Statut **PARTIELLE** ou **PAYÉE** ; entrée `REDEVANCE_ENCAISSEMENT` |
 | 15 | Vérification du **Journal d'audit** | **Chaîne intègre** |
+| 16 | Connexion d'un compte compagnie sur `/dpaf/`, puis sur `/compagnies/` | Refus sur l'espace DPAF ; sur la plateforme, seules les données de sa compagnie, sans passager signalé ni score |
+| 17 | Paiement déclaré par une compagnie, validé par un agent du Trésor, puis reversement de la part de l'État (circuit `OPERATEUR`) | Paiement **À valider** puis **Validé** ; facture **PARTIELLE** ou **PAYÉE** ; entrées `REDEVANCE_PAIEMENT_DECLARE`, `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_REVERSEMENT_ETAT` |
 | 16 | Coupure de la liaison d'un poste (après développement du mode hors ligne) | Contrôle poursuivi ; resynchronisation au retour de la liaison |
 | 17 | Coupure électrique d'un guichet | Bascule sur onduleur ; aucun passage perdu |
 | 18 | Restauration de sauvegarde et bascule vers le site de secours | RPO et RTO conformes aux objectifs |
@@ -484,7 +487,7 @@ Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixé
 6. Ponts NFC installés avec `NFC_BRIDGE_ORIGIN` limité au domaine de production ; test **Connecté** sur chaque poste.
 7. Lecteurs, SDK biométriques et kiosques intégrés et testés ; simulateur masqué sur les kiosques.
 8. Connecteurs (Interpol, WAPIS, FPR, DAF) raccordés ou, à défaut, copie locale des listes à jour et procédure validée.
-9. Compagnies raccordées et testées ; agents du Trésor formés.
+9. Compagnies raccordées et testées, comptes de la plateforme des compagnies créés ; circuit de recouvrement de la redevance arrêté avec la base juridique correspondante ; agents du Trésor formés.
 10. Applications mobiles pointant vers l'API nationale ; fiches des magasins validées.
 11. Procédure de mode dégradé affichée dans chaque poste ; onduleurs testés.
 12. Agents formés ; référents désignés ; chaîne d'escalade diffusée.

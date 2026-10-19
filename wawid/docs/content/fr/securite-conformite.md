@@ -8,6 +8,7 @@ Cette page décrit le modèle de sécurité de WawID tel qu'il est implémenté 
 - **Traçabilité** : toute action sensible est inscrite dans un journal d'audit chaîné.
 - **Minimisation** : les images biométriques ne quittent pas le poste ; seuls des scores et des indicateurs sont transmis.
 - **Séparation des canaux** : voyageurs (sans compte), agents (session), équipements et compagnies (clés distinctes).
+- **Plateformes dissociées** : espace DPAF (`/dpaf/`), plateforme voyageurs (`/`, `/aide/`), applications mobiles (`/app/`) et plateforme des compagnies aériennes (`/compagnies/`). Un compte n'ouvre que la plateforme de son rôle, et aucune plateforme publique ne renvoie vers l'espace DPAF.
 
 ## Rôles et permissions
 
@@ -17,21 +18,25 @@ Cette page décrit le modèle de sécurité de WawID tel qu'il est implémenté 
 | Analyste renseignement | `read`, `alerts`, `cases`, `watchlist`, `rules`, `apis`, `evisa` |
 | Superviseur | `read`, `control`, `alerts`, `cases`, `watchlist`, `rules`, `apis`, `evisa`, `gates` |
 | Agent du Trésor | `read`, `finance` |
-| Administrateur | Toutes les permissions, dont `users` et `system` |
+| Administrateur | Toutes les permissions de l'espace DPAF, dont `users`, `system` et `finance` |
+| Compagnie aérienne | `carrier` uniquement (plateforme des compagnies, limitée à la compagnie du compte) |
 
 | Permission | Autorise |
 | --- | --- |
-| `read` | Consulter les données du back-office, vérifier un QR code, lire le journal d'audit |
+| `read` | Consulter les données de l'espace DPAF, vérifier un QR code, lire le journal d'audit |
 | `control` | Évaluer un voyageur et enregistrer une décision de passage |
 | `alerts`, `cases` | Traiter les alertes, ouvrir et mettre à jour les dossiers |
 | `watchlist`, `rules` | Gérer les listes de surveillance, les règles de ciblage, tester les connecteurs |
 | `apis` | Charger des manifestes et des messages API/PNR |
 | `evisa` | Instruire les demandes d'e-Visa |
 | `gates` | Commander et paramétrer les eGates |
-| `finance` | Redevance de sécurité (assiette, encaissements) |
+| `finance` | Redevance de sécurité (assiette, encaissements, validation des paiements déclarés par les compagnies, reversements à l'État) |
+| `carrier` | Plateforme des compagnies : vols, messages, factures et déclaration de paiements de **sa** compagnie (code IATA du compte) |
 | `users`, `system` | Gérer les comptes ; paramètres, connecteurs, réinitialisation |
 
 Une requête sans session valide reçoit `401` ; une session dont le rôle n'a pas la permission reçoit `403`. Un administrateur ne peut ni désactiver ni rétrograder son propre compte.
+
+La connexion précise la plateforme demandée : un compte **Compagnie aérienne** est refusé (`403`) sur l'espace DPAF et un compte de la DPAF sur la plateforme des compagnies ; le refus est journalisé (`ECHEC_CONNEXION`). Un compte compagnie ne voit que les données de sa compagnie, jamais les résultats du pré-contrôle, et n'a pas accès aux pages internes de la documentation (réservées aux sessions de l'espace DPAF).
 
 ## Authentification des agents
 
@@ -46,7 +51,7 @@ Une requête sans session valide reçoit `401` ; une session dont le rôle n'a p
 ### Mots de passe
 
 - Hachage **scrypt** avec un sel aléatoire de 16 octets par compte ; comparaison en temps constant.
-- Longueur minimale de **10 caractères** pour les comptes créés ou modifiés depuis le back-office.
+- Longueur minimale de **10 caractères** pour les comptes créés ou modifiés depuis l'espace DPAF.
 - Échec de connexion : réponse retardée (environ 0,7 s), message générique et entrée `ECHEC_CONNEXION` dans l'audit.
 - Les comptes initiaux sont créés à partir de `WAWID_ADMIN_PASSWORD` (et `WAWID_DEMO_PASSWORD` si défini) uniquement lorsqu'aucun compte n'existe.
 
@@ -91,7 +96,7 @@ Limite : une personne disposant d'un accès en écriture au stockage pourrait re
 
 ### En-têtes HTTP
 
-`Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy` (caméra limitée au site, micro et géolocalisation désactivés), `Cache-Control: no-store` sur l'API, `noindex` sur le back-office et le kiosque.
+`Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy` (caméra limitée au site, micro et géolocalisation désactivés), `Cache-Control: no-store` sur l'API, `noindex` sur l'espace DPAF, la plateforme des compagnies et le kiosque.
 
 ## Pont NFC local
 
@@ -107,7 +112,7 @@ Limite : une personne disposant d'un accès en écriture au stockage pourrait re
 | Guichet | MRZ, résultats de puce, scores visage et iris, nombre d'empreintes capturées | Images et gabarits biométriques |
 | App iPhone | MRZ de la puce, résultat de l'authentification passive, protocole | Photo de la puce (DG2) |
 | e-Visa (eKYC) | Indicateurs de qualité, d'authenticité et scores | Photos du document et selfie |
-| Passerelle transporteurs | — | Aucun résultat de ciblage n'est renvoyé à la compagnie |
+| Passerelle et plateforme des compagnies | Accusé de réception : référence, vol, passagers, complétude, ponctualité, erreurs | Aucun résultat de ciblage n'est renvoyé à la compagnie (ni nombre de passagers signalés, ni score, ni identifiant interne du vol) |
 
 ## Données personnelles : loi n° 2008-12
 
@@ -134,7 +139,7 @@ Le démonstrateur est hébergé sur Netlify (hors du territoire). Pour une explo
 
 - hébergement dans un **centre de données national** (par exemple Diamniadio) et site de secours **sur le territoire** ;
 - **aucune donnée biométrique hors du pays** ;
-- seuls le portail public et la passerelle transporteurs exposés, en DMZ derrière un CDN/WAF anti-DDoS ;
+- seuls le portail public, la plateforme des compagnies et la passerelle transporteurs exposés, en DMZ derrière un CDN/WAF anti-DDoS ;
 - clés et signatures dans un **HSM** ; sauvegardes chiffrées hors ligne ;
 - identité des agents par **OIDC, MFA et cartes agents PKI** ;
 - supervision **SIEM/SOC**, tests d'intrusion avant mise en service, tests de bascule semestriels.

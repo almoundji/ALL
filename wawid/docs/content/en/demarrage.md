@@ -1,29 +1,33 @@
 # Getting started with WawID
 
-WawID is the identity and border management platform: traveler checks at counters and eGates, intelligence (Threat Monitor, watchlists, targeting rules), airline passenger pre-screening (APIS / PNR), travel authorizations (e-Visa), the security fee paid by travelers (WawPass), the airline security fee and administration. This page introduces the interfaces, signing in, the roles and the elements shared by every back office screen.
+WawID is the identity and border management platform: traveler checks at counters and eGates, intelligence (Threat Monitor, watchlists, targeting rules), airline passenger pre-screening (APIS / PNR), travel authorizations (e-Visa), the security fee paid by travelers (WawPass), the airline security fee and administration. This page introduces the platforms, signing in, the roles and the elements shared by every screen of the DPAF space.
 
-## WawID interfaces
+## WawID platforms
 
-| Interface | Address | Users | Purpose |
+WawID is organized into **four separate platforms**. Each has its own address (and can be given its own domain name in production); none links to another restricted platform.
+
+| Platform | Address | Users | Purpose |
 | --- | --- | --- | --- |
-| Back office | `/admin/` | Border officers, intelligence analysts, supervisors, administrators, Treasury officers | Counter check, eGate supervision, intelligence, APIS, e-Visa, finance, administration |
-| Traveler portal | `/` | Travelers (public) | e-Visa application and tracking, WawPass payment, eGate pre-enrollment |
-| eGate kiosk | `/gate/` | Screen of automated gates and ABC kiosks | Self-service traveler journey (passport, chip, face, gate opening or referral) |
-| iPhone app | iOS app | Travelers | e-Visa application with NFC reading of the passport chip |
+| DPAF space | `/dpaf/` (alias of `/admin/`) | Border officers, intelligence analysts, supervisors, Treasury officers, administrators | Counter check, eGate supervision, intelligence, APIS, e-Visa, finance, administration |
+| Traveler platform | `/` (portal) and `/aide/` (public help) | Travelers (public) | e-Visa application and tracking, WawPass payment, eGate pre-enrollment, help center |
+| Mobile apps | `/app/` | Travelers | Download of the WawID e-Visa app: Android (direct APK download) and iPhone (TestFlight); e-Visa application with NFC reading of the passport chip |
+| Airline platform | `/compagnies/` | Airline staff | API / PNR data submission, acknowledgements, data quality, security fee invoices and payments (see *Airline platform*) |
 
-The back office runs in any recent browser (Chrome, Edge, Safari, Firefox). The **Traveler portal** and **Open eGate kiosk** links in the user menu open the other two interfaces in a new tab.
+In addition, the **eGate kiosk** (`/gate/`) is the screen of automated gates and ABC kiosks (self-service traveler journey: passport, chip, face, gate opening or referral).
+
+The DPAF space runs in any recent browser (Chrome, Edge, Safari, Firefox). The **Open eGate kiosk** link in the user menu opens the kiosk in a new tab. The traveler portal has no link to the DPAF space, and the DPAF space has no link to the portal.
 
 ## Signing in
 
-1. Open `/admin/` in your browser.
+1. Open `/dpaf/` in your browser (the former `/admin/` address still works).
 2. Enter the **Username** and **Password** provided by your administrator.
 3. Click **Sign in**.
 
-If the credentials are wrong, the message "Incorrect username or password" is displayed. Every attempt, successful or not, is written to the audit log, and failed attempts are deliberately slowed down to discourage repeated guessing.
+If the credentials are wrong, the message "Incorrect username or password" is displayed. An airline account is refused on the DPAF space with the message "This is an airline account: sign in on the airline platform." Every attempt, successful or not, is written to the audit log, and failed attempts are deliberately slowed down to discourage repeated guessing.
 
 To sign out, click your avatar (your initials, top right), then **Sign out**.
 
-> **Local demo**: the accounts `admin` (password `admin`) and `agent`, `analyste`, `superviseur`, `tresor` (password `demo`) are created automatically. In production, passwords are set by the administrator.
+> **Local demo**: the accounts `admin` (password `admin`) and `agent`, `analyste`, `superviseur`, `tresor` (password `demo`) are created automatically, as well as the airline accounts `airsenegal` and `airfrance` (password `demo`), which only work on `/compagnies/`. In production, passwords are set by the administrator.
 
 ### Session duration
 
@@ -54,7 +58,9 @@ In practice:
 - **Intelligence analyst**: handles alerts and cases, maintains watchlists and targeting rules, processes e-Visa applications and works with APIS / PNR data. Analysts do not perform counter checks.
 - **Supervisor**: has the rights of both the officer and the analyst, and controls eGates and ABC kiosks remotely (open, close, maintenance, settings).
 - **Administrator**: all rights, including user management, system settings and the finance module.
-- **Treasury officer**: read access and the **Security fee** module (invoices, collections, reconciliation, revenue split). No control actions.
+- **Treasury officer**: read access and the **Security fee** module (invoices, validation of payments declared by airlines, collections, transfers to the State, reconciliation, revenue split). No control actions.
+
+A sixth role, **Airline**, is reserved for the airline platform: it is bound to an airline's IATA code, does not open the DPAF space and only gives access to that airline's data.
 
 ## The home page
 
@@ -68,7 +74,7 @@ Applications are grouped into spaces, shown as tabs: **My home**, **Border contr
 
 Each tile opens an application and shows its title, a short description and, usually, a figure: for example **Dashboard** (crossings in the last 24 h), **eGates & ABC** (open gates out of the total), **Threat Monitor** (new alerts), **e-Visa** (applications to process) or **Airline invoices** (overdue invoices). A non-zero figure is shown in red (critical) or orange (warning) when the tile is set up that way. Data refreshes automatically every 30 seconds.
 
-Tiles with a **dashed border** are create tiles that start an action directly: **New check**, **Add an entry** (watchlist), **Receive a message** (APIS / PNR), **Create a user**. The **Traveler portal** and **eGate kiosk** tiles open those interfaces in a new tab.
+Tiles with a **dashed border** are create tiles that start an action directly: **New check**, **Add an entry** (watchlist), **Receive a message** (APIS / PNR), **Create a user**. The **eGate kiosk** tile opens the kiosk in a new tab.
 
 ### Personalizing the home page
 
@@ -88,7 +94,7 @@ Hidden tiles only disappear from **My home**: they remain available in their spa
 | Border post | Your assigned border post, preceded by a green dot (online) or a gray dot (offline). |
 | Theme (moon) | Switches between light and dark themes. |
 | Bell | Notifications of new alerts. |
-| Avatar | Name, role and border post; links to the eGate kiosk and the traveler portal; sign out. |
+| Avatar | Name, role and border post; link to the eGate kiosk; sign out. |
 
 ### Global search
 

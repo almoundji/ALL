@@ -1,6 +1,6 @@
 # API reference (airlines, devices, connectors)
 
-This page describes the WawID interfaces open to third-party systems: the traveler portal and iPhone app, the airline gateway (API/PNR), eGates and ABC kiosks, and the external connector contract.
+This page describes the WawID interfaces open to third-party systems: the traveler portal and iPhone app, the airline gateway (API/PNR) and the airline platform routes, eGates and ABC kiosks, and the external connector contract.
 
 ## General
 
@@ -18,11 +18,13 @@ This page describes the WawID interfaces open to third-party systems: the travel
 | Family | Authentication | Intended for |
 | --- | --- | --- |
 | `/api/public/*` | None | Traveler portal, iPhone app |
-| `/api/carrier/messages` | `X-Carrier-Key` header | Airlines |
+| `/api/carrier/messages` | `X-Carrier-Key` header | Airlines (systems) |
+| `/api/compagnie/*` | Session of an **Airline** account (signed cookie, signed in with `platform: "compagnies"`) | Airline platform (`/compagnies/`) |
 | `/api/gate/*` | `X-Gate-Key` header | eGates, ABC kiosks |
-| Other routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Officer session (signed cookie) | Back office only |
+| `/api/docs`, `/api/docs/:lang/:slug` | None for public pages; DPAF space session for internal pages | Help center |
+| Other routes (`/api/session`, `/api/data`, `/api/crossings`, `/api/evisas/…`, etc.) | Officer session (signed cookie) | DPAF space only |
 
-Back-office routes are not documented here: they require an authenticated session and a role with the matching permission, and they are not an integration interface.
+DPAF space routes are not documented here: they require an authenticated session and a role with the matching permission, and they are not an integration interface. An airline account has access to none of them (`403`), nor to the internal documentation pages (`403`; `401` without a session).
 
 ### Error format
 
@@ -36,7 +38,7 @@ Every error returns a JSON object with an `error` field:
 | --- | --- |
 | 400 | Invalid request (malformed JSON, missing or incorrect field) |
 | 401 | Invalid device key, carrier key or session |
-| 403 | Insufficient role (back office) |
+| 403 | Insufficient role (DPAF space), account refused on this platform, or internal documentation page requested by an airline account |
 | 404 | Resource not found or unknown route (`{"error":"Route inconnue"}`) |
 | 409 | Action not allowed in the current state (e.g. reply when no information is expected) |
 | 413 | Body too large |
@@ -287,10 +289,8 @@ PNRGOV (EDIFACT) messages are accepted after conversion by the integration servi
 {
   "status": "ACCEPTÉ AVEC AVERTISSEMENTS",
   "reference": "MSG-MH3K9Z01",
-  "flightId": "FL-MH3K9Z0A",
   "flight": "HC 404",
   "passengers": 3,
-  "flagged": 0,
   "completeness": 67,
   "onTime": true,
   "errors": ["PNR QX7K2P : passager 2 sans SSR DOCS"]
@@ -300,7 +300,7 @@ PNRGOV (EDIFACT) messages are accepted after conversion by the integration servi
 - `reference` identifies the message in the Passenger Information Unit log; keep it for any follow-up.
 - `completeness`: percentage of passengers with document number, date of birth and nationality. Target: **98% or more**.
 - `onTime`: whether the transmission deadline was met.
-- `flagged`: number of passengers flagged internally. **No targeting result is shared with the carrier**; this counter must not be used operationally.
+- **No targeting result is shared with the carrier**: the acknowledgment contains neither the number of flagged passengers nor the internal flight identifier. The pre-screening outcome stays in the DPAF space.
 
 API and PNR messages for the same flight are **merged** (matched on document number, otherwise on name).
 
@@ -321,6 +321,20 @@ curl -X POST https://wawid-waw-telecom.netlify.app/api/carrier/messages \
   -H "Content-Type: text/plain" \
   --data-binary @paxlst.edi
 ```
+
+## Airline platform: session routes
+
+These routes serve the *Airline platform* (`/compagnies/`). They require the session of an account with the **Airline** role, opened by `POST /api/session` with `{ "username": "…", "password": "…", "platform": "compagnies" }`, and only cover the account's airline (its IATA code). Any other account gets `403`. For system-to-system integration, use the `POST /api/carrier/messages` gateway.
+
+| Route | Purpose | Response |
+| --- | --- | --- |
+| `GET /api/compagnie/overview` | Airline overview | `carrier` (code, name), `flights` (last 200 flights: route, time, direction, sources, passengers, completeness, timeliness), `messages` (last 300 acknowledgments), `invoices` (security fee invoices and payments), `redevance` (`rateUSD`, `penaltyRate`, `circuit`, `beneficiary`) |
+| `GET /api/compagnie/flights/:id` | Details of one of the airline's flights | Flight and passenger list (`surname`, `given`, `docNo`, `nat`, `seat`, `missing`: missing fields among `docNo`, `dob`, `nat`); `404` for another airline's flight |
+| `POST /api/compagnie/messages` | Submission of a PAXLST or PNR message | Same body and same acknowledgment as the gateway (`202`, `422`) |
+| `GET /api/compagnie/samples` | Sample messages | `{ "PAXLST": "…", "PNR": "…" }` adapted to the airline code |
+| `POST /api/compagnie/payments` | Declaration of a security fee payment | Body `{ "invoiceId": "RS-…", "amount": 1000000, "ref": "VIR-…", "method": "Virement" }` (`method`: `Virement`, `SWIFT`, `Mobile money` or `Chèque`); returns the invoice with the payment in `DECLARE` status; `400` if the amount is invalid or the reference is missing, `404` if the invoice is not the airline's |
+
+None of these responses contains a pre-screening result (score, factors, flagged passengers). A declared payment stays in `DECLARE` status until the finance department validates it (`CONFIRME`) or rejects it (`REJETE`, with a `reason`); only `CONFIRME` payments settle the invoice.
 
 ## eGate and ABC kiosk devices
 

@@ -47,20 +47,27 @@ La tuile de l'accueil indique le nombre d'anomalies (équipements qui ne sont pa
 
 Les habilitations suivent le principe du moindre privilège. Les mots de passe sont hachés (scrypt) ; une session dure 12 heures ; chaque action est tracée.
 
-Le tableau des comptes affiche **Nom** (et identifiant), **Rôle**, **Poste**, **Dernière connexion** et **État** (**Actif** ou **Désactivé**).
+Le tableau des comptes affiche **Nom** (et identifiant), **Rôle** (avec, en dessous, la plateforme ouverte par le compte : **Espace DPAF** ou **Plateforme compagnies** suivie du nom de la compagnie), **Poste**, **Dernière connexion** et **État** (**Actif** ou **Désactivé**).
 
 ### Créer un utilisateur
 
 1. Cliquez sur **Nouvel utilisateur** (ou sur la tuile **Créer un utilisateur**).
 2. Saisissez le **Nom complet** et l'**Identifiant** : 3 à 40 caractères parmi a-z, 0-9, point, tiret bas et tiret ; il doit être unique.
 3. Choisissez le **Rôle** et le **Poste** de rattachement.
-4. Saisissez un **Mot de passe initial (10 caractères min.)**.
-5. Cliquez sur **Créer**.
+4. Pour un compte de compagnie aérienne uniquement, choisissez le rôle **Compagnie aérienne** et la compagnie dans **Compagnie aérienne (comptes « Compagnie aérienne » uniquement)** : ce choix est obligatoire pour ce rôle.
+5. Saisissez un **Mot de passe initial (10 caractères min.)**.
+6. Cliquez sur **Créer**.
+
+### Comptes des compagnies aériennes
+
+Le rôle **Compagnie aérienne** ouvre uniquement la *Plateforme des compagnies aériennes* (`/compagnies/`) ; il est refusé sur l'espace DPAF. Le compte est rattaché à une compagnie (code IATA) et ne voit que les vols, messages et factures de cette compagnie ; aucun résultat de pré-contrôle ni aucune page interne de la documentation ne lui est accessible. Créez un compte nominatif par utilisateur de la compagnie. Inversement, les comptes de la DPAF (agents, analystes, superviseurs, Trésor, administrateurs) n'ouvrent pas la plateforme des compagnies.
+
+Ce compte est distinct de la clé de passerelle `X-Carrier-Key` utilisée par les systèmes de la compagnie (variable `WAWID_CARRIER_KEYS`, voir *Déploiement et configuration*).
 
 ### Modifier ou désactiver un compte
 
 1. Cliquez sur **Modifier** sur la ligne du compte.
-2. Changez le **Rôle** ou le **Poste**, saisissez si besoin un nouveau mot de passe (laisser vide pour conserver l'actuel).
+2. Changez le **Rôle**, le **Poste** ou, pour un compte compagnie, la **Compagnie aérienne** ; saisissez si besoin un nouveau mot de passe (laisser vide pour conserver l'actuel).
 3. Décochez **Compte actif** pour désactiver le compte : l'utilisateur ne peut plus se connecter et sa session en cours est refusée. Cochez la case pour le réactiver.
 4. Cliquez sur **Enregistrer**.
 
@@ -68,22 +75,23 @@ Le tableau des comptes affiche **Nom** (et identifiant), **Rôle**, **Poste**, *
 
 ### Matrice des droits
 
-La matrice affichée sous le tableau reprend les droits de chaque rôle. Elle est complétée ici par le droit `finance`, qui n'y figure pas.
+La matrice affichée sous le tableau reprend les droits de chaque rôle, y compris **Redevance (finances)** et **Plateforme compagnies (sa compagnie)**.
 
-| Droit | Agent de contrôle | Analyste renseignement | Superviseur | Agent du Trésor (redevance) | Administrateur |
-|---|---|---|---|---|---|
-| Consultation (`read`) | Oui | Oui | Oui | Oui | Oui |
-| Contrôle guichet (`control`) | Oui | — | Oui | — | Oui |
-| Traitement des alertes (`alerts`) | Oui | Oui | Oui | — | Oui |
-| Dossiers (`cases`) | Oui | Oui | Oui | — | Oui |
-| Listes de surveillance (`watchlist`) | — | Oui | Oui | — | Oui |
-| Règles de ciblage (`rules`) | — | Oui | Oui | — | Oui |
-| APIS (`apis`) | — | Oui | Oui | — | Oui |
-| Décisions e-Visa (`evisa`) | — | Oui | Oui | — | Oui |
-| Pilotage eGates (`gates`) | — | — | Oui | — | Oui |
-| Utilisateurs (`users`) | — | — | — | — | Oui |
-| Paramètres système (`system`) | — | — | — | — | Oui |
-| Redevance (`finance`) | — | — | — | Oui | Oui |
+| Droit | Agent de contrôle | Analyste renseignement | Superviseur | Agent du Trésor (redevance) | Administrateur | Compagnie aérienne |
+|---|---|---|---|---|---|---|
+| Consultation (`read`) | Oui | Oui | Oui | Oui | Oui | — |
+| Contrôle guichet (`control`) | Oui | — | Oui | — | Oui | — |
+| Traitement des alertes (`alerts`) | Oui | Oui | Oui | — | Oui | — |
+| Dossiers (`cases`) | Oui | Oui | Oui | — | Oui | — |
+| Listes de surveillance (`watchlist`) | — | Oui | Oui | — | Oui | — |
+| Règles de ciblage (`rules`) | — | Oui | Oui | — | Oui | — |
+| APIS (`apis`) | — | Oui | Oui | — | Oui | — |
+| Décisions e-Visa (`evisa`) | — | Oui | Oui | — | Oui | — |
+| Pilotage eGates (`gates`) | — | — | Oui | — | Oui | — |
+| Utilisateurs (`users`) | — | — | — | — | Oui | — |
+| Paramètres système (`system`) | — | — | — | — | Oui | — |
+| Redevance (`finance`) | — | — | — | Oui | Oui | — |
+| Plateforme compagnies, sa compagnie (`carrier`) | — | — | — | — | — | Oui |
 
 Le droit **Consultation** donne accès en lecture aux tableaux de bord, passages, listes, règles, connecteurs, vols, e-Visa, supervision, journal d'audit et projet.
 
@@ -106,12 +114,12 @@ Le tableau affiche les 1 000 dernières entrées, la plus récente en premier : 
 
 | Domaine | Codes d'action |
 |---|---|
-| Sessions | `CONNEXION`, `ECHEC_CONNEXION`, `DECONNEXION` |
+| Sessions | `CONNEXION` (objet : espace DPAF ou plateforme compagnies), `ECHEC_CONNEXION` (y compris une connexion refusée sur une plateforme non autorisée pour le compte), `DECONNEXION` |
 | Contrôle | `PASSAGE_DECISION`, `EGATE_TRANSACTION`, `EGATE_REJET`, `EGATE_COMMANDE` |
 | Renseignement | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
 | Portail et e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT`, `WAWPASS_VALIDATION`, `PREENROLEMENT` |
-| Redevance | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PARAMETRES` |
+| Redevance | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (déclaration par une compagnie), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 
 Les mots de passe ne sont jamais écrits dans le journal : une modification de mot de passe est seulement mentionnée.

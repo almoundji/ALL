@@ -8,6 +8,7 @@ This page describes the WawID security model as implemented in the demonstrator,
 - **Traceability**: every sensitive action is written to a chained audit log.
 - **Minimization**: biometric images do not leave the workstation; only scores and flags are sent.
 - **Channel separation**: travelers (no account), officers (session), devices and airlines (separate keys).
+- **Separate platforms**: DPAF space (`/dpaf/`), traveler platform (`/`, `/aide/`), mobile apps (`/app/`) and airline platform (`/compagnies/`). An account only opens the platform of its role, and no public platform links to the DPAF space.
 
 ## Roles and permissions
 
@@ -17,21 +18,25 @@ This page describes the WawID security model as implemented in the demonstrator,
 | Intelligence analyst | `read`, `alerts`, `cases`, `watchlist`, `rules`, `apis`, `evisa` |
 | Supervisor | `read`, `control`, `alerts`, `cases`, `watchlist`, `rules`, `apis`, `evisa`, `gates` |
 | Treasury officer | `read`, `finance` |
-| Administrator | All permissions, including `users` and `system` |
+| Administrator | All DPAF space permissions, including `users`, `system` and `finance` |
+| Airline | `carrier` only (airline platform, limited to the account's airline) |
 
 | Permission | Allows |
 | --- | --- |
-| `read` | Viewing back-office data, verifying a QR code, reading the audit log |
+| `read` | Viewing DPAF space data, verifying a QR code, reading the audit log |
 | `control` | Assessing a traveler and recording a crossing decision |
 | `alerts`, `cases` | Handling alerts, opening and updating cases |
 | `watchlist`, `rules` | Managing watchlists and targeting rules, testing connectors |
 | `apis` | Loading manifests and API/PNR messages |
 | `evisa` | Processing e-Visa applications |
 | `gates` | Controlling and configuring eGates |
-| `finance` | Security fee (fee base, collections) |
+| `finance` | Security fee (fee base, collections, validation of payments declared by airlines, transfers to the State) |
+| `carrier` | Airline platform: flights, messages, invoices and payment declarations of **its own** airline (the account's IATA code) |
 | `users`, `system` | Managing accounts; settings, connectors, reset |
 
 A request without a valid session gets `401`; a session whose role lacks the permission gets `403`. An administrator cannot deactivate or demote their own account.
+
+Sign-in states the requested platform: an **Airline** account is refused (`403`) on the DPAF space and a DPAF account on the airline platform; the refusal is logged (`ECHEC_CONNEXION`). An airline account only sees its own airline's data, never pre-screening results, and has no access to internal documentation pages (reserved for DPAF space sessions).
 
 ## Officer authentication
 
@@ -46,7 +51,7 @@ A request without a valid session gets `401`; a session whose role lacks the per
 ### Passwords
 
 - **scrypt** hashing with a random 16-byte salt per account; constant-time comparison.
-- Minimum length of **10 characters** for accounts created or changed in the back office.
+- Minimum length of **10 characters** for accounts created or changed in the DPAF space.
 - Failed login: delayed response (about 0.7 s), generic message and an `ECHEC_CONNEXION` (failed login) audit entry.
 - Initial accounts are created from `WAWID_ADMIN_PASSWORD` (and `WAWID_DEMO_PASSWORD` if set) only when no account exists.
 
@@ -91,7 +96,7 @@ Limit: someone with write access to the storage could recompute the whole chain.
 
 ### HTTP headers
 
-`Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy` (camera limited to the site, microphone and geolocation disabled), `Cache-Control: no-store` on the API, `noindex` on the back office and kiosk.
+`Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy` (camera limited to the site, microphone and geolocation disabled), `Cache-Control: no-store` on the API, `noindex` on the DPAF space, the airline platform and the kiosk.
 
 ## Local NFC bridge
 
@@ -107,7 +112,7 @@ Limit: someone with write access to the storage could recompute the whole chain.
 | Counter | MRZ, chip results, face and iris scores, number of fingerprints captured | Biometric images and templates |
 | iPhone app | Chip MRZ, passive authentication result, protocol | Chip photo (DG2) |
 | e-Visa (eKYC) | Quality and authenticity flags, scores | Document photos and selfie |
-| Carrier gateway | — | No targeting result is returned to the airline |
+| Airline gateway and platform | Acknowledgment: reference, flight, passengers, completeness, timeliness, errors | No targeting result is returned to the airline (no number of flagged passengers, no score, no internal flight identifier) |
 
 ## Personal data: Law 2008-12
 
@@ -134,7 +139,7 @@ The demonstrator is hosted on Netlify (outside the country). For real operations
 
 - hosting in a **national data center** (for example Diamniadio) with a disaster recovery site **in the country**;
 - **no biometric data outside the country**;
-- only the public portal and the carrier gateway exposed, in a DMZ behind an anti-DDoS CDN/WAF;
+- only the public portal, the airline platform and the carrier gateway exposed, in a DMZ behind an anti-DDoS CDN/WAF;
 - keys and signatures in an **HSM**; encrypted offline backups;
 - officer identity through **OIDC, MFA and PKI officer cards**;
 - **SIEM/SOC** monitoring, penetration testing before go-live, failover tests twice a year.

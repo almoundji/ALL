@@ -12,6 +12,8 @@ Ce guide s'adresse aux voyageurs qui se rendent au Sénégal ou qui en partent. 
 
 Adresse du portail : `https://wawid-waw-telecom.netlify.app`
 
+La plateforme voyageurs comprend le portail (`/`) et le centre d'aide public (`/aide/`). Les applications mobiles se téléchargent sur la page `/app/` (lien **Application mobile** du portail) : Android par téléchargement direct de l'APK, iPhone par TestFlight. Les espaces des agents de la DPAF et des compagnies aériennes sont des plateformes distinctes, réservées à leurs utilisateurs ; le portail n'y donne pas accès.
+
 > Démonstrateur : sur la version de démonstration, **aucun paiement réel n'est effectué** et les données affichées sont fictives.
 
 ## Ai-je besoin d'un visa ?
@@ -140,7 +142,7 @@ Conditions : MRZ valide, voyageur **majeur**, passeport **non expiré**. Un pass
 
 ## L'application iPhone WawID e-Visa
 
-L'app permet de déposer une demande d'e-Visa en lisant directement la **puce électronique** de votre passeport, ce qui renforce la vérification et accélère l'instruction.
+L'app permet de déposer une demande d'e-Visa en lisant directement la **puce électronique** de votre passeport, ce qui renforce la vérification et accélère l'instruction. Elle s'installe depuis la page `/app/` du portail (iPhone : TestFlight ; une version Android est aussi proposée en téléchargement direct).
 
 ### Ce qu'il vous faut
 

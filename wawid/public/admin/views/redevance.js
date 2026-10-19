@@ -136,7 +136,7 @@ async function invoiceDialog(i, ctx, r) {
         <dt>Statut</dt><dd><span class="status ${STATUS[i.st.status]}">${i.st.status}</span></dd>
       </dl></div>
       ${i.payments.length ? `<h4 style="margin:14px 0 6px">Paiements</h4>${i.payments.map((p, k) => paymentLine(i, p, k, ctx)).join("")}` : ""}
-      ${ctx.can("finance") && i.st.due ? `<h4 style="margin:14px 0 6px">${operatorCircuit(r) ? "Enregistrer un encaissement (relevé du compte de collecte)" : "Enregistrer un encaissement (quittance du Trésor)"}</h4><div class="form-grid"><label class="field"><span>Montant (FCFA)</span><input class="input" name="amount" type="number" min="1" value="${i.st.due + i.st.penalty}"></label><label class="field"><span>Référence de quittance</span><input class="input" name="ref"></label></div>` : ""}`,
+      ${ctx.can("finance") && i.st.due ? `<h4 style="margin:14px 0 6px">${operatorCircuit(r) ? "Enregistrer un encaissement (relevé du compte de collecte)" : "Enregistrer un encaissement (quittance du Trésor)"}</h4><div class="form-grid"><label class="field"><span>Montant (FCFA)</span><input class="input" name="amount" type="number" min="1" value="${i.st.due + i.st.penalty}"></label><label class="field"><span>${operatorCircuit(r) ? "Référence du virement" : "Référence de quittance"}</span><input class="input" name="ref"></label></div>` : ""}`,
     actions: ctx.can("finance") && i.st.due ? [{ label: "Fermer", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "pay" }] : [{ label: "Fermer", value: null }],
     onMount: (d) => bindPaymentActions(d, ctx),
   });
@@ -162,7 +162,7 @@ function bindPaymentActions(root, ctx) {
     const [invoiceId, index, decision] = b.dataset.pay.split(":");
     let reason;
     if (decision === "REJETE") {
-      reason = prompt("Motif du rejet", "Non retrouvé sur le relevé du compte de collecte");
+      reason = prompt("Motif du rejet", "Paiement non retrouvé sur le relevé bancaire");
       if (reason === null) return;
     }
     try {
@@ -175,7 +175,7 @@ function bindPaymentActions(root, ctx) {
 
 function validations(body, ctx, invoices) {
   const rows = invoices.flatMap((i) => i.payments.map((p, k) => ({ i, p, k })).filter(({ p }) => p.status === "DECLARE"));
-  body.innerHTML = `<div class="msg info" style="margin-bottom:16px">${icon("info")}<span>Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé du compte de collecte ; seuls les paiements validés soldent les factures.</span></div>
+  body.innerHTML = `<div class="msg info" style="margin-bottom:16px">${icon("info")}<span>Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé bancaire ; seuls les paiements validés soldent les factures.</span></div>
   <section class="card">${rows.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Déclaré le</th><th>Compagnie</th><th>Facture</th><th>Référence</th><th>Mode</th><th class="num">Montant</th><th></th></tr></thead><tbody>
     ${rows.map(({ i, p, k }) => `<tr><td>${fmtDate(p.at)}</td><td>${esc(i.carrierName)}</td><td class="mono">${esc(i.id)}</td><td class="mono">${esc(p.ref)}</td><td>${esc(p.channel || "")}</td><td class="num"><b>${xof(p.amount)}</b></td><td>${paymentActions(i, p, k, ctx)}</td></tr>`).join("")}
   </tbody></table></div>` : `<div class="empty">${icon("checkCircle")}<p>Aucun paiement en attente de validation.</p></div>`}</section>`;

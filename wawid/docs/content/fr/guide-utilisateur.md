@@ -6,7 +6,7 @@ Ce guide décrit, profil par profil, ce que chaque utilisateur de WawID voit et 
 
 ## Démarrage rapide
 
-Chaque utilisateur du back-office (`/admin/`) a **un seul rôle**, attribué par l'administrateur. Le rôle détermine les tuiles visibles sur la page d'accueil et les actions autorisées.
+Chaque utilisateur de l'espace DPAF (`/dpaf/`) a **un seul rôle**, attribué par l'administrateur. Le rôle détermine les tuiles visibles sur la page d'accueil et les actions autorisées.
 
 | Profil | Rôle WawID | Tuiles principales | Pages de référence |
 | --- | --- | --- | --- |
@@ -15,8 +15,8 @@ Chaque utilisateur du back-office (`/admin/`) a **un seul rôle**, attribué par
 | Analyste renseignement | Analyste renseignement | **Threat Monitor**, **Dossiers**, **Listes de surveillance**, **Règles de ciblage**, **Connecteurs**, **Vols annoncés**, **e-Visa** | *Threat Monitor, dossiers, listes, règles et connecteurs* ; *APIS et PNR* ; *e-Visa, WawPass et pré-enrôlements* |
 | Superviseur de poste (chef de vacation) | Superviseur | **Tableau de bord**, **Threat Monitor**, **Dossiers**, **eGates & ABC**, **Contrôle guichet**, **Journal d'audit** | *Tableau de bord* ; *Comprendre le score de risque* |
 | Administrateur | Administrateur | **Utilisateurs & rôles**, **Créer un utilisateur**, **Paramètres**, **Journal d'audit**, **Supervision systèmes**, **Connecteurs** | *Administration (équipements, utilisateurs, audit, paramètres)* ; *Déploiement et configuration* |
-| Agent du Trésor | Agent du Trésor (redevance) | **Redevance de sécurité**, **Factures compagnies**, **Rapprochement**, **Répartition** | *Redevance de sécurité* |
-| Compagnie aérienne | Aucun compte : clé de passerelle | Pas d'accès au back-office ; envoi des messages à `/api/carrier/messages` | *Référence API (compagnies, équipements, connecteurs)* ; *APIS et PNR* |
+| Agent du Trésor | Agent du Trésor (redevance) | **Redevance de sécurité**, **Factures compagnies**, **Paiements à valider**, **Reversements à l'État**, **Rapprochement**, **Répartition** | *Redevance de sécurité* |
+| Compagnie aérienne | Compagnie aérienne (compte rattaché à un code IATA) et clé de passerelle | Plateforme des compagnies (`/compagnies/`) : **Tableau de bord**, **Transmettre**, **Messages**, **Vols**, **Redevance**, **API** ; pas d'accès à l'espace DPAF ; transmission automatique à `/api/carrier/messages` | *Plateforme des compagnies aériennes* ; *Référence API (compagnies, équipements, connecteurs)* |
 | Voyageur | Aucun compte | Portail voyageur (`/`), application mobile WawID e-Visa (iPhone et Android) | *Guide du voyageur (portail et app iPhone)* |
 
 Un même agent peut avoir besoin de deux profils (par exemple un superviseur qui supervise aussi les eGates) : le rôle **Superviseur** couvre les deux. Le rôle **Analyste renseignement** ne permet pas de contrôle au guichet ; le rôle **Agent du Trésor (redevance)** ne donne accès à aucune action de contrôle.
@@ -26,7 +26,7 @@ Un même agent peut avoir besoin de deux profils (par exemple un superviseur qui
 Avant votre première vacation sur WawID, vérifiez les points suivants avec votre chef de poste ou l'administrateur.
 
 1. Vous avez reçu votre **Identifiant** et un **mot de passe initial** par un canal remis en main propre (jamais par un message partagé).
-2. Vous vous connectez sur `/admin/` et la page d'accueil affiche « Bonjour » suivi de votre prénom.
+2. Vous vous connectez sur `/dpaf/` et la page d'accueil affiche « Bonjour » suivi de votre prénom.
 3. Votre **rôle** et votre **poste** affichés dans le menu de l'avatar sont corrects (par exemple « Agent de contrôle », poste AIBD). Sinon, signalez-le à l'administrateur avant toute opération : le poste est enregistré avec chaque passage.
 4. Le point devant le nom du poste, dans la barre supérieure, est **vert** (connecté).
 5. Vous retrouvez les tuiles de votre profil (voir le tableau ci-dessus) dans **Mon accueil**.
@@ -54,7 +54,7 @@ Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle fro
 
 ### Prise de service
 
-1. Connectez-vous sur `/admin/` et vérifiez votre poste dans la barre supérieure.
+1. Connectez-vous sur `/dpaf/` et vérifiez votre poste dans la barre supérieure.
 2. Ouvrez le **Threat Monitor**, onglet **Nouvelles**, pour prendre connaissance des alertes en cours sur votre poste (par exemple les passagers signalés d'un vol attendu).
 3. Vérifiez auprès du chef de vacation les consignes du jour (vols à surveiller, eGates fermées, sources indisponibles).
 4. Faites un contrôle d'essai si le chef de poste le demande (scénario **Passeport valide**) pour vérifier lecteur, puce et caméra, sans valider la décision.
@@ -221,22 +221,27 @@ Le rôle **Administrateur** dispose de tous les droits, dont **Utilisateurs & r�
 
 ### Ce que vous voyez
 
-Le rôle **Agent du Trésor (redevance)** affiche l'espace **Finances** : **Redevance de sécurité** (synthèse), **Factures compagnies**, **Rapprochement**, **Répartition** et **Simulateur de modèle**. Vous pouvez enregistrer des encaissements et exporter ; vous ne pouvez pas modifier les paramètres de la redevance (taux, part opérateur, pénalité, taux IATA), réservés à l'administrateur.
+Le rôle **Agent du Trésor (redevance)** affiche l'espace **Finances** : **Redevance de sécurité** (synthèse), **Factures compagnies**, **Paiements à valider**, **Reversements à l'État**, **Rapprochement**, **Répartition** et **Simulateur de modèle**. Vous pouvez valider ou rejeter les paiements déclarés par les compagnies, enregistrer des encaissements et des reversements à l'État, et exporter ; vous ne pouvez pas modifier les paramètres de la redevance (taux, part opérateur, pénalité, taux IATA, circuit de recouvrement), réservés à l'administrateur.
+
+Par défaut, WawID applique le circuit « compagnies → WawID → Trésor public » : les compagnies paient WawID (compte de collecte) et WawID reverse la part de l'État au Receveur général du Trésor. Ce circuit diffère du cadre en vigueur (décret n° 2012-519, décision du 4 décembre 2012) et suppose un nouveau texte réglementaire et une convention de mandat d'encaissement avec l'État ; voir *Redevance de sécurité*, « Circuit de recouvrement ».
 
 ### Calendrier mensuel
 
-Le calendrier suit l'arrêté interministériel du 3 février 2012 et le décret n° 2012-519 :
+Le calendrier suit l'arrêté interministériel du 3 février 2012 ; les étapes de paiement dépendent du circuit de recouvrement :
 
 1. **Du 1er au 9 du mois M+1** : collecte des statistiques (déclarations des compagnies et comptage WawID). Consultez **Assiette du mois en cours (WawID)** pour une première estimation.
 2. **Le 10 du mois M+1** : émission des factures en FCFA au taux IATA du mois M. Vérifiez dans **Factures compagnies** que chaque compagnie a sa facture `RS-AAAAMM-XX`.
-3. **Pendant le mois M+1** : à réception de chaque quittance du Receveur général du Trésor, enregistrez l'encaissement.
-4. **Fin du mois M+1** : échéance. Les factures non soldées passent **EN RETARD** ; la pénalité de 5 % par mois de retard s'applique au reste dû.
-5. **Chaque mois** : examinez l'onglet **Rapprochement** et exportez les données (**Exporter**) pour la comptabilité publique.
+3. **Pendant le mois M+1** : les compagnies déclarent leurs virements sur leur plateforme ; dans **Paiements à valider**, rapprochez chaque déclaration du relevé du compte de collecte, puis **Valider** ou **Rejeter** (avec un motif). Dans le circuit `TRESOR`, enregistrez aussi l'encaissement à réception de chaque quittance du Receveur général du Trésor.
+4. **Fin du mois M+1** : échéance. Les factures non soldées par des paiements validés passent **EN RETARD** ; la pénalité de 5 % par mois de retard s'applique au reste dû.
+5. **Le 15 du mois M+2** (circuit `OPERATEUR`) : dans **Reversements à l'État**, enregistrez le virement de la part de l'État au Receveur général du Trésor avec sa référence.
+6. **Chaque mois** : examinez l'onglet **Rapprochement** et exportez les données (**Exporter**) pour la comptabilité publique.
 
 ### Enregistrer un encaissement
 
+Pour un paiement que la compagnie n'a pas déclaré sur sa plateforme :
+
 1. Ouvrez **Factures compagnies** et cliquez sur la facture.
-2. Dans **Enregistrer un encaissement (quittance du Trésor)**, vérifiez le montant (prérempli avec le reste dû et les pénalités) et corrigez-le si la quittance porte un autre montant.
+2. Dans **Enregistrer un encaissement (relevé du compte de collecte)** ou **Enregistrer un encaissement (quittance du Trésor)** selon le circuit, vérifiez le montant (prérempli avec le reste dû et les pénalités) et corrigez-le si le relevé ou la quittance porte un autre montant.
 3. Saisissez la **Référence de quittance** exacte.
 4. Cliquez sur **Enregistrer**.
 
@@ -244,7 +249,8 @@ Le calendrier suit l'arrêté interministériel du 3 février 2012 et le décret
 
 | Situation | Que faire |
 | --- | --- |
-| Paiement partiel | Enregistrez le montant réellement encaissé : la facture passe **PARTIELLE** et le reste dû est conservé. |
+| Paiement partiel | Validez le paiement déclaré (ou enregistrez le montant réellement encaissé) : la facture passe **PARTIELLE** et le reste dû est conservé. |
+| Paiement déclaré introuvable sur le relevé | **Rejetez**-le avec un motif précis ; la compagnie voit le motif et peut déclarer à nouveau avec la bonne référence. |
 | Écart supérieur à 3 % entre comptage WawID et déclaration | La ligne apparaît en rouge dans **Rapprochement**. Constituez le dossier (mois, compagnie, écart, montant non facturé) pour le contrôle et le contentieux de la DGCPT. |
 | Compagnie contestant une pénalité | Vérifiez la date d'échéance, les dates d'encaissement et le détail de la facture ; la décision relève de la DGCPT. |
 | Erreur de saisie d'un encaissement | Un encaissement enregistré ne peut être ni modifié ni supprimé dans cette version (et un montant négatif est refusé). Ne ressaisissez pas : signalez l'erreur par écrit à l'administrateur et au comptable, avec la référence de la facture ; l'entrée reste visible dans le journal d'audit. |
@@ -253,12 +259,12 @@ Le calendrier suit l'arrêté interministériel du 3 février 2012 et le décret
 
 ## Compagnie aérienne (transmission API et PNR)
 
-Les compagnies n'ont pas de compte dans le back-office. Elles transmettent leurs messages à la passerelle transporteurs avec une clé propre, liée à leur code IATA.
+Les compagnies n'ont pas accès à l'espace DPAF. Elles disposent de la **plateforme des compagnies aériennes** (`/compagnies/`), avec des comptes du rôle **Compagnie aérienne** rattachés à leur code IATA : transmission manuelle des messages, accusés de réception, complétude par vol, factures de redevance et déclaration des paiements (voir *Plateforme des compagnies aériennes*). Leurs systèmes transmettent aussi les messages à la passerelle transporteurs avec une clé propre, liée à leur code IATA.
 
 ### Raccordement
 
 1. La compagnie désigne un correspondant technique et un correspondant sûreté.
-2. L'administration lui remet sa clé `X-Carrier-Key` par un canal sûr.
+2. L'administrateur crée ses comptes utilisateurs (rôle **Compagnie aérienne**, compagnie choisie dans la liste) et l'administration lui remet sa clé `X-Carrier-Key` par un canal sûr.
 3. La compagnie envoie des messages d'essai (PAXLST et PNR) sur l'environnement indiqué par l'administration et vérifie la réponse **202** et la référence `MSG-…`.
 4. L'analyste confirme la bonne réception dans **Passerelle transporteurs** (statut **ACCEPTÉ**, complétude).
 
@@ -266,7 +272,7 @@ Les compagnies n'ont pas de compte dans le back-office. Elles transmettent leurs
 
 1. **PNR** : à H-48 puis à H-24 avant le départ prévu.
 2. **API (PAXLST)** : à la clôture de l'enregistrement, au plus tard à la fermeture des portes.
-3. Conservez la référence `MSG-…` de chaque accusé.
+3. Conservez la référence `MSG-…` de chaque accusé ; tous les accusés restent consultables dans l'écran **Messages** de la plateforme des compagnies.
 
 ### Situations courantes
 
@@ -278,7 +284,7 @@ Les compagnies n'ont pas de compte dans le back-office. Elles transmettent leurs
 | Vol marqué « transmission tardive » | Message reçu hors délai | Revoir le calendrier d'envoi ; objectif de ponctualité : 95 % des vols. |
 | Statut **À relancer** | Ponctualité inférieure à 95 % ou complétude inférieure à 98 % | Plan de correction avec l'administration. |
 
-Aucun résultat de ciblage n'est renvoyé à la compagnie.
+Aucun résultat de ciblage n'est renvoyé à la compagnie : ni sur la plateforme, ni dans l'accusé de réception de la passerelle (pas de nombre de passagers signalés).
 
 ## Voyageur
 

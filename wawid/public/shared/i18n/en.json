@@ -412,7 +412,7 @@
 "Enfants 0-2 ans": "Children 0-2 years",
 "Enregistrements": "Records",
 "Enregistrer": "Save",
-"Enregistrer un encaissement (quittance du Trésor)": "Record a collection (Treasury receipt)",
+"Enregistrer un encaissement (quittance du Trésor)": "Record a payment (Treasury receipt)",
 "Entretien enregistré": "Interview recorded",
 "Entretien et vérifications approfondies": "Interview and in-depth checks",
 "Entretien structuré": "Structured interview",
@@ -1636,5 +1636,7 @@
 "Redevance (finances)": "Security fee (finance)",
 "Plateforme compagnies (sa compagnie)": "Airline platform (own airline)",
 "Page réservée aux agents connectés": "Page restricted to signed-in officers",
-"Agents de la DPAF : la documentation complète est disponible dans l'espace DPAF.": "DPAF officers: the full documentation is available in the DPAF space."
+"Agents de la DPAF : la documentation complète est disponible dans l'espace DPAF.": "DPAF officers: the full documentation is available in the DPAF space.",
+"Paiement non retrouvé sur le relevé bancaire": "Payment not found on the bank statement",
+"Paiements déclarés par les compagnies sur leur plateforme. Validez-les après rapprochement avec le relevé bancaire ; seuls les paiements validés soldent les factures.": "Payments declared by airlines on their platform. Validate them after reconciliation with the bank statement; only validated payments settle invoices."
 }

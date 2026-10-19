@@ -52,7 +52,7 @@ Un vol dont les données arrivent hors délai est marqué « transmission tardiv
 
 | Code | Signification | Corps |
 | --- | --- | --- |
-| 202 | Accepté (éventuellement avec avertissements) | `{ status, reference, flightId, flight, passengers, flagged, completeness, onTime, errors[] }` |
+| 202 | Accepté (éventuellement avec avertissements) | `{ status, reference, flight, passengers, completeness, onTime, errors[] }` — le résultat du pré-contrôle n'est jamais communiqué |
 | 422 | Rejeté (format inconnu, vol absent, aucun passager, vol d'une autre compagnie) | `{ status: "REJETÉ", reference, errors[] }` |
 | 401 | Clé transporteur invalide | — |
 | 413 | Message trop volumineux | — |

@@ -6,7 +6,7 @@ Cette page s'adresse aux équipes techniques (développement, exploitation, int�
 
 | Composant | Emplacement | Rôle |
 | --- | --- | --- |
-| Interfaces web | `wawid/public/` | Portail voyageur (`/`), back-office (`/admin/`), kiosque eGate (`/gate/`) |
+| Interfaces web | `wawid/public/` | Portail voyageur (`/`), aide (`/aide/`), applications mobiles (`/app/`), espace DPAF (`/dpaf/`, alias de `/admin/`), plateforme des compagnies (`/compagnies/`), kiosque eGate (`/gate/`) |
 | API | `wawid/netlify/functions/api.mts` | Fonction unique routée sur `/api/*` |
 | Bibliothèques serveur | `wawid/netlify/lib/` | `auth.mts` (comptes, sessions, clés), `store.mts` (stockage, audit), `carrier.mts` (API/PNR), `connectors.mts`, `seed.mts` (jeu de démonstration) |
 | Moteur métier | `wawid/public/shared/engine.js` | MRZ, score de risque, décision eGate (partagé navigateur et serveur) |
@@ -34,7 +34,9 @@ Le serveur de développement (`dev-server.mjs`) sert les fichiers de `public/` e
 | URL locale | Interface |
 | --- | --- |
 | `http://localhost:8888/` | Portail voyageur |
-| `http://localhost:8888/admin/` | Back-office |
+| `http://localhost:8888/dpaf/` | Espace DPAF (alias de `/admin/`) |
+| `http://localhost:8888/compagnies/` | Plateforme des compagnies aériennes |
+| `http://localhost:8888/app/` | Applications mobiles |
 | `http://localhost:8888/gate/` | Kiosque eGate |
 
 ### Comptes et clés en local

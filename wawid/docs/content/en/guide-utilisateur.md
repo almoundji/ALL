@@ -6,7 +6,7 @@ This guide describes, profile by profile, what each WawID user sees and does day
 
 ## Quick start
 
-Each back office user (`/admin/`) has **a single role**, assigned by the administrator. The role determines the tiles visible on the home page and the actions allowed.
+Each DPAF space user (`/dpaf/`) has **a single role**, assigned by the administrator. The role determines the tiles visible on the home page and the actions allowed.
 
 | Profile | WawID role | Main tiles | Reference pages |
 | --- | --- | --- | --- |
@@ -15,8 +15,8 @@ Each back office user (`/admin/`) has **a single role**, assigned by the adminis
 | Intelligence analyst | Intelligence analyst | **Threat Monitor**, **Cases**, **Watchlists**, **Targeting rules**, **Connectors**, **Announced flights**, **e-Visa** | *Threat Monitor, cases, watchlists, rules and connectors*; *APIS and PNR*; *e-Visa, WawPass and pre-enrollments* |
 | Post supervisor (shift leader) | Supervisor | **Dashboard**, **Threat Monitor**, **Cases**, **eGates & ABC**, **Counter check**, **Audit log** | *Dashboard*; *Understanding the risk score* |
 | Administrator | Administrator | **Users & roles**, **Create a user**, **Settings**, **Audit log**, **System monitoring**, **Connectors** | *Administration (devices, users, audit, settings)*; *Deployment and configuration* |
-| Treasury officer | Treasury officer (fee) | **Security fee**, **Airline invoices**, **Reconciliation**, **Revenue split** | *Security fee* |
-| Airline | No account: gateway key | No back office access; messages sent to `/api/carrier/messages` | *API reference (airlines, devices, connectors)*; *APIS and PNR* |
+| Treasury officer | Treasury officer (fee) | **Security fee**, **Airline invoices**, **Payments to validate**, **Transfers to the State**, **Reconciliation**, **Revenue split** | *Security fee* |
+| Airline | Airline (account bound to an IATA code) and gateway key | Airline platform (`/compagnies/`): **Dashboard**, **Submit**, **Messages**, **Flights**, **Security fee**, **API**; no access to the DPAF space; automatic submission to `/api/carrier/messages` | *Airline platform*; *API reference (airlines, devices, connectors)* |
 | Traveler | No account | Traveler portal (`/`), WawID e-Visa mobile app (iPhone and Android) | *Traveler guide (portal and iPhone app)* |
 
 The same person may need two profiles (for example a supervisor who also oversees the eGates): the **Supervisor** role covers both. The **Intelligence analyst** role does not allow counter checks; the **Treasury officer (fee)** role gives access to no control action.
@@ -26,7 +26,7 @@ The same person may need two profiles (for example a supervisor who also oversee
 Before your first shift on WawID, check the following with your post chief or the administrator.
 
 1. You have received your **Username** and an **initial password** through a channel handed to you in person (never through a shared message).
-2. You can sign in at `/admin/` and the home page shows "Hello" followed by your first name.
+2. You can sign in at `/dpaf/` and the home page shows "Hello" followed by your first name.
 3. Your **role** and **post** shown in the avatar menu are correct (for example "Border officer", post AIBD). Otherwise, report it to the administrator before doing anything: the post is recorded with every crossing.
 4. The dot in front of the post name, in the top bar, is **green** (connected).
 5. You can find the tiles of your profile (see the table above) in **My home**.
@@ -54,7 +54,7 @@ With the **Border officer** role, the home page shows the **Border control** spa
 
 ### Starting your shift
 
-1. Sign in at `/admin/` and check your post in the top bar.
+1. Sign in at `/dpaf/` and check your post in the top bar.
 2. Open the **Threat Monitor**, **New** tab, to review current alerts for your post (for example flagged passengers on an expected flight).
 3. Check the day's instructions with the shift leader (flights to watch, closed eGates, unavailable sources).
 4. Run a test check if the post chief asks for it (**Valid passport** scenario) to verify reader, chip and camera, without confirming the decision.
@@ -221,22 +221,27 @@ The **Administrator** role has every right, including **Users & roles**, **Setti
 
 ### What you see
 
-The **Treasury officer (fee)** role displays the **Finance** space: **Security fee** (summary), **Airline invoices**, **Reconciliation**, **Revenue split** and **Model simulator**. You can record collections and export; you cannot change the fee settings (rate, operator share, penalty, IATA rate), which are reserved for the administrator.
+The **Treasury officer (fee)** role displays the **Finance** space: **Security fee** (summary), **Airline invoices**, **Payments to validate**, **Transfers to the State**, **Reconciliation**, **Revenue split** and **Model simulator**. You can validate or reject the payments declared by airlines, record collections and transfers to the State, and export; you cannot change the fee settings (rate, operator share, penalty, IATA rate, collection flow), which are reserved for the administrator.
+
+By default, WawID applies the "airlines → WawID → Public Treasury" flow: airlines pay WawID (collection account) and WawID transfers the State's share to the Receiver General of the Treasury. This flow differs from the current legal framework (Decree No. 2012-519, decision of 4 December 2012) and requires a new regulatory text and a collection-mandate agreement with the State; see *Security fee*, "Collection flow".
 
 ### Monthly calendar
 
-The calendar follows the interministerial order of 3 February 2012 and Decree No. 2012-519:
+The calendar follows the interministerial order of 3 February 2012; the payment steps depend on the collection flow:
 
 1. **From the 1st to the 9th of month M+1**: statistics collection (airline declarations and WawID count). Use **Current month fee base (WawID)** for a first estimate.
 2. **On the 10th of month M+1**: invoices issued in FCFA at the IATA rate of month M. Check in **Airline invoices** that each airline has its `RS-YYYYMM-XX` invoice.
-3. **During month M+1**: on receipt of each receipt from the Receiver General of the Treasury, record the collection.
-4. **End of month M+1**: due date. Unpaid invoices become **EN RETARD** (overdue); the 5% penalty per month of delay applies to the remaining balance.
-5. **Every month**: review the **Reconciliation** tab and export the data (**Export**) for public accounting.
+3. **During month M+1**: airlines declare their transfers on their platform; in **Payments to validate**, match each declaration against the collection account statement, then **Validate** or **Reject** (with a reason). In the `TRESOR` flow, also record the collection on receipt of each receipt from the Receiver General of the Treasury.
+4. **End of month M+1**: due date. Invoices not settled by validated payments become **EN RETARD** (overdue); the 5% penalty per month of delay applies to the remaining balance.
+5. **15th of month M+2** (`OPERATEUR` flow): in **Transfers to the State**, record the transfer of the State's share to the Receiver General of the Treasury with its reference.
+6. **Every month**: review the **Reconciliation** tab and export the data (**Export**) for public accounting.
 
 ### Recording a collection
 
+For a payment the airline did not declare on its platform:
+
 1. Open **Airline invoices** and click the invoice.
-2. In **Record a collection (Treasury receipt)**, check the amount (prefilled with the remaining balance and penalties) and correct it if the receipt shows a different amount.
+2. In **Record a payment (collection account statement)** or **Record a collection (Treasury receipt)** depending on the flow, check the amount (prefilled with the remaining balance and penalties) and correct it if the statement or receipt shows a different amount.
 3. Enter the exact **Receipt reference**.
 4. Click **Save**.
 
@@ -244,7 +249,8 @@ The calendar follows the interministerial order of 3 February 2012 and Decree No
 
 | Situation | What to do |
 | --- | --- |
-| Partial payment | Record the amount actually collected: the invoice becomes **PARTIELLE** (partial) and the remaining balance is kept. |
+| Partial payment | Validate the declared payment (or record the amount actually collected): the invoice becomes **PARTIELLE** (partial) and the remaining balance is kept. |
+| Declared payment not found on the statement | **Reject** it with a precise reason; the airline sees the reason and can declare again with the correct reference. |
 | Gap above 3% between WawID count and declaration | The line is shown in red in **Reconciliation**. Build the file (month, airline, gap, unbilled amount) for DGCPT control and litigation. |
 | Airline disputing a penalty | Check the due date, collection dates and invoice details; the decision lies with the DGCPT. |
 | Collection entered by mistake | A recorded collection can be neither edited nor deleted in this version (and a negative amount is refused). Do not re-enter it: report the error in writing to the administrator and the accountant, with the invoice reference; the entry remains visible in the audit log. |
@@ -253,12 +259,12 @@ The calendar follows the interministerial order of 3 February 2012 and Decree No
 
 ## Airline (API and PNR transmission)
 
-Airlines have no back office account. They send their messages to the carrier gateway with their own key, bound to their IATA code.
+Airlines have no access to the DPAF space. They use the **airline platform** (`/compagnies/`), with accounts of the **Airline** role bound to their IATA code: manual message submission, acknowledgements, completeness per flight, security fee invoices and payment declaration (see *Airline platform*). Their systems also send messages to the carrier gateway with their own key, bound to their IATA code.
 
 ### Onboarding
 
 1. The airline appoints a technical contact and a security contact.
-2. The administration hands over its `X-Carrier-Key` through a secure channel.
+2. The administrator creates its user accounts (role **Airline**, airline selected from the list) and the administration hands over its `X-Carrier-Key` through a secure channel.
 3. The airline sends test messages (PAXLST and PNR) to the environment indicated by the administration and checks the **202** response and the `MSG-…` reference.
 4. The analyst confirms receipt in **Carrier gateway** (**ACCEPTÉ** (accepted) status, completeness).
 
@@ -266,7 +272,7 @@ Airlines have no back office account. They send their messages to the carrier ga
 
 1. **PNR**: at H-48 then H-24 before scheduled departure.
 2. **API (PAXLST)**: at check-in closure, at the latest when the doors close.
-3. Keep the `MSG-…` reference of each acknowledgment.
+3. Keep the `MSG-…` reference of each acknowledgment; all acknowledgements remain available in the **Messages** screen of the airline platform.
 
 ### Common situations
 
@@ -278,7 +284,7 @@ Airlines have no back office account. They send their messages to the carrier ga
 | Flight marked "late transmission" | Message received after the deadline | Review the sending schedule; punctuality target: 95% of flights. |
 | **Follow up** status | Punctuality below 95% or completeness below 98% | Corrective plan with the administration. |
 
-No targeting result is ever sent back to the airline.
+No targeting result is ever sent back to the airline: neither on the platform nor in the gateway acknowledgement (no number of flagged passengers).
 
 ## Traveler
 

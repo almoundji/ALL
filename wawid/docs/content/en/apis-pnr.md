@@ -63,7 +63,7 @@ The **Carrier gateway** tab shows the message journal and the **Airline connecti
 
 ### Message journal
 
-Columns: **Received**, **Format** (`PAXLST`, `PNR` or `INCONNU` for unknown), **Flight** (and source: airline gateway or manual upload), **Passengers**, **Flagged** (score ≥ 35), **Completeness**, **Status**. Click an accepted message to open the flight.
+Columns: **Received**, **Format** (`PAXLST`, `PNR` or `INCONNU` for unknown), **Flight** (and source: airline gateway, airline platform — "Portail compagnie" — or manual upload), **Passengers**, **Flagged** (score ≥ 35, visible only in the DPAF space), **Completeness**, **Status**. Click an accepted message to open the flight.
 
 | Status (as stored) | Meaning |
 |---|---|
@@ -77,9 +77,10 @@ Columns: **Received**, **Format** (`PAXLST`, `PNR` or `INCONNU` for unknown), **
 
 - **Access point**: `POST https://<domain>/api/carrier/messages`
 - **Authentication**: `X-Carrier-Key` header, one key per airline, set in the `WAWID_CARRIER_KEYS` variable (e.g. `HC:key1,AF:key2`). The key is bound to the IATA code: a message about another airline's flight is rejected.
-- **Responses**: 202 and an acknowledgment (`MSG-…` reference, passengers, flagged, completeness, timeliness); 422 when rejected; 401 when the key is invalid.
+- **Responses**: 202 and an acknowledgment (`MSG-…` reference, flight, passengers, completeness, timeliness, warnings); 422 when rejected; 401 when the key is invalid. The acknowledgment contains **neither the number of flagged passengers nor the internal flight identifier**: no pre-screening result is disclosed to the airline.
+- **Airline platform** (`/compagnies/`): each airline also has accounts with the **Airline** role to submit messages manually, read its acknowledgments, and track the completeness of its flights and its security fee. Messages sent from the platform appear in this log with the source "Portail compagnie" and are processed exactly like gateway messages.
 
-The full specification for airlines is in `docs/API-TRANSPORTEURS.md` and on the *API reference* page.
+The full specification for airlines is in `docs/API-TRANSPORTEURS.md` and on the *API reference* and *Airline platform* pages.
 
 ### Receive an API / PNR message manually
 

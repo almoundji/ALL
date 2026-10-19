@@ -35,6 +35,11 @@
     Content-Disposition = "attachment; filename=WawID-eVisa-android.apk"
 
 [[headers]]
+  for = "/dpaf/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
   for = "/compagnies/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"

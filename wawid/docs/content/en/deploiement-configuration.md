@@ -6,7 +6,7 @@ This page is for technical teams (development, operations, integration). It cove
 
 | Component | Location | Role |
 | --- | --- | --- |
-| Web interfaces | `wawid/public/` | Traveler portal (`/`), back office (`/admin/`), eGate kiosk (`/gate/`) |
+| Web interfaces | `wawid/public/` | Traveler portal (`/`), help (`/aide/`), mobile apps (`/app/`), DPAF space (`/dpaf/`, alias of `/admin/`), airline platform (`/compagnies/`), eGate kiosk (`/gate/`) |
 | API | `wawid/netlify/functions/api.mts` | Single function routed on `/api/*` |
 | Server libraries | `wawid/netlify/lib/` | `auth.mts` (accounts, sessions, keys), `store.mts` (storage, audit), `carrier.mts` (API/PNR), `connectors.mts`, `seed.mts` (demo data set) |
 | Business engine | `wawid/public/shared/engine.js` | MRZ, risk score, eGate decision (shared by browser and server) |
@@ -34,7 +34,9 @@ The development server (`dev-server.mjs`) serves the files in `public/` and forw
 | Local URL | Interface |
 | --- | --- |
 | `http://localhost:8888/` | Traveler portal |
-| `http://localhost:8888/admin/` | Back office |
+| `http://localhost:8888/dpaf/` | DPAF space (alias of `/admin/`) |
+| `http://localhost:8888/compagnies/` | Airline platform |
+| `http://localhost:8888/app/` | Mobile apps |
 | `http://localhost:8888/gate/` | eGate kiosk |
 
 ### Local accounts and keys

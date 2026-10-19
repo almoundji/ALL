@@ -47,20 +47,27 @@ The home tile shows the number of anomalies (devices that are not **Online**).
 
 Permissions follow the least-privilege principle. Passwords are hashed (scrypt), a session lasts 12 hours, and every action is logged.
 
-The accounts table shows **Name** (and username), **Role**, **Border post**, **Last sign-in** and **Status** (**Active** or **Disabled**).
+The accounts table shows **Name** (and username), **Role** (with, below it, the platform the account opens: **DPAF space** or **Airline platform** followed by the airline name), **Border post**, **Last sign-in** and **Status** (**Active** or **Disabled**).
 
 ### Create a user
 
 1. Click **New user** (or the **Create a user** tile).
 2. Enter the **Full name** and the **Username**: 3 to 40 characters from a-z, 0-9, dot, underscore and hyphen; it must be unique.
 3. Choose the **Role** and the home **Border post**.
-4. Enter an **Initial password (10 characters min.)**.
-5. Click **Create**.
+4. For an airline account only, choose the **Airline** role and the airline in **Airline (“Airline” accounts only)**: this choice is mandatory for that role.
+5. Enter an **Initial password (10 characters min.)**.
+6. Click **Create**.
+
+### Airline accounts
+
+The **Airline** role only opens the *Airline platform* (`/compagnies/`); it is refused on the DPAF space. The account is bound to an airline (IATA code) and only sees that airline's flights, messages and invoices; no pre-screening result and no internal documentation page is available to it. Create one named account per airline user. Conversely, DPAF accounts (officers, analysts, supervisors, Treasury, administrators) do not open the airline platform.
+
+This account is separate from the `X-Carrier-Key` gateway key used by the airline's systems (`WAWID_CARRIER_KEYS` variable, see *Deployment and configuration*).
 
 ### Edit or disable an account
 
 1. Click **Edit** on the account row.
-2. Change the **Role** or **Border post**; enter a new password if needed (leave blank to keep the current one).
+2. Change the **Role**, the **Border post** or, for an airline account, the **Airline**; enter a new password if needed (leave blank to keep the current one).
 3. Clear **Account active** to disable the account: the user can no longer sign in and the current session is rejected. Select the box to re-enable it.
 4. Click **Save**.
 
@@ -68,22 +75,23 @@ The accounts table shows **Name** (and username), **Role**, **Border post**, **L
 
 ### Permissions matrix
 
-The matrix under the table shows each role's permissions. It is completed here with the `finance` permission, which it does not list.
+The matrix under the table shows each role's permissions, including **Security fee (finance)** and **Airline platform (own airline)**.
 
-| Permission | Border officer | Intelligence analyst | Supervisor | Treasury officer (fee) | Administrator |
-|---|---|---|---|---|---|
-| Read access (`read`) | Yes | Yes | Yes | Yes | Yes |
-| Counter check (`control`) | Yes | — | Yes | — | Yes |
-| Alert handling (`alerts`) | Yes | Yes | Yes | — | Yes |
-| Cases (`cases`) | Yes | Yes | Yes | — | Yes |
-| Watchlists (`watchlist`) | — | Yes | Yes | — | Yes |
-| Targeting rules (`rules`) | — | Yes | Yes | — | Yes |
-| APIS (`apis`) | — | Yes | Yes | — | Yes |
-| e-Visa decisions (`evisa`) | — | Yes | Yes | — | Yes |
-| eGate management (`gates`) | — | — | Yes | — | Yes |
-| Users (`users`) | — | — | — | — | Yes |
-| System settings (`system`) | — | — | — | — | Yes |
-| Security fee (`finance`) | — | — | — | Yes | Yes |
+| Permission | Border officer | Intelligence analyst | Supervisor | Treasury officer (fee) | Administrator | Airline |
+|---|---|---|---|---|---|---|
+| Read access (`read`) | Yes | Yes | Yes | Yes | Yes | — |
+| Counter check (`control`) | Yes | — | Yes | — | Yes | — |
+| Alert handling (`alerts`) | Yes | Yes | Yes | — | Yes | — |
+| Cases (`cases`) | Yes | Yes | Yes | — | Yes | — |
+| Watchlists (`watchlist`) | — | Yes | Yes | — | Yes | — |
+| Targeting rules (`rules`) | — | Yes | Yes | — | Yes | — |
+| APIS (`apis`) | — | Yes | Yes | — | Yes | — |
+| e-Visa decisions (`evisa`) | — | Yes | Yes | — | Yes | — |
+| eGate management (`gates`) | — | — | Yes | — | Yes | — |
+| Users (`users`) | — | — | — | — | Yes | — |
+| System settings (`system`) | — | — | — | — | Yes | — |
+| Security fee (`finance`) | — | — | — | Yes | Yes | — |
+| Airline platform, own airline (`carrier`) | — | — | — | — | — | Yes |
 
 **Read access** gives read-only access to dashboards, crossings, watchlists, rules, connectors, flights, e-Visas, monitoring, the audit log and the project page.
 
@@ -106,12 +114,12 @@ The table shows the latest 1,000 entries, newest first: **No.**, **Timestamp**, 
 
 | Area | Action codes |
 |---|---|
-| Sessions | `CONNEXION`, `ECHEC_CONNEXION`, `DECONNEXION` |
+| Sessions | `CONNEXION` (object: DPAF space or airline platform), `ECHEC_CONNEXION` (including a sign-in refused on a platform the account is not allowed to open), `DECONNEXION` |
 | Border control | `PASSAGE_DECISION`, `EGATE_TRANSACTION`, `EGATE_REJET`, `EGATE_COMMANDE` |
 | Intelligence | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
 | Portal and e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT`, `WAWPASS_VALIDATION`, `PREENROLEMENT` |
-| Security fee | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PARAMETRES` |
+| Security fee | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (declaration by an airline), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 
 Action codes are internal identifiers and stay in French. Passwords are never written to the log: a password change is only mentioned.
