@@ -47,11 +47,6 @@
 # Plateformes dissociées : /dpaf/ (espace DPAF, alias de /admin/), /compagnies/ (compagnies aériennes),
 # / (voyageurs), /app/ (applications mobiles). En production, chacune peut recevoir son propre domaine.
 [[redirects]]
-  from = "/dpaf"
-  to = "/dpaf/"
-  status = 301
-
-[[redirects]]
   from = "/dpaf/*"
   to = "/admin/:splat"
   status = 200
