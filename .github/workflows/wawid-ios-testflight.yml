@@ -1,0 +1,38 @@
+# Compile l'app iPhone WawID e-Visa et l'envoie sur TestFlight.
+# Secrets requis (Settings → Secrets and variables → Actions) :
+#   APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (contenu du fichier AuthKey_XXXX.p8 encodé en base64)
+name: WawID iOS → TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["wawid/ios/**"]
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: wawid/ios
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Générer le projet Xcode
+        run: brew install xcodegen && xcodegen generate
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: wawid/ios
+      - name: Compiler et envoyer sur TestFlight
+        run: bundle exec fastlane beta

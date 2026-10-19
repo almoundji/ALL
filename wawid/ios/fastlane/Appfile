@@ -1,0 +1,2 @@
+app_identifier("sn.wawtelecom.wawid.visa")
+team_id(ENV["APPLE_TEAM_ID"])

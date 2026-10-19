@@ -3,7 +3,7 @@ import Foundation
 /// Client de l'API publique WawID (mêmes routes que le portail web).
 struct WawAPI {
     static var baseURL: URL {
-        let s = Bundle.main.object(forInfoDictionaryKey: "WAWIDApiBaseURL") as? String ?? "https://wawid.netlify.app"
+        let s = Bundle.main.object(forInfoDictionaryKey: "WAWIDApiBaseURL") as? String ?? "https://wawid-waw-telecom.netlify.app"
         return URL(string: s)!
     }
 
