@@ -1,2 +1,5 @@
 node_modules/
 .netlify/
+
+# APK de test (publié sur Netlify, non versionné)
+public/app/*.apk

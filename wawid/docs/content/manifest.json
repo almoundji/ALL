@@ -2,6 +2,7 @@
   "sections": [
     { "group": { "fr": "Prise en main", "en": "Getting started" }, "pages": [
       { "slug": "demarrage", "public": false, "routes": [""], "fr": "Démarrer avec WawID", "en": "Getting started with WawID" },
+      { "slug": "guide-utilisateur", "public": false, "routes": [], "fr": "Guide utilisateur par profil", "en": "User guide by profile" },
       { "slug": "portail-voyageur", "public": true, "routes": [], "fr": "Guide du voyageur (portail et app iPhone)", "en": "Traveler guide (portal and iPhone app)" },
       { "slug": "faq-glossaire", "public": true, "routes": [], "fr": "FAQ et glossaire", "en": "FAQ and glossary" }
     ]},
@@ -25,6 +26,7 @@
       { "slug": "administration", "public": false, "routes": ["systemes", "utilisateurs", "audit", "parametres", "projet"], "fr": "Administration (équipements, utilisateurs, audit, paramètres)", "en": "Administration (devices, users, audit, settings)" },
       { "slug": "api-reference", "public": true, "routes": [], "fr": "Référence API (compagnies, équipements, connecteurs)", "en": "API reference (airlines, devices, connectors)" },
       { "slug": "deploiement-configuration", "public": false, "routes": [], "fr": "Déploiement et configuration", "en": "Deployment and configuration" },
+      { "slug": "installation-senegal", "public": false, "routes": [], "fr": "Guide d'installation — Sénégal", "en": "Installation guide — Senegal" },
       { "slug": "securite-conformite", "public": false, "routes": [], "fr": "Sécurité, données personnelles et conformité", "en": "Security, personal data and compliance" }
     ]}
   ]

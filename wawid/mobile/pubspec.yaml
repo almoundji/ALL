@@ -1,0 +1,42 @@
+name: wawid_visa
+description: "WawID e-Visa — application iPhone et Android (lecture NFC du passeport)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # Lecture ICAO 9303 (BAC / PACE, DG1, DG2) — ZeroPass, double licence LGPL-3.0 / commerciale.
+  dmrtd:
+    git:
+      url: https://github.com/ZeroPass/dmrtd.git
+      ref: 3b6c091843573b275ae68a87335e1872f8b60ea0
+  flutter_nfc_kit: ^3.7.0
+  camera: ^0.12.1
+  google_mlkit_text_recognition: ^0.17.1
+  http: ^1.6.0
+  crypto: ^3.0.6
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon-1024.png
+  remove_alpha_ios: true

@@ -15,7 +15,8 @@ function shell(page, html) {
     <a class="brand" href="#accueil"><span class="brand-logo">${LOGO}</span><span><span class="brand-name">${WORDMARK}</span><br><span class="brand-sub">Portail voyageur</span></span></a>
     <div class="p-links">${NAV.map(([k, l]) => `<a href="#${k}" ${k === page ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</div>
     <button class="btn btn-ghost btn-icon" id="theme" title="Thème">${icon("moon")}</button>
-    <a class="btn btn-ghost btn-sm" href="aide/">${icon("file")} <span>Aide</span></a>
+    <a class="btn btn-ghost btn-sm p-agents" href="app/" title="Application mobile">${icon("download")} <span>Application mobile</span></a>
+    <a class="btn btn-ghost btn-sm p-agents" href="aide/" title="Aide">${icon("file")} <span>Aide</span></a>
     ${langSwitch()}
     <a class="btn btn-dark btn-sm p-agents" href="admin/" title="Espace agents">${icon("lock")}<span>Espace agents</span></a>
   </nav></header>

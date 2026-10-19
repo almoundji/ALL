@@ -1,13 +1,11 @@
 # Compile l'app iPhone WawID e-Visa et l'envoie sur TestFlight.
 # Secrets requis (Settings → Secrets and variables → Actions) :
 #   APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64 (contenu du fichier AuthKey_XXXX.p8 encodé en base64)
-name: WawID iOS → TestFlight
+# Application native SwiftUI (historique). L'application de référence est désormais wawid/mobile (Flutter).
+name: WawID iOS natif (historique) → TestFlight
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["wawid/ios/**"]
 
 jobs:
   testflight:
