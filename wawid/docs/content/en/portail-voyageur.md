@@ -19,7 +19,7 @@ Portal address: `https://wawid-waw-telecom.netlify.app`
 1. Open the portal home page.
 2. In the **Do I need a visa?** card, select your nationality.
 3. The portal shows immediately:
-   - **Visa-exempt (stay of 90 days or less)**: you do not need to apply;
+   - **Visa-exempt (stay ≤ 90 days)**: you do not need to apply;
    - **e-Visa required**: follow the **Apply** link.
 
 The list of exempt nationalities is set by the administration and may change. If in doubt, check again just before you travel.
@@ -71,7 +71,7 @@ An answer is usually given **within 72 hours**. Your application goes through au
 
 1. Open the **Tracking** tab.
 2. Enter the **reference** (EV…) and the **passport number** used in the application. Both must match.
-3. Click **Check**.
+3. Click **View**.
 
 | Status | Meaning | What to do |
 | --- | --- | --- |
@@ -134,13 +134,15 @@ The gate **refers you to a counter** (this does not prejudge your situation), in
 1. Open the **eGate** tab.
 2. Paste the **2 MRZ lines** of your passport and your **e-mail**.
 3. Tick the **biometric consent** box (capture of your biometric data at your first crossing, for border control purposes).
-4. Click **Enroll me**. An `EN…` reference is shown.
+4. Click **Register**. An `EN…` reference is shown.
 
 Conditions: valid MRZ, **adult** traveler, **unexpired** passport. A passport that is already pre-enrolled returns the existing reference. Your face and fingerprints are captured at your **first crossing at a counter**; after that, the eGates are open to you.
 
 ## The WawID e-Visa iPhone app
 
 The app lets you apply for an e-Visa by reading your passport's **electronic chip** directly, which strengthens verification and speeds up processing.
+
+> The app interface is currently in French. The button and screen names below are English translations; the original French label is given in parentheses where useful.
 
 ### What you need
 
@@ -150,16 +152,16 @@ The app lets you apply for an e-Visa by reading your passport's **electronic chi
 
 ### Step 1 — Scan the MRZ
 
-1. Tap **Scan with the camera** and frame the 2-line band at the bottom of the photo page, or type it in.
+1. Tap **Scan with the camera** (*Scanner avec la caméra*) and frame the 2-line band at the bottom of the photo page, or type it in.
 2. Check the summary (surname, given names, passport, nationality, expiry).
 3. The **Check digits valid** badge must appear. Otherwise, correct the entry: the MRZ is the **key** that opens the chip.
 
 ### Step 2 — Read the chip with NFC
 
-1. Tap **Read NFC chip**.
+1. Tap **Read NFC chip** (*Lire la puce NFC*).
 2. Place the passport **closed** on a table and bring the **top of the iPhone** to the cover.
 3. **Hold still** during the read (5 to 15 seconds) until the message "Passport read successfully".
-4. The app shows the chip photo and two results: **Authentic passport** (passive authentication) and **Chip and MRZ match**.
+4. The app shows the chip photo and two results: **Authentic passport** (*Passeport authentique*, passive authentication) and **Chip and MRZ match** (*Puce et MRZ concordantes*).
 
 Tips for a good read:
 
@@ -178,7 +180,7 @@ Complete identity (surname, given names, e-mail, phone), trip (purpose, arrival,
 
 1. Check the fee (50,000 FCFA) and choose a payment method.
 2. Turn on **consent** (Law 2008-12).
-3. Tap **Pay and submit**. The app shows your **reference**: keep it.
+3. Tap **Pay and submit** (*Payer et déposer*). The app shows your **reference**: keep it.
 
 ### Tracking in the app
 

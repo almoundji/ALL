@@ -50,15 +50,19 @@ The list (columns **Severity**, **Alert**, **Received**, **Status**) is on the l
 2. Click **Take ownership**. Your name is recorded as owner and the alert moves to **In progress**. This button only appears on a new alert.
 3. To record a check, click **Note**, type the text, then click **Add**. An empty note is rejected.
 4. For an in-depth inspection, click **Open a case** (permission `cases`). If an open case already exists for this alert, WawID shows it instead of creating a second one.
-5. When the doubt is resolved, click **Close**. Choose a **Resolution**:
-   - False alert — namesake
-   - Doubt resolution — additional documents
-   - Handed over to the border police
-   - Entry refusal notified
-   - Notice sent to Interpol (NCB)
-   - Document seized
-   - Other…
-6. If needed, fill in **Details**, then click **Close**. The stored resolution combines the choice and the details ("choice — details"). A resolution is mandatory.
+5. When the doubt is resolved, click **Close**, choose a **Resolution** from the list (see below), fill in **Details** if needed, then click **Close**.
+
+Available resolutions:
+
+- False alert — namesake
+- Doubt resolution — additional documents
+- Handed over to the border police
+- Entry refusal notified
+- Notice sent to Interpol (NCB)
+- Document seized
+- Other…
+
+The stored resolution combines the choice and the details ("choice — details"). A resolution is mandatory.
 
 To go back to a closed alert, open it and click **Reopen**. It returns to **In progress** and the event is added to the history.
 

@@ -50,15 +50,19 @@ La liste (colonnes **Gravité**, **Alerte**, **Reçue**, **Statut**) occupe la p
 2. Cliquez sur **Prendre en charge** : votre nom est enregistré comme responsable et l'alerte passe **En cours**. Ce bouton n'apparaît que pour une alerte nouvelle.
 3. Pour consigner une vérification, cliquez sur **Note**, saisissez le texte, puis **Ajouter**. Une note vide est refusée.
 4. Pour un contrôle approfondi, cliquez sur **Ouvrir un dossier** (droit `cases`). Si un dossier ouvert existe déjà pour cette alerte, WawID l'affiche au lieu d'en créer un second.
-5. Une fois le doute levé, cliquez sur **Clôturer**. Choisissez une **Résolution** :
-   - Fausse alerte — homonyme
-   - Levée de doute — documents complémentaires
-   - Remis à la police aux frontières
-   - Refus d'entrée notifié
-   - Signalement transmis à Interpol (BCN)
-   - Document saisi
-   - Autre…
-6. Complétez si besoin le champ **Précisions**, puis cliquez sur **Clôturer**. La résolution enregistrée combine le choix et les précisions (« choix — précisions »). Une résolution est obligatoire.
+5. Une fois le doute levé, cliquez sur **Clôturer**, choisissez une **Résolution** dans la liste (voir ci-dessous), complétez si besoin le champ **Précisions**, puis cliquez sur **Clôturer**.
+
+Résolutions proposées :
+
+- Fausse alerte — homonyme
+- Levée de doute — documents complémentaires
+- Remis à la police aux frontières
+- Refus d'entrée notifié
+- Signalement transmis à Interpol (BCN)
+- Document saisi
+- Autre…
+
+La résolution enregistrée combine le choix et les précisions (« choix — précisions »). Une résolution est obligatoire.
 
 Pour revenir sur une alerte clôturée, ouvrez-la et cliquez sur **Rouvrir** : elle repasse **En cours** et l'événement est ajouté à l'historique.
 

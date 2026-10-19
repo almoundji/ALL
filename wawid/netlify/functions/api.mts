@@ -625,7 +625,7 @@ async function ingestCarrierMessage(raw: string, declared: string | undefined, s
   const log = (entry: any) => { d.carrierMessages.unshift(entry); return save("carrierMessages", d.carrierMessages.slice(0, 2000)); };
   const reference = uid("MSG");
   if (!format) {
-    await log({ id: reference, receivedAt, source, format: "INCONNU", carrier: allowedCarrier, flight: null, flightId: null, passengers: 0, flagged: 0, status: "REJETÉ", errors: ["Format non reconnu (PAXLST UN/EDIFACT ou PNR attendu)"], size: raw.length, completeness: 0 });
+    await log({ id: reference, receivedAt, source, format: "INCONNU", carrier: allowedCarrier, carrierName: AIRLINE_NAMES[allowedCarrier] || allowedCarrier, flight: null, flightId: null, passengers: 0, flagged: 0, status: "REJETÉ", errors: ["Format non reconnu (PAXLST UN/EDIFACT ou PNR attendu)"], size: raw.length, completeness: 0 });
     return { status: "REJETÉ", reference, errors: ["Format non reconnu (PAXLST UN/EDIFACT ou PNR attendu)"] };
   }
   const msg = format === "PAXLST" ? parsePaxlst(raw) : parsePnr(raw);
@@ -635,7 +635,7 @@ async function ingestCarrierMessage(raw: string, declared: string | undefined, s
   const complete = msg.passengers.filter((p) => p.docNo && p.dob && p.nat).length;
   const completeness = msg.passengers.length ? Math.round((complete / msg.passengers.length) * 100) : 0;
   if (fatal) {
-    await log({ id: reference, receivedAt, source, format, carrier: msg.carrier || allowedCarrier, flight: msg.flight || null, flightId: null, passengers: msg.passengers.length, flagged: 0, status: "REJETÉ", errors, size: raw.length, completeness });
+    await log({ id: reference, receivedAt, source, format, carrier: msg.carrier || allowedCarrier, carrierName: AIRLINE_NAMES[msg.carrier || allowedCarrier] || msg.carrier || allowedCarrier, flight: msg.flight || null, flightId: null, passengers: msg.passengers.length, flagged: 0, status: "REJETÉ", errors, size: raw.length, completeness });
     return { status: "REJETÉ", reference, errors };
   }
 

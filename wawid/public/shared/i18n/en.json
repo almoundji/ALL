@@ -328,7 +328,7 @@
 "Document proche de l'expiration": "Document close to expiry",
 "Document réutilisé (autre identité)": "Reused document (another identity)",
 "Document réutilisé sous une autre identité": "Document reused under another identity",
-"Document saisi": "Document entered",
+"Document saisi": "Document seized",
 "Document signalé perdu / volé": "Document reported lost / stolen",
 "Document suspect (MRZ)": "Suspicious document (MRZ)",
 "Document à validité très courte à l'entrée": "Document with very short validity at entry",
@@ -1468,5 +1468,13 @@
 "— échéance ; reversement au Receveur général du Trésor.": "— due date; remittance to the Receiver General of the Treasury.",
 "— émission des factures en FCFA au taux IATA du mois M.": "— invoices issued in FCFA at the IATA rate of month M.",
 "← Portail voyageur": "← Traveler portal",
-"≈ {0} FCFA d'assiette manquante": "≈ {0} FCFA of missing fee base"
+"≈ {0} FCFA d'assiette manquante": "≈ {0} FCFA of missing fee base",
+"transmission tardive": "late transmission",
+"Conforme": "Compliant",
+"À relancer": "Follow up",
+"Passeport authentifié": "Passport authenticated",
+"Vérification échouée": "Verification failed",
+"Passages antérieurs": "Previous crossings",
+"Biométrie à capturer au 1er passage": "Biometrics to be captured at first crossing",
+"Réseau d'identités": "Identity network"
 }

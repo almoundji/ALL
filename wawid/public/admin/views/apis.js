@@ -124,7 +124,7 @@ function compliance(body, flights, messages) {
     c.complete += f.passengers.filter((p) => p.dob && p.docNo && p.nat).length;
     return m;
   }, {}));
-  const rejected = (name) => messages.filter((m) => m.status === "REJETÉ" && flights.find((f) => f.id === m.flightId)?.carrier === name).length;
+  const rejected = (name) => messages.filter((m) => m.status === "REJETÉ" && (m.carrierName || flights.find((f) => f.id === m.flightId)?.carrier) === name).length;
   body.innerHTML = `<section class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Transporteur</th><th class="num">Vols</th><th class="num">Passagers</th><th class="num">Transmission dans les délais</th><th class="num">Complétude des données</th><th class="num">Messages rejetés</th><th>Statut</th></tr></thead><tbody>
     ${byCarrier.map((c) => { const ot = c.onTime / c.flights, cp = c.complete / Math.max(1, c.pax); const ok = ot >= 0.95 && cp >= 0.98; return `<tr><td class="cell-title">${esc(c.carrier)}</td><td class="num">${c.flights}</td><td class="num">${fmtNum(c.pax)}</td><td class="num">${fmtNum(ot * 100, 0)} %</td><td class="num">${fmtNum(cp * 100, 1)} %</td><td class="num">${rejected(c.carrier)}</td><td>${ok ? '<span class="status good">Conforme</span>' : '<span class="status warning">À relancer</span>'}</td></tr>`; }).join("")}
   </tbody></table></div><div class="card-body small muted">Transmission attendue : API à la clôture du vol (UN/EDIFACT PAXLST) et PNR à H-48 / H-24 (PNRGOV), conformément aux normes OACI annexe 9.</div></section>`;

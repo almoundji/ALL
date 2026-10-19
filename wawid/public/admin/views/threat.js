@@ -2,7 +2,7 @@
 import { ago, api, dialog, esc, fmtDateTime, icon, status, toast } from "../../shared/ui.js";
 import { mountTable, pageHead } from "./common.js";
 
-const TYPES = { SLTD: "Document perdu / volé", WATCHLIST: "Liste de surveillance", FRAUDE_BIO: "Fraude biométrique", FRAUDE_DOC: "Fraude documentaire", DOCUMENT: "Document expiré", REGLE: "Règle de ciblage", VISA: "Sans autorisation", APIS: "APIS / PNR", RISQUE: "Risque élevé" };
+const TYPES = { SLTD: "Document perdu / volé", WATCHLIST: "Liste de surveillance", FRAUDE_BIO: "Fraude biométrique", FRAUDE_DOC: "Fraude documentaire", DOCUMENT: "Document expiré", REGLE: "Règle de ciblage", VISA: "Sans autorisation", APIS: "APIS / PNR", RISQUE: "Risque élevé", RESEAU: "Réseau d'identités" };
 const RESOLUTIONS = ["Fausse alerte — homonyme", "Levée de doute — documents complémentaires", "Remis à la police aux frontières", "Refus d'entrée notifié", "Signalement transmis à Interpol (BCN)", "Document saisi"];
 
 export function render(el, ctx, _rest, query) {

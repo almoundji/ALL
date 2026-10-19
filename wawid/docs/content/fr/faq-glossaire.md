@@ -1,0 +1,110 @@
+# FAQ et glossaire
+
+## Questions fréquentes
+
+### Voyageurs
+
+#### Comment savoir si j'ai besoin d'un visa ?
+
+Sur la page d'accueil du portail voyageur, choisissez votre nationalité dans **Ai-je besoin d'un visa ?**. Le portail indique si vous êtes dispensé (séjour de 90 jours au plus) ou si un e-Visa est requis. La liste des dispenses est fixée par l'administration.
+
+#### Combien de temps faut-il pour obtenir un e-Visa ?
+
+La réponse est généralement donnée sous **72 heures**. Déposez votre demande suffisamment tôt avant le départ. Lorsque la puce du passeport a été lue avec l'app iPhone, l'instruction est en général plus rapide.
+
+#### J'ai perdu ma référence de demande. Que faire ?
+
+La référence (commençant par `EV`) figure sur l'écran de confirmation et dans l'app. Le suivi exige la référence **et** le numéro de passeport ; sans la référence, contactez les services de l'immigration.
+
+#### L'administration me demande une information complémentaire. Comment répondre ?
+
+Ouvrez **Suivi**, saisissez la référence et le numéro de passeport, lisez le message de l'agent puis répondez dans **Votre réponse**. La demande repasse automatiquement en examen.
+
+#### Dois-je imprimer mon e-Visa ?
+
+Ce n'est pas obligatoire : le QR code peut être présenté sur votre téléphone. Une version imprimée est utile en cas de batterie déchargée. Présentez toujours le QR code **avec votre passeport**.
+
+#### Mon reçu WawPass a été refusé à l'aéroport.
+
+Un QR code WawPass n'est valable **qu'une fois**. S'il a déjà été scanné, il est signalé « Reçu déjà utilisé ». Vérifiez aussi que le vol et la date correspondent à votre voyage.
+
+#### Pourquoi l'eGate m'a-t-elle orienté vers un guichet ?
+
+Une orientation ne préjuge de rien : elle se produit par exemple si vous êtes mineur, si la puce ou le document n'a pas pu être vérifié, si la comparaison faciale ou la détection du vivant a échoué, si votre nationalité n'est pas éligible sur cette porte ou si un contrôle complémentaire est nécessaire. Un agent traite alors votre passage au guichet.
+
+#### Mon iPhone ne lit pas la puce du passeport.
+
+Il faut un iPhone 7 ou plus récent et un passeport biométrique. Vérifiez la MRZ (une seule erreur bloque l'accès à la puce), retirez la coque, posez le passeport fermé sur une surface non métallique, approchez le haut de l'iPhone et ne bougez plus pendant 5 à 15 secondes. Vous pouvez aussi continuer sans lecture de la puce.
+
+### Compagnies aériennes
+
+#### Comment obtenir une clé de la passerelle API/PNR ?
+
+La clé `X-Carrier-Key` est remise par l'administration à chaque compagnie et liée à son code IATA. Elle ne permet de transmettre que les vols de cette compagnie.
+
+#### Quels formats sont acceptés ?
+
+UN/EDIFACT **PAXLST** (D02B, profil IATA/OMD) pour l'API et le **PNR au format texte IATA** (RLOC, segments, SSR DOCS, CTCE/CTCM, FP). Les messages PNRGOV sont acceptés après conversion par le service d'intégration. Taille maximale : 2 Mo.
+
+#### Quand transmettre les données ?
+
+PNR à H-48 puis H-24 avant le départ ; API à la clôture de l'enregistrement, au plus tard à la fermeture des portes. Les retards sont suivis dans la conformité des transporteurs (objectif : ≥ 95 % des vols à l'heure, ≥ 98 % de complétude).
+
+#### Recevons-nous le résultat du contrôle de nos passagers ?
+
+Non. La passerelle renvoie un accusé de réception (référence `MSG-…`, nombre de passagers, complétude, ponctualité, erreurs) mais **aucun résultat de ciblage** n'est communiqué au transporteur.
+
+### Agents
+
+#### La puce est indiquée « simulée » au guichet. Est-ce normal ?
+
+Oui, si le pont NFC n'est pas lancé ou si aucun lecteur n'est branché. Vérifiez l'adresse du pont dans **Administration → Paramètres → Lecteur NFC de ce poste** et cliquez sur **Tester**.
+
+#### Comment vérifier un QR code e-Visa ou WawPass ?
+
+Utilisez la fonction de vérification des QR du back-office (session requise). La signature est contrôlée, puis le statut de l'e-Visa ou l'usage du WawPass est vérifié en temps réel.
+
+#### Pourquoi dois-je saisir un motif pour certaines décisions ?
+
+Lorsque votre décision diffère de la recommandation du score de risque, un motif est obligatoire. Il est conservé avec le passage et tracé dans le journal d'audit.
+
+#### Ma session a expiré.
+
+Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte a été désactivé, contactez un administrateur.
+
+## Glossaire
+
+| Terme | Définition |
+| --- | --- |
+| ABC (Automated Border Control) | Contrôle automatisé aux frontières : eGates, kiosques et corridors biométriques permettant le passage sans agent. |
+| Alerte | Signal créé lorsqu'un passage ou un passager annoncé présente un score de risque élevé ou une correspondance sur une liste. |
+| API (Advance Passenger Information) | Données d'identité et de document des passagers transmises par la compagnie avant l'arrivée ou le départ du vol. |
+| APIS | Système de traitement des données API : réception des manifestes et pré-contrôle des passagers annoncés. |
+| Authentification active (AA) / chip | Mécanisme prouvant que la puce n'a pas été clonée (clé privée stockée dans la puce, DG15/DG14). |
+| Authentification passive (PA) | Vérification de la signature numérique des données de la puce (EF.SOD) à l'aide des certificats de l'État émetteur (CSCA). Elle prouve que les données n'ont pas été modifiées. |
+| BAC (Basic Access Control) | Protocole d'accès à la puce d'un passeport, utilisant des clés dérivées de la MRZ. Remplacé progressivement par PACE. |
+| CDP | Commission de protection des données personnelles, autorité sénégalaise de contrôle (loi n° 2008-12). |
+| Chiffres de contrôle | Chiffres de la MRZ calculés selon l'ICAO 9303 pour détecter les erreurs de lecture ou de saisie. |
+| CSCA / ICAO PKD | Certificats racines des États émetteurs de passeports ; le PKD de l'OACI les distribue pour l'authentification passive. |
+| DG1, DG2 | Groupes de données de la puce : DG1 contient la MRZ, DG2 la photo du titulaire. |
+| Détection du vivant (liveness) | Vérification qu'un visage présenté est celui d'une personne réelle et non une photo, un écran ou un masque. |
+| e-Visa | Autorisation de voyage demandée et délivrée en ligne, présentée à la frontière sous forme de QR code signé. |
+| eGate | Porte automatique qui lit le passeport, compare le visage du voyageur à la photo de la puce et s'ouvre ou oriente vers un guichet. |
+| eKYC | Vérification d'identité à distance : authenticité du document, comparaison faciale avec un selfie, détection du vivant. |
+| FCFA (XOF) | Franc CFA d'Afrique de l'Ouest, monnaie des frais e-Visa et de la taxe de sécurité. |
+| ICAO 9303 (OACI Doc 9303) | Norme internationale des documents de voyage lisibles à la machine : MRZ, puce, protocoles de sécurité. |
+| MRZ (Machine Readable Zone) | Bande de 2 lignes (passeport, format TD3) ou 3 lignes (carte, TD1) en bas de la page d'identité, lisible par machine. |
+| NFC | Communication sans contact à courte portée utilisée pour lire la puce des passeports biométriques. |
+| PACE (Password Authenticated Connection Establishment) | Protocole d'accès à la puce plus robuste que BAC, également fondé sur la MRZ. |
+| PAXLST | Message UN/EDIFACT « Passenger List » utilisé par les compagnies pour transmettre les données API. |
+| PNR (Passenger Name Record) | Dossier de réservation : itinéraire, date de réservation, moyen de paiement, coordonnées. |
+| PNRGOV | Format UN/EDIFACT de transmission des PNR aux autorités publiques. |
+| POI (personne d'intérêt) | Personne signalée par les services de renseignement sur une liste de surveillance. |
+| Pré-enrôlement | Enregistrement préalable du passeport sur le portail pour pouvoir utiliser les eGates. |
+| Redevance de sécurité | Redevance perçue auprès des compagnies sur les passagers des vols commerciaux, suivie dans le module Finances. |
+| Score de risque | Note de 0 à 100 calculée à partir de facteurs explicables (listes, règles, document, biométrie) ; elle produit une recommandation : Autorisé, Contrôle secondaire ou Refusé. |
+| SLTD (Stolen and Lost Travel Documents) | Base Interpol des documents de voyage perdus ou volés. |
+| SSR DOCS | Élément du PNR contenant les données du document de voyage du passager. |
+| Taxe de sécurité | Taxe aéroportuaire payée par le voyageur, en ligne via WawPass. |
+| WAPIS | Système d'information policière d'Afrique de l'Ouest, programme régional appuyé par Interpol. |
+| WawPass | Service de paiement en ligne de la taxe de sécurité, avec reçu QR valable une fois. |
