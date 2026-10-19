@@ -1,0 +1,29 @@
+# WawID — site Netlify autonome (répertoire de base : wawid/)
+[build]
+  publish = "public"
+  command = "npm test"
+  [build.environment]
+    NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/gate/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

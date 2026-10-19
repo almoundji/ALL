@@ -1,0 +1,40 @@
+# Génération du projet Xcode : `brew install xcodegen && xcodegen` dans ce dossier.
+name: WawIDVisa
+options:
+  bundleIdPrefix: sn.wawtelecom
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  NFCPassportReader:
+    url: https://github.com/AndyQ/NFCPassportReader
+    from: "2.0.0"
+targets:
+  WawIDVisa:
+    type: application
+    platform: iOS
+    sources:
+      - WawIDVisa/Sources
+      - WawIDVisa/Resources
+    dependencies:
+      - package: NFCPassportReader
+    entitlements:
+      path: WawIDVisa/WawIDVisa.entitlements
+      properties:
+        com.apple.developer.nfc.readersession.formats: [TAG]
+    info:
+      path: WawIDVisa/Info.plist
+      properties:
+        CFBundleDisplayName: WawID e-Visa
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSCameraUsageDescription: "La caméra lit la bande MRZ de votre passeport pour préparer la lecture de la puce."
+        NFCReaderUsageDescription: "La puce de votre passeport est lue pour authentifier votre document."
+        com.apple.developer.nfc.readersession.iso7816.select-identifiers: [A0000002471001, A0000002472001, "00000000000000"]
+        WAWIDApiBaseURL: "https://wawid.netlify.app"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: sn.wawtelecom.wawid.visa
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
