@@ -188,6 +188,8 @@ export function pnrFactors(p: Passenger, eta: string | null) {
 export function samples(now = new Date()) {
   const d = new Date(now.getTime() + 6 * 3600000);
   const yy = String(d.getUTCFullYear()).slice(2), mm = String(d.getUTCMonth() + 1).padStart(2, "0"), dd = String(d.getUTCDate()).padStart(2, "0");
+  const edi = (t: Date) => `${String(t.getUTCFullYear()).slice(2)}${String(t.getUTCMonth() + 1).padStart(2, "0")}${String(t.getUTCDate()).padStart(2, "0")}${String(t.getUTCHours()).padStart(2, "0")}${String(t.getUTCMinutes()).padStart(2, "0")}`;
+  const dep = new Date(now.getTime() + 2 * 3600000), arr = new Date(now.getTime() + 7 * 3600000);
   const mon = Object.keys(MONTHS)[d.getUTCMonth()];
   const bkd = new Date(now.getTime() - 20 * 3600000);
   return {
@@ -200,9 +202,9 @@ export function samples(now = new Date()) {
       "NAD+MS+++DEPARTEMENT CONTROLE HC'",
       "TDT+20+HC404'",
       "LOC+125+CDG'",
-      `DTM+189:${yy}${mm}${dd}0730:201'`,
+      `DTM+189:${edi(dep)}:201'`,
       "LOC+87+DSS'",
-      `DTM+232:${yy}${mm}${dd}1215:201'`,
+      `DTM+232:${edi(arr)}:201'`,
       "NAD+FL+++NDIAYE:FATOU+12 RUE DE LA PAIX+PARIS'", "ATT+2++F'", "DTM+329:900211'", "LOC+178+CDG'", "LOC+179+DSS'", "NAT+2+SEN'", "RFF+AVF:QX7K2P'", "RFF+SEA:12A'",
       "DOC+P:110:111+A07711223'", "DTM+36:300101'", "LOC+91+SEN'",
       "NAD+FL+++KABORE:ISSOUF:MALICK+++'", "ATT+2++M'", "DTM+329:810412'", "LOC+178+CDG'", "LOC+179+DSS'", "NAT+2+BFA'", "RFF+AVF:ZZ81LM'", "RFF+SEA:31C'",
