@@ -37,7 +37,7 @@ function home() {
     <span class="pill-dark">${icon("zap")} e-Visa · eGate · Suivi</span>
     <h1>Votre voyage, <span class="hl">simplifié</span> et sécurisé</h1>
     <span class="p-underline" style="margin:14px 0 0 0"></span>
-    <p>Demandez votre autorisation de voyage en ligne, payez la taxe de sécurité et franchissez la frontière en quelques secondes grâce aux eGates biométriques.</p>
+    <p>Demandez votre autorisation de voyage en ligne, suivez votre demande et franchissez la frontière en quelques secondes grâce aux eGates biométriques.</p>
     <div class="row"><a class="btn btn-primary btn-lg" href="#evisa">${icon("fileCheck")} Demander un e-Visa</a><a class="btn btn-lg" href="#suivi">${icon("search")} Suivre ma demande</a></div>
   </section>
   <section class="card card-pad" style="margin-top:20px">

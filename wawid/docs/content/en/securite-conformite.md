@@ -66,12 +66,12 @@ Keys must be long and random, delivered over a secure channel, and rotated perio
 
 ## Signed QR codes
 
-Approved e-Visas and WawPass receipts are shown as a QR code holding a `TYPE.REFERENCE.SIGNATURE` token (`EV` or `WP`), signed with HMAC-SHA256 using `SESSION_SECRET` (signature truncated to 16 characters).
+Approved e-Visas (and former WawPass receipts, issued before traveler payment was removed) are shown as a QR code holding a `TYPE.REFERENCE.SIGNATURE` token (`EV` or `WP`), signed with HMAC-SHA256 using `SESSION_SECRET` (signature truncated to 16 characters).
 
 - Verification is restricted to signed-in officers (`read` permission).
 - A tampered token is rejected ("invalid or forged QR code").
 - For an e-Visa, status and validity date are checked again **in real time**: a revoked or expired e-Visa is refused even if the signature is correct.
-- A WawPass is accepted **only once**; every validation is logged.
+- A former WawPass receipt is accepted **only once**; every verification is logged. No new receipts are issued: the security fee is included in the ticket.
 
 ## Chained audit log
 
@@ -80,7 +80,7 @@ Each entry holds a sequence number, a timestamp, the actor, the action, the targ
 - Any modification, deletion or insertion of an entry breaks the chain.
 - The back office (**Administration → Audit log**) recomputes the chain and shows "Chain intact" or the number of the faulty entry.
 - The log is never truncated automatically; archiving it (signed export) is an operations task.
-- Logged actions: logins and failures, crossing decisions, eGate transactions, e-Visa submissions and decisions, WawPass payments and validations, pre-enrollments, API/PNR messages, changes to watchlists, rules, users, settings and connectors, eGate commands, collections, reset.
+- Logged actions: logins and failures, crossing decisions, eGate transactions, e-Visa submissions and decisions, validations of former WawPass receipts, pre-enrollments, API/PNR messages, changes to watchlists, rules, users, settings and connectors, eGate commands, collections, reset.
 
 Limit: someone with write access to the storage could recompute the whole chain. In production, the chain head must be **anchored periodically** with an HSM signature.
 

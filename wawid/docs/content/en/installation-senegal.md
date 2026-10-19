@@ -17,7 +17,7 @@ Each item is classified according to its actual state:
 
 ## Starting point
 
-The current WawID deployment is a **demonstrator** hosted on Netlify (Netlify Functions and Netlify Blobs). It validates the journeys (counter, eGate, e-Visa, WawPass, APIS/PNR, intelligence, security fee), not load, sovereignty or service continuity. National operations require the sovereign architecture described in `docs/ARCHITECTURE.md`.
+The current WawID deployment is a **demonstrator** hosted on Netlify (Netlify Functions and Netlify Blobs). It validates the journeys (counter, eGate, e-Visa, eGate pre-enrollment, APIS/PNR, intelligence, security fee), not load, sovereignty or service continuity. National operations require the sovereign architecture described in `docs/ARCHITECTURE.md`.
 
 | Component | Today (Existing) | National target |
 | --- | --- | --- |
@@ -167,7 +167,7 @@ The manufacturer references cited in the code (Regula, Thales/Gemalto, ARH, Inno
 | 4-finger fingerprint scanner | Yes | Depending on model | — | — |
 | Camera for face capture | Yes | Yes (front-facing) | — | — |
 | Iris camera | Optional | — | — | — |
-| QR scanner gun (e-Visa, WawPass) | Recommended | — | — | — |
+| QR scanner gun (e-Visa) | Recommended | — | — | — |
 | Traveler touch screen | — | Yes | — | — |
 | Gate controller | — | Yes | — | — |
 | UPS | Yes | Yes | Yes | Yes |
@@ -339,7 +339,7 @@ The names below are those read by the code (`netlify/lib/auth.mts` and `netlify/
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `SESSION_SECRET` | Yes | Signs sessions and e-Visa / WawPass QR codes. Without it, the API returns an error. |
+| `SESSION_SECRET` | Yes | Signs sessions and e-Visa QR codes (and former WawPass receipts). Without it, the API returns an error. |
 | `WAWID_ADMIN_PASSWORD` | Yes | Password of the `admin` account, created on the first sign-in if no account exists. |
 | `WAWID_DEMO_PASSWORD` | No | Creates the demo accounts `agent`, `analyste`, `superviseur`, `tresor`. **Never set it in production.** |
 | `WAWID_GATE_KEY` | Yes for eGates | eGate and kiosk key (`X-Gate-Key` header). |
@@ -373,7 +373,7 @@ Rules to apply:
 1. Use a different value for each purpose (session, eGates, each airline) and for each environment (demo, acceptance, production).
 2. Never put a secret in the code, the documentation, a ticket or a messaging app; send keys to airlines and technicians through a secure channel.
 3. Keep a register (without the values): who holds which key, creation date, planned renewal date.
-4. Changing `SESSION_SECRET` signs out every user and **invalidates every e-Visa and WawPass QR code already issued**: plan this operation.
+4. Changing `SESSION_SECRET` signs out every user and **invalidates every e-Visa QR code (and former WawPass receipt) already issued**: plan this operation.
 5. In national production, keys are kept in an HSM (To be developed).
 
 ### Initial accounts and passwords
@@ -507,7 +507,7 @@ Contact details, hours and response times for each level are set with the DPAF b
 | 8 | Remote closing of an eGate | **Gate closed** shown within 15 seconds |
 | 9 | e-Visa application on the portal, information request, reply, approval | Correct successive statuses; signed QR verified at the counter |
 | 10 | e-Visa application from the iPhone and Android app | Chip read; application visible in the DPAF space with the **Chip (NFC)** field |
-| 11 | WawPass verified twice | First verification **Valid**, second "Receipt already used" |
+| 11 | **Security fee** card on the traveler portal | Information page "You have nothing to pay", fee included in the ticket; no form and no payment request; `POST /api/public/pass` answers `410` |
 | 12 | PAXLST and PNR message from an airline with its key | 202 with no pre-screening result in the acknowledgment; API + PNR merge; flagged passengers visible in the DPAF space |
 | 13 | Message with another airline's key | Rejection (422) |
 | 14 | Collection recorded on an invoice by a Treasury officer | **PARTIELLE** (partial) or **PAYÉE** (paid) status; `REDEVANCE_ENCAISSEMENT` entry |

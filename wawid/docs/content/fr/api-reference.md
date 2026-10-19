@@ -68,7 +68,7 @@ GET /api/public/info
 }
 ```
 
-Les montants sont en FCFA (XOF). Identifiants de postes : `AIBD`, `PDK`, `ROS`, `KID`, `KAR`, `ZIG`.
+Les montants sont en FCFA (XOF). `passFee` est un paramètre hérité de l'ancien WawPass, que le portail n'utilise plus. Identifiants de postes : `AIBD`, `PDK`, `ROS`, `KID`, `KAR`, `ZIG`.
 
 ### POST /api/public/evisa
 
@@ -152,29 +152,13 @@ Réponse `200` : même objet que `/evisa/status`, avec `status` repassé à `EN_
 
 ### POST /api/public/pass
 
-Paiement de la taxe de sécurité (WawPass).
+Route retirée : l'ancien paiement de la taxe de sécurité par le voyageur (WawPass) a été supprimé, la redevance de sécurité étant incluse dans le prix du billet et perçue par les compagnies aériennes. Tout appel répond `410` :
 
 ```json
-{
-  "surname": "NDIAYE", "given": "FATOU", "nat": "SEN", "docNo": "A07711223",
-  "flight": "HC 404", "travelDate": "2026-11-20", "paymentMethod": "Orange Money"
-}
+{ "error": "La redevance de sécurité est incluse dans le prix du billet : aucun paiement n'est demandé au voyageur." }
 ```
 
-Tous les champs sauf `paymentMethod` sont obligatoires ; `travelDate` au format `AAAA-MM-JJ`, aujourd'hui ou plus tard ; `nat` sur 3 lettres.
-
-Réponse `200` :
-
-```json
-{
-  "ref": "WP7654321", "createdAt": "2026-10-19T08:30:00.000Z", "surname": "NDIAYE", "given": "FATOU",
-  "docNo": "A07711223", "nat": "SEN", "flight": "HC 404", "travelDate": "2026-11-20",
-  "amount": 15000, "currency": "XOF", "method": "Orange Money", "used": false,
-  "token": "WP.WP7654321.a9F…"
-}
-```
-
-Le `token` est le contenu du QR code. Il est vérifié une seule fois à l'aéroport.
+Les reçus `WP…` émis auparavant restent vérifiables par l'espace DPAF (route de session `/api/verify-token`).
 
 ### POST /api/public/enrol
 

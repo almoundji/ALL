@@ -24,9 +24,9 @@ Ouvrez **Suivi**, saisissez la référence et le numéro de passeport, lisez le 
 
 Ce n'est pas obligatoire : le QR code peut être présenté sur votre téléphone. Une version imprimée est utile en cas de batterie déchargée. Présentez toujours le QR code **avec votre passeport**.
 
-#### Mon reçu WawPass a été refusé à l'aéroport.
+#### Dois-je payer une taxe de sécurité ?
 
-Un QR code WawPass n'est valable **qu'une fois**. S'il a déjà été scanné, il est signalé « Reçu déjà utilisé ». Vérifiez aussi que le vol et la date correspondent à votre voyage.
+Non. La redevance de sécurité est **incluse dans le prix de votre billet d'avion** et perçue par votre compagnie aérienne : vous n'avez rien à payer, ni en ligne ni à l'aéroport, et aucun reçu n'est à présenter. Méfiez-vous de toute demande de paiement à ce titre. L'ancien paiement en ligne WawPass a été supprimé.
 
 #### Pourquoi l'eGate m'a-t-elle orienté vers un guichet ?
 
@@ -72,9 +72,9 @@ Sur l'**espace DPAF** (`/dpaf/`, l'ancienne adresse `/admin/` reste valable). Le
 
 Oui, si le pont NFC n'est pas lancé ou si aucun lecteur n'est branché. Vérifiez l'adresse du pont dans **Administration → Paramètres → Lecteur NFC de ce poste** et cliquez sur **Tester**.
 
-#### Comment vérifier un QR code e-Visa ou WawPass ?
+#### Comment vérifier un QR code e-Visa ?
 
-Utilisez la fonction de vérification des QR de l'espace DPAF (session requise). La signature est contrôlée, puis le statut de l'e-Visa ou l'usage du WawPass est vérifié en temps réel.
+Utilisez **Vérifier un QR** dans l'espace DPAF (session requise). La signature est contrôlée, puis le statut de l'e-Visa est vérifié en temps réel. Les anciens reçus WawPass, émis avant la suppression du paiement voyageur, restent vérifiables à titre historique.
 
 #### Pourquoi dois-je saisir un motif pour certaines décisions ?
 
@@ -104,7 +104,7 @@ Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte 
 | e-Visa | Autorisation de voyage demandée et délivrée en ligne, présentée à la frontière sous forme de QR code signé. |
 | eGate | Porte automatique qui lit le passeport, compare le visage du voyageur à la photo de la puce et s'ouvre ou oriente vers un guichet. |
 | eKYC | Vérification d'identité à distance : authenticité du document, comparaison faciale avec un selfie, détection du vivant. |
-| FCFA (XOF) | Franc CFA d'Afrique de l'Ouest, monnaie des frais e-Visa et de la taxe de sécurité. |
+| FCFA (XOF) | Franc CFA d'Afrique de l'Ouest, monnaie des frais e-Visa et de la facturation de la redevance de sécurité. |
 | ICAO 9303 (OACI Doc 9303) | Norme internationale des documents de voyage lisibles à la machine : MRZ, puce, protocoles de sécurité. |
 | MRZ (Machine Readable Zone) | Bande de 2 lignes (passeport, format TD3) ou 3 lignes (carte, TD1) en bas de la page d'identité, lisible par machine. |
 | NFC | Communication sans contact à courte portée utilisée pour lire la puce des passeports biométriques. |
@@ -119,6 +119,6 @@ Les sessions durent 12 heures (une vacation). Reconnectez-vous. Si votre compte 
 | Score de risque | Note de 0 à 100 calculée à partir de facteurs explicables (listes, règles, document, biométrie) ; elle produit une recommandation : Autorisé, Contrôle secondaire ou Refusé. |
 | SLTD (Stolen and Lost Travel Documents) | Base Interpol des documents de voyage perdus ou volés. |
 | SSR DOCS | Élément du PNR contenant les données du document de voyage du passager. |
-| Taxe de sécurité | Taxe aéroportuaire payée par le voyageur, en ligne via WawPass. |
+| Taxe de sécurité | Voir *Redevance de sécurité* : incluse dans le billet, elle n'est plus payée séparément par le voyageur. |
 | WAPIS | Système d'information policière d'Afrique de l'Ouest, programme régional appuyé par Interpol. |
-| WawPass | Service de paiement en ligne de la taxe de sécurité, avec reçu QR valable une fois. |
+| WawPass | Ancien service (supprimé) de paiement en ligne de la taxe de sécurité par le voyageur, avec reçu QR valable une fois. Les reçus déjà émis restent consultables dans l'onglet **Historique WawPass** et vérifiables à titre historique. |

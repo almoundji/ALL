@@ -7,7 +7,7 @@ This guide is for travelers going to or leaving Senegal. It describes the WawID 
 | Do I need a visa? | Portal home page | Check whether your nationality is visa-exempt |
 | e-Visa | Portal (**e-Visa** tab) or iPhone app | Apply for a travel authorization online |
 | Tracking | Portal (**Tracking** tab) or iPhone app | Check the application status, answer the administration, get the QR code |
-| WawPass | Portal (**WawPass** tab) | Pay the airport security fee and get a QR receipt |
+| Security fee | Portal home page (**Security fee** card) | Information: the fee is included in the ticket, nothing to pay |
 | eGate | Portal (**eGate** tab) | Pre-enroll for the automated gates |
 
 Portal address: `https://wawid-waw-telecom.netlify.app`
@@ -103,16 +103,13 @@ When the application is **approved**, the tracking page shows:
 
 Print the page (**Print** button) or keep it on your phone. At the border, show **the QR code and your passport**, at the counter or at the eGate. The QR code is signed: any change makes it invalid. The officer checks in real time that the e-Visa is approved and still valid.
 
-## WawPass: paying the security fee
+## Security fee: nothing to pay
 
-WawPass lets you pay the **airport security fee** (15,000 FCFA in the default configuration) online before your flight.
+**You have nothing to pay.** The security fee is included in your plane ticket price and collected by your airline. It applies to passengers boarding or leaving an international commercial flight in Senegal; crew members, children under 2, passengers in transit for less than 24 h and diverted flights are exempt.
 
-1. Open the **WawPass** tab.
-2. Enter surname, given names, nationality, passport number, flight (for example `HC 404`) and travel date. The date must be **today or later**.
-3. Choose a payment method (Wave, Orange Money or bank card), then click **Pay**.
-4. The **Payment confirmed** screen shows a **QR code** and a `WP…` reference. Print or save it.
+The **Security fee** card on the portal home page opens this information. There is no receipt to show at the airport.
 
-At the airport, an officer scans the QR code. **It can be used only once**: a receipt that was already presented is reported as "Receipt already used".
+> **Beware of any request to pay this fee** online or at the airport: it will never be asked of you directly. The former WawPass online payment service has been removed.
 
 ## Using the eGates
 

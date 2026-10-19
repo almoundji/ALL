@@ -17,7 +17,7 @@ Chaque élément est classé selon son état réel :
 
 ## Situation de départ
 
-Le déploiement actuel de WawID est un **démonstrateur** hébergé sur Netlify (Netlify Functions et Netlify Blobs). Il valide les parcours (guichet, eGate, e-Visa, WawPass, APIS/PNR, renseignement, redevance), pas la charge, la souveraineté ni la continuité de service. Une exploitation nationale exige l'architecture souveraine décrite dans `docs/ARCHITECTURE.md`.
+Le déploiement actuel de WawID est un **démonstrateur** hébergé sur Netlify (Netlify Functions et Netlify Blobs). Il valide les parcours (guichet, eGate, e-Visa, pré-enrôlement eGate, APIS/PNR, renseignement, redevance), pas la charge, la souveraineté ni la continuité de service. Une exploitation nationale exige l'architecture souveraine décrite dans `docs/ARCHITECTURE.md`.
 
 | Composant | Aujourd'hui (Existant) | Cible nationale |
 | --- | --- | --- |
@@ -167,7 +167,7 @@ Les références de constructeurs citées dans le code (Regula, Thales/Gemalto, 
 | Capteur d'empreintes 4 doigts | Oui | Selon le modèle | — | — |
 | Caméra pour la capture du visage | Oui | Oui (frontale) | — | — |
 | Caméra iris | Facultatif | — | — | — |
-| Douchette QR (e-Visa, WawPass) | Recommandée | — | — | — |
+| Douchette QR (e-Visa) | Recommandée | — | — | — |
 | Écran voyageur tactile | — | Oui | — | — |
 | Contrôleur des portes | — | Oui | — | — |
 | Onduleur | Oui | Oui | Oui | Oui |
@@ -339,7 +339,7 @@ Les noms ci-dessous sont ceux lus par le code (`netlify/lib/auth.mts` et `netlif
 
 | Variable | Obligatoire | Rôle |
 | --- | --- | --- |
-| `SESSION_SECRET` | Oui | Signature des sessions et des QR codes e-Visa / WawPass. Sans elle, l'API répond par une erreur. |
+| `SESSION_SECRET` | Oui | Signature des sessions et des QR codes e-Visa (et des anciens reçus WawPass). Sans elle, l'API répond par une erreur. |
 | `WAWID_ADMIN_PASSWORD` | Oui | Mot de passe du compte `admin`, créé au premier login si aucun compte n'existe. |
 | `WAWID_DEMO_PASSWORD` | Non | Crée les comptes de démonstration `agent`, `analyste`, `superviseur`, `tresor`. **Ne jamais définir en production.** |
 | `WAWID_GATE_KEY` | Oui pour les eGates | Clé des eGates et kiosques (en-tête `X-Gate-Key`). |
@@ -373,7 +373,7 @@ Règles à appliquer :
 1. Utilisez une valeur différente pour chaque usage (session, eGates, chaque compagnie) et pour chaque environnement (démonstration, recette, production).
 2. Ne placez jamais un secret dans le code, dans la documentation, dans un ticket ou dans une messagerie ; transmettez les clés aux compagnies et aux techniciens par un canal sûr.
 3. Tenez un registre (sans les valeurs) : qui détient quelle clé, date de création, date de renouvellement prévue.
-4. Changer `SESSION_SECRET` déconnecte tous les utilisateurs et **invalide tous les QR codes e-Visa et WawPass déjà émis** : planifiez cette opération.
+4. Changer `SESSION_SECRET` déconnecte tous les utilisateurs et **invalide tous les QR codes e-Visa (et anciens reçus WawPass) déjà émis** : planifiez cette opération.
 5. En production nationale, les clés sont conservées dans un HSM (À développer).
 
 ### Comptes initiaux et mots de passe
@@ -507,7 +507,7 @@ Les coordonnées, horaires et délais d'intervention de chaque niveau sont fixé
 | 8 | Fermeture d'une eGate à distance | **Porte fermée** affiché en moins de 15 secondes |
 | 9 | Demande e-Visa sur le portail, demande d'information, réponse, approbation | Statuts successifs corrects ; QR signé vérifié au guichet |
 | 10 | Demande e-Visa depuis l'application iPhone et Android | Puce lue ; demande visible dans l'espace DPAF avec le champ **Puce (NFC)** |
-| 11 | WawPass vérifié deux fois | Première vérification **Valide**, seconde « Reçu déjà utilisé » |
+| 11 | Carte **Redevance de sécurité** du portail voyageur | Page d'information « Vous n'avez rien à payer », redevance incluse dans le billet ; aucun formulaire ni demande de paiement ; `POST /api/public/pass` répond `410` |
 | 12 | Message PAXLST et PNR d'une compagnie avec sa clé | 202 sans résultat de pré-contrôle dans l'accusé ; fusion API + PNR ; passagers signalés visibles dans l'espace DPAF |
 | 13 | Message avec la clé d'une autre compagnie | Rejet (422) |
 | 14 | Encaissement d'une facture par un agent du Trésor | Statut **PARTIELLE** ou **PAYÉE** ; entrée `REDEVANCE_ENCAISSEMENT` |

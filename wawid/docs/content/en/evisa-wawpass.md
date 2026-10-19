@@ -1,10 +1,12 @@
-# e-Visa, WawPass and pre-enrollments
+# e-Visa and eGate pre-enrollments
 
 The **e-Visa & travelers** space of the back office handles applications submitted on the traveler portal:
 
 - **e-Visa**: processing of travel authorization applications (Visa Management System);
-- **WawPass & enrollments**: receipts for the security fee paid online, and pre-enrollments in the eGate program;
-- **Verify a QR** (**Border control** space): checking e-Visa and WawPass QR codes at the border.
+- **eGate pre-enrollments**: pre-enrollments in the eGate program and, on a second tab, the history of former WawPass receipts;
+- **Verify a QR** (**Border control** space): checking e-Visa QR codes at the border.
+
+> The security fee (12 USD per passenger) is included in the plane ticket price and collected by airlines (see *Security fee*). Travelers pay nothing separately: the former WawPass online payment has been removed from the portal.
 
 | Action | Permission |
 |---|---|
@@ -97,11 +99,11 @@ At the counter and at eGates, the risk engine looks up the e-Visa for the passpo
 
 The server checks the signature. A forged QR is reported as invalid or forged. For an e-Visa, the QR is **Valid** if the application is approved and not expired. Compare the holder and document number shown with the passport presented.
 
-> A WawPass receipt is valid **once**: the first verification marks it as used, and the next one answers "Receipt already used.".
+> Former WawPass receipts (`WP…` tokens) issued before the traveler payment was removed can still be verified for the record: the first verification marks them as **Used**, the next one answers "Receipt already used.". No new receipts are issued.
 
-## WawPass (security fee)
+## WawPass history (former receipts)
 
-Open **WawPass & enrollments**, **WawPass** tab. Each row is a security fee paid online by a traveler on the portal:
+Traveler payment of the security fee (WawPass) has been removed: the fee is included in the ticket. Open **eGate pre-enrollments**, **WawPass history** tab, to view receipts issued before:
 
 | Column | Content |
 |---|---|
@@ -111,11 +113,11 @@ Open **WawPass & enrollments**, **WawPass** tab. Each row is a security fee paid
 | **Amount** | Amount (15,000 FCFA by default) and payment method |
 | **Status** | **Valid** or **Used** |
 
-The home tile shows the number of receipts still valid. In the demo, payments (Wave, Orange Money, bank card) are simulated.
+This history is read-only; no new receipts are added.
 
 ## eGate pre-enrollments
 
-The **eGate pre-enrollments** tab lists travelers who signed up on the portal for the automated crossing program: **Reference** (`EN…`), **Traveler** (nationality and passport), **Date** and **Status**. The status shown, "Biometrics to be captured at first crossing", is a reminder that the face is captured at the first crossing at a counter.
+Open the **eGate pre-enrollments** tile (route `#/wawpass`): the default tab, **eGate pre-enrollments**, lists travelers who signed up on the portal for the automated crossing program: **Reference** (`EN…`), **Traveler** (nationality and passport), **Date** and **Status**. The status shown, "Biometrics to be captured at first crossing", is a reminder that the face is captured at the first crossing at a counter.
 
 The portal only accepts a pre-enrollment when:
 

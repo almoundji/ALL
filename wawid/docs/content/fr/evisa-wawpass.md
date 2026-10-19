@@ -1,10 +1,12 @@
-# e-Visa, WawPass et pré-enrôlements
+# e-Visa et pré-enrôlements eGate
 
 L'espace **e-Visa & voyageurs** du back-office traite les demandes déposées sur le portail voyageur :
 
 - **e-Visa** : instruction des demandes d'autorisation de voyage (Visa Management System) ;
-- **WawPass & enrôlements** : reçus de la taxe de sécurité payée en ligne et pré-enrôlements au programme eGate ;
-- **Vérifier un QR** (espace **Contrôle frontière**) : contrôle à la frontière des QR codes e-Visa et WawPass.
+- **Pré-enrôlements eGate** : pré-enrôlements au programme eGate et, dans un second onglet, historique des anciens reçus WawPass ;
+- **Vérifier un QR** (espace **Contrôle frontière**) : contrôle à la frontière des QR codes e-Visa.
+
+> La redevance de sécurité (12 USD par passager) est incluse dans le prix du billet d'avion et perçue par les compagnies aériennes (voir *Redevance de sécurité*). Le voyageur n'a rien à payer à part : l'ancien paiement en ligne WawPass a été supprimé du portail.
 
 | Action | Droit nécessaire |
 |---|---|
@@ -97,11 +99,11 @@ Au guichet et aux eGates, le moteur de risque recherche l'e-Visa du passeport pr
 
 Le serveur contrôle la signature. Un QR falsifié est déclaré « QR code invalide ou falsifié ». Pour un e-Visa, le QR est **Valide** si la demande est approuvée et non échue. Comparez le titulaire et le numéro de document affichés avec le passeport présenté.
 
-> Un reçu WawPass n'est valable qu'**une fois** : la première vérification le marque **Utilisé**, la suivante répond « Reçu déjà utilisé. ».
+> Les anciens reçus WawPass (jetons `WP…`) émis avant la suppression du paiement voyageur restent vérifiables à titre historique : la première vérification les marque **Utilisé**, la suivante répond « Reçu déjà utilisé. ». Aucun nouveau reçu n'est émis.
 
-## WawPass (taxe de sécurité)
+## Historique WawPass (anciens reçus)
 
-Ouvrez **WawPass & enrôlements**, onglet **WawPass**. Chaque ligne correspond à une taxe de sécurité payée en ligne par un voyageur sur le portail :
+Le paiement de la taxe de sécurité par le voyageur (WawPass) a été supprimé : la redevance est incluse dans le billet. Ouvrez **Pré-enrôlements eGate**, onglet **Historique WawPass**, pour consulter les reçus émis auparavant :
 
 | Colonne | Contenu |
 |---|---|
@@ -111,11 +113,11 @@ Ouvrez **WawPass & enrôlements**, onglet **WawPass**. Chaque ligne correspond �
 | **Montant** | Montant (15 000 FCFA par défaut) et moyen de paiement |
 | **Statut** | **Valide** ou **Utilisé** |
 
-La tuile de l'accueil indique le nombre de reçus encore valides. Dans la démonstration, les paiements (Wave, Orange Money, carte bancaire) sont simulés.
+Cet historique est en lecture seule ; aucun nouveau reçu n'y est ajouté.
 
 ## Pré-enrôlements eGate
 
-L'onglet **Pré-enrôlements eGate** liste les voyageurs inscrits depuis le portail au programme de passage automatisé : **Référence** (`EN…`), **Voyageur** (nationalité et passeport), **Date** et **Statut**. Le statut affiché, « Biométrie à capturer au 1er passage », rappelle que le visage est capturé lors du premier passage au guichet.
+Ouvrez la tuile **Pré-enrôlements eGate** (route `#/wawpass`) : l'onglet par défaut, **Pré-enrôlements eGate**, liste les voyageurs inscrits depuis le portail au programme de passage automatisé : **Référence** (`EN…`), **Voyageur** (nationalité et passeport), **Date** et **Statut**. Le statut affiché, « Biométrie à capturer au 1er passage », rappelle que le visage est capturé lors du premier passage au guichet.
 
 Le portail n'accepte le pré-enrôlement que si :
 

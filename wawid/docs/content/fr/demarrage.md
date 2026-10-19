@@ -1,6 +1,6 @@
 # Démarrer avec WawID
 
-WawID est la plateforme de gestion des identités et des frontières : contrôle des voyageurs aux guichets et aux eGates, renseignement (Threat Monitor, listes de surveillance, règles de ciblage), pré-contrôle des passagers aériens (APIS / PNR), autorisations de voyage (e-Visa), taxe de sécurité (WawPass), redevance de sécurité et administration. Cette page présente les plateformes, la connexion, les rôles et les éléments communs à tous les écrans de l'espace DPAF.
+WawID est la plateforme de gestion des identités et des frontières : contrôle des voyageurs aux guichets et aux eGates, renseignement (Threat Monitor, listes de surveillance, règles de ciblage), pré-contrôle des passagers aériens (APIS / PNR), autorisations de voyage (e-Visa), pré-enrôlement eGate, redevance de sécurité (incluse dans le billet et perçue par les compagnies aériennes) et administration. Cette page présente les plateformes, la connexion, les rôles et les éléments communs à tous les écrans de l'espace DPAF.
 
 ## Les plateformes de WawID
 
@@ -9,7 +9,7 @@ WawID est organisé en **quatre plateformes dissociées**. Chacune a sa propre a
 | Plateforme | Adresse | Pour qui | Usage |
 | --- | --- | --- | --- |
 | Espace DPAF | `/dpaf/` (alias de `/admin/`) | Agents, analystes, superviseurs, agents du Trésor, administrateurs | Contrôle guichet, supervision des eGates, renseignement, APIS, e-Visa, finances, administration |
-| Plateforme voyageurs | `/` (portail) et `/aide/` (aide publique) | Voyageurs (public) | Demande et suivi d'e-Visa, paiement du WawPass, pré-enrôlement eGate, centre d'aide |
+| Plateforme voyageurs | `/` (portail) et `/aide/` (aide publique) | Voyageurs (public) | Demande et suivi d'e-Visa, pré-enrôlement eGate, information sur la redevance de sécurité (rien à payer), centre d'aide |
 | Applications mobiles | `/app/` | Voyageurs | Téléchargement de l'application WawID e-Visa : Android (APK en téléchargement direct) et iPhone (TestFlight) ; demande d'e-Visa avec lecture NFC de la puce du passeport |
 | Plateforme des compagnies aériennes | `/compagnies/` | Personnel des compagnies aériennes | Transmission des données API / PNR, accusés de réception, qualité des données, factures et paiements de la redevance de sécurité (voir *Plateforme des compagnies aériennes*) |
 
@@ -121,4 +121,4 @@ Le bouton **?** ouvre la page de cette documentation qui correspond à l'écran 
 
 ## Traçabilité et journal d'audit
 
-Toutes les actions sensibles sont enregistrées dans le **Journal d'audit** : connexions, échecs de connexion et déconnexions, décisions de passage, commandes envoyées aux eGates, validations de WawPass, création de dossiers, modifications de listes et de règles, décisions e-Visa, gestion des utilisateurs, etc. Chaque entrée indique l'auteur, l'action, l'objet et l'heure. Les entrées sont chaînées par empreinte SHA-256 : toute modification ou suppression a posteriori rompt la chaîne et devient détectable. Le message de la page de connexion le rappelle : « Toutes les actions sont journalisées ».
+Toutes les actions sensibles sont enregistrées dans le **Journal d'audit** : connexions, échecs de connexion et déconnexions, décisions de passage, commandes envoyées aux eGates, vérifications d'anciens reçus WawPass, création de dossiers, modifications de listes et de règles, décisions e-Visa, gestion des utilisateurs, etc. Chaque entrée indique l'auteur, l'action, l'objet et l'heure. Les entrées sont chaînées par empreinte SHA-256 : toute modification ou suppression a posteriori rompt la chaîne et devient détectable. Le message de la page de connexion le rappelle : « Toutes les actions sont journalisées ».

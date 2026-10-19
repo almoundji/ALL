@@ -89,7 +89,7 @@ Caps applied: 20,000 crossings, 300 flights, 2,000 carrier messages kept; the au
 
 | Variable | Required | Role |
 | --- | --- | --- |
-| `SESSION_SECRET` | Yes | HMAC key signing session cookies and e-Visa / WawPass QR codes. Long random string (64 characters or more). Without it, the API returns a server error. Changing it invalidates all sessions and all issued QR codes. |
+| `SESSION_SECRET` | Yes | HMAC key signing session cookies and e-Visa QR codes (and former WawPass receipts). Long random string (64 characters or more). Without it, the API returns a server error. Changing it invalidates all sessions and all issued QR codes. |
 | `WAWID_ADMIN_PASSWORD` | Yes | Password of the `admin` account, created at the **first** login if no account exists. Without it, no account is created. |
 | `WAWID_DEMO_PASSWORD` | No | If set, also creates the `agent`, `analyste`, `superviseur` and `tresor` accounts with this password. Do not set it in production. |
 | `WAWID_GATE_KEY` | Yes, for eGates | Shared key of eGates and kiosks (`X-Gate-Key` header). Without it, no device can authenticate. |

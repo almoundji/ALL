@@ -1649,5 +1649,8 @@
 "Programme de passage automatisé": "Automated border crossing programme",
 "pré-enrôlements": "pre-enrollments",
 "Historique WawPass ({0})": "WawPass history ({0})",
-"Pré-enrôlements au programme eGate. Historique des anciens reçus WawPass (paiement voyageur supprimé : la redevance est incluse dans le billet).": "Pre-enrollments to the eGate programme. History of former WawPass receipts (traveler payment removed: the fee is included in the ticket)."
+"Pré-enrôlements au programme eGate. Historique des anciens reçus WawPass (paiement voyageur supprimé : la redevance est incluse dans le billet).": "Pre-enrollments to the eGate programme. History of former WawPass receipts (traveler payment removed: the fee is included in the ticket).",
+"Demandez votre autorisation de voyage en ligne, suivez votre demande et franchissez la frontière en quelques secondes grâce aux eGates biométriques.": "Apply for your travel authorization online, track your application and cross the border in seconds through biometric eGates.",
+"e-Visa (ou ancien reçu WawPass) : la signature cryptographique est contrôlée par le serveur.": "e-Visa (or former WawPass receipt): the cryptographic signature is checked by the server.",
+"Incluse dans le billet (compagnies)": "Included in the ticket (airlines)"
 }

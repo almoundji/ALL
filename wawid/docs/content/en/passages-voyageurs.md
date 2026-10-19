@@ -4,7 +4,7 @@ This page covers four applications in the **Border control** space, available to
 
 - **Crossings**: the history of all border crossings and the detail page of each crossing;
 - **Traveler search**: a traveler's 360° profile;
-- **Verify a QR**: checking e-Visa and WawPass QR codes;
+- **Verify a QR**: checking e-Visa QR codes;
 - **Vehicles (VRS)**: vehicles and occupants at land border posts.
 
 ## Crossings: the list
@@ -89,9 +89,9 @@ WawID goes beyond exact matching:
 
 When nothing is found, the message "No results for …" is shown.
 
-## Verify a QR (e-Visa and WawPass)
+## Verify a QR (e-Visa)
 
-Travelers present QR codes issued by the portal: an approved e-Visa or a **WawPass** receipt (security fee). A QR code contains a value such as `EV.EV2600001.ab12cd34ef56gh78` (e-Visa) or `WP.WP1234567.…` (WawPass): a type, a reference and a cryptographic signature computed by the server.
+Travelers present the QR code of their approved e-Visa, issued by the portal. A QR code contains a value such as `EV.EV2600001.ab12cd34ef56gh78`: a type, a reference and a cryptographic signature computed by the server. The security fee is included in the ticket: no payment receipt is required from the traveler.
 
 1. Open **Verify a QR** (tile, or button in the counter check).
 2. Read the QR code:
@@ -107,10 +107,10 @@ The result shows **Valid** or **Invalid** with a message, then the type, **Refer
 | Wrong signature (altered or fabricated QR) | Invalid — "Invalid or forged QR code (incorrect signature)." |
 | e-Visa approved and not expired | Valid — visa number and end of validity. |
 | e-Visa not approved or expired | Invalid — application status. |
-| WawPass presented for the first time | Valid — "Fee paid", flight and travel date. |
-| WawPass already presented | Invalid — "Receipt already used." |
+| Former WawPass receipt (`WP.…`), first verification | Valid — "Fee paid", flight and travel date (history). |
+| Former WawPass receipt already verified | Invalid — "Receipt already used." |
 
-> **Warning: a WawPass can be used only once.** The first verification marks it as used and is written to the audit log. Only verify a receipt when actually checking the traveler. The list of receipts and their status (**Valid** or **Used**) is available in **WawPass & enrollments**.
+> Traveler payment through WawPass has been removed; receipts issued before can still be verified for the record. Their first verification marks them as used and is written to the audit log. They are listed in **eGate pre-enrollments**, **WawPass history** tab.
 
 ## Vehicles (VRS)
 

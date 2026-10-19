@@ -28,7 +28,7 @@
 | S0 | Cadrage, architecture, design system Fiori × WAW, déploiement continu | Terminé |
 | S1 | MVP contrôle guichet : MRZ ICAO, biométrie, moteur de risque, passages, tableau de bord entrées/sorties/fraude | Terminé |
 | S2 | eGates & ABC : kiosque, éligibilité, supervision et commandes à distance | Terminé |
-| S3 | e-Visa (TAS/VMS), WawPass, portail voyageur, QR signés | Terminé |
+| S3 | e-Visa (TAS/VMS), WawPass (paiement voyageur retiré depuis : redevance incluse dans le billet), portail voyageur, QR signés | Terminé |
 | S4 | Renseignement & APIS : Threat Monitor, dossiers, listes Interpol/FPR/WAPIS/POI/SLTD, règles, connecteurs, recherche 360° | Terminé |
 | S5 | Intégrations réelles : Interpol I-24/7 via BCN, WAPIS, FPR, SDK biométrique certifié, lecteurs RFID, eGates constructeur, PAXLST/PNRGOV | En cours |
 | S6 | Sécurité & passage à l'échelle nationale : PostgreSQL + Kafka, SSO/MFA/PKI, mode hors ligne des postes, pentest, CDP (voir `ARCHITECTURE.md`) | À venir |

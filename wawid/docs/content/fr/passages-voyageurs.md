@@ -4,7 +4,7 @@ Cette page décrit quatre applications de l'espace **Contrôle frontière**, acc
 
 - **Passages** : l'historique de tous les franchissements et la fiche détaillée de chaque passage ;
 - **Recherche voyageur** : le profil 360° d'un voyageur ;
-- **Vérifier un QR** : le contrôle des QR codes e-Visa et WawPass ;
+- **Vérifier un QR** : le contrôle des QR codes e-Visa ;
 - **Véhicules (VRS)** : les véhicules et occupants aux postes terrestres.
 
 ## Passages : la liste
@@ -89,9 +89,9 @@ WawID ne se limite pas à une recherche exacte :
 
 Sans résultat, le message « Aucun résultat pour … » s'affiche.
 
-## Vérifier un QR (e-Visa et WawPass)
+## Vérifier un QR (e-Visa)
 
-Les voyageurs présentent des QR codes délivrés par le portail : e-Visa approuvé ou reçu **WawPass** (taxe de sécurité). Le contenu d'un QR a la forme `EV.EV2600001.ab12cd34ef56gh78` (e-Visa) ou `WP.WP1234567.…` (WawPass) : un type, une référence et une signature cryptographique calculée par le serveur.
+Les voyageurs présentent le QR code de leur e-Visa approuvé, délivré par le portail. Le contenu d'un QR a la forme `EV.EV2600001.ab12cd34ef56gh78` : un type, une référence et une signature cryptographique calculée par le serveur. La redevance de sécurité est incluse dans le billet : aucun reçu de paiement n'est demandé au voyageur.
 
 1. Ouvrez **Vérifier un QR** (tuile ou bouton du contrôle guichet).
 2. Lisez le QR :
@@ -107,10 +107,10 @@ Le résultat indique **Valide** ou **Non valide** avec un message, puis le type,
 | Signature incorrecte (QR modifié ou fabriqué) | Non valide — « QR code invalide ou falsifié (signature incorrecte). » |
 | e-Visa approuvé et non échu | Valide — numéro de visa et date de fin de validité. |
 | e-Visa non approuvé ou échu | Non valide — statut de la demande. |
-| WawPass présenté pour la première fois | Valide — « Taxe acquittée », vol et date du voyage. |
-| WawPass déjà présenté | Non valide — « Reçu déjà utilisé. » |
+| Ancien reçu WawPass (`WP.…`), première vérification | Valide — « Taxe acquittée », vol et date du voyage (historique). |
+| Ancien reçu WawPass déjà vérifié | Non valide — « Reçu déjà utilisé. » |
 
-> **Attention : un WawPass est à usage unique.** La première vérification le marque comme utilisé et est inscrite au journal d'audit. Ne vérifiez donc un reçu qu'au moment du contrôle effectif du voyageur. La liste des reçus et leur statut (**Valide** ou **Utilisé**) est consultable dans **WawPass & enrôlements**.
+> Le paiement WawPass par le voyageur a été supprimé ; les reçus émis auparavant restent vérifiables à titre historique. Leur première vérification les marque comme utilisés et est inscrite au journal d'audit. Leur liste figure dans **Pré-enrôlements eGate**, onglet **Historique WawPass**.
 
 ## Véhicules (VRS)
 

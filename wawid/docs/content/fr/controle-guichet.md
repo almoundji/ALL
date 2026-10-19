@@ -2,7 +2,7 @@
 
 L'application **Contrôle guichet** guide l'agent dans le contrôle d'un voyageur : lecture du document et de sa puce, capture biométrique, interrogation des fichiers, évaluation du risque et décision motivée. Elle est réservée aux rôles disposant du droit de contrôle (**Agent de contrôle**, **Superviseur**, **Administrateur**).
 
-Pour démarrer, ouvrez la tuile **Contrôle guichet** ou la tuile de création **Nouveau contrôle**. Le bouton **Nouveau contrôle**, en haut à droite, abandonne le contrôle en cours et repart de zéro ; **Vérifier un QR** ouvre la vérification des e-Visa et WawPass.
+Pour démarrer, ouvrez la tuile **Contrôle guichet** ou la tuile de création **Nouveau contrôle**. Le bouton **Nouveau contrôle**, en haut à droite, abandonne le contrôle en cours et repart de zéro ; **Vérifier un QR** ouvre la vérification des e-Visa.
 
 L'assistant comporte quatre étapes, affichées en haut de page : **Document**, **Biométrie**, **Vérifications**, **Décision**. Les boutons **Précédent** et **Suivant** permettent de revenir en arrière sans perdre les données saisies.
 

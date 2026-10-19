@@ -66,7 +66,7 @@ function renderApplication(el, ctx, ref) {
 
 // ---------- Vérification d'un QR ----------
 export function renderVerify(el, ctx) {
-  el.innerHTML = `${pageHead({ title: "Vérifier un QR code", sub: "e-Visa ou reçu WawPass (taxe de sécurité) : la signature cryptographique est contrôlée par le serveur.", crumbs: [[null, "Contrôle frontière"]] })}
+  el.innerHTML = `${pageHead({ title: "Vérifier un QR code", sub: "e-Visa (ou ancien reçu WawPass) : la signature cryptographique est contrôlée par le serveur.", crumbs: [[null, "Contrôle frontière"]] })}
   <div class="grid-2">
     <form class="card card-pad stack" id="f">
       <label class="field"><span>Contenu du QR code</span><input class="input mono" name="token" placeholder="EV.EV260001.ab12cd34ef56gh78" autofocus></label>

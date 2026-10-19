@@ -36,7 +36,7 @@ Ces volumes sont modestes pour une architecture transactionnelle classique : le 
 
 ```
                          ┌──────────────── Internet (portail voyageur, transporteurs) ────────────────┐
-                         │  CDN/WAF anti-DDoS ─ API publique e-Visa / WawPass / APIS Gateway (DMZ)    │
+                         │  CDN/WAF anti-DDoS ─ API publique e-Visa / eGate / APIS Gateway (DMZ)      │
                          └───────────────────────────────┬────────────────────────────────────────────┘
                                                          │ (flux filtrés, unidirectionnels si possible)
 ┌──────────── Site A — Datacenter national de Diamniadio (actif) ─────────────┐   ┌──── Site B — DC commercial Tier III (actif) ────┐
@@ -95,7 +95,7 @@ Ces chantiers correspondent aux sprints 5 à 8 du backlog (`docs/SCRUM.md`).
 
 ## 5. Ce que le démonstrateur valide déjà
 
-- Les parcours complets (guichet, eGate/ABC, e-Visa, WawPass, APIS, Threat Monitor, dossiers) et l'ergonomie Fiori.
+- Les parcours complets (guichet, eGate/ABC, e-Visa, pré-enrôlement eGate, APIS, Threat Monitor, dossiers) et l'ergonomie Fiori.
 - La logique métier testée (`npm test`), y compris le spécimen MRZ de la norme ICAO 9303.
 - Le contrat des connecteurs externes et le principe de repli sur copie locale.
 - La traçabilité (journal chaîné vérifiable) et la matrice des droits.

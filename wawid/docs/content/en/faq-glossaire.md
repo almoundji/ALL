@@ -24,9 +24,9 @@ Open **Tracking**, enter the reference and passport number, read the officer's m
 
 It is not required: you can show the QR code on your phone. A printed copy is useful if your battery runs out. Always show the QR code **together with your passport**.
 
-#### My WawPass receipt was refused at the airport.
+#### Do I have to pay a security tax?
 
-A WawPass QR code can be used **only once**. If it was already scanned, it is reported as "Receipt already used". Also check that the flight and date match your trip.
+No. The security fee is **included in your plane ticket price** and collected by your airline: you have nothing to pay, online or at the airport, and no receipt to show. Beware of any request for payment on this account. The former WawPass online payment has been removed.
 
 #### Why did the eGate refer me to a counter?
 
@@ -72,9 +72,9 @@ On the **DPAF space** (`/dpaf/`; the former `/admin/` address still works). The 
 
 Yes, if the NFC bridge is not running or no reader is connected. Check the bridge address in **Administration → Settings → NFC reader on this workstation** and click **Test**.
 
-#### How do I verify an e-Visa or WawPass QR code?
+#### How do I verify an e-Visa QR code?
 
-Use the QR verification feature of the DPAF space (session required). The signature is checked, then the e-Visa status or WawPass usage is verified in real time.
+Use **Verify a QR** in the DPAF space (session required). The signature is checked, then the e-Visa status is verified in real time. Former WawPass receipts, issued before the traveler payment was removed, can still be verified for the record.
 
 #### Why must I enter a reason for some decisions?
 
@@ -116,8 +116,8 @@ Sessions last 12 hours (one shift). Sign in again. If your account was deactivat
 | POI (person of interest) | Person flagged by intelligence services on a watchlist. |
 | Pre-enrollment | Registering a passport in advance on the portal in order to use the eGates. |
 | Risk score | Score from 0 to 100 computed from explainable factors (lists, rules, document, biometrics); it produces a recommendation: Cleared, Secondary inspection or Refused. |
-| Security fee | Fee collected by airlines in the ticket price on passengers of international commercial flights (12 USD), paid to WawID (collection account), which transfers the State's share to the Public Treasury, or directly to the Treasury depending on the flow in force; tracked in the Finance module. In the traveler portal, WawPass also refers to the airport security fee paid by the traveler. |
+| Security fee | Fee collected by airlines in the ticket price on passengers of international commercial flights (12 USD), paid to WawID (collection account), which transfers the State's share to the Public Treasury, or directly to the Treasury depending on the flow in force; tracked in the Finance module. Travelers do not pay it separately. |
 | SLTD (Stolen and Lost Travel Documents) | Interpol database of lost or stolen travel documents. |
 | SSR DOCS | PNR element holding the passenger's travel document data. |
 | WAPIS | West African Police Information System, a regional program supported by Interpol. |
-| WawPass | Online payment service for the airport security fee, with a QR receipt valid once. |
+| WawPass | Former (withdrawn) online payment service for the security fee paid by the traveler, with a QR receipt valid once. Receipts already issued can still be viewed on the **WawPass history** tab and verified for the record. |

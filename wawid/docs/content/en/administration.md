@@ -118,7 +118,7 @@ The table shows the latest 1,000 entries, newest first: **No.**, **Timestamp**, 
 | Border control | `PASSAGE_DECISION`, `EGATE_TRANSACTION`, `EGATE_REJET`, `EGATE_COMMANDE` |
 | Intelligence | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
-| Portal and e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT`, `WAWPASS_VALIDATION`, `PREENROLEMENT` |
+| Portal and e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT` (history, no longer written), `WAWPASS_VALIDATION` (verification of a former receipt), `PREENROLEMENT` |
 | Security fee | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (declaration by an airline), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 
@@ -133,7 +133,7 @@ The **Policy** card shows the settings in force (read-only in this version):
 - **Visa exemption**: exempt nationalities (ECOWAS and bilateral agreements); other nationalities trigger the e-Visa check on entry;
 - **Face threshold (counter)**: 80 %;
 - **e-Visa fee**: 50,000 FCFA;
-- **Security fee** (WawPass): 15,000 FCFA;
+- **Security fee**: 15,000 FCFA (legacy setting from the former WawPass, with no effect: the security fee is included in the ticket and is managed in the Finance module);
 - **Retention**: 5 years (Law No. 2008-12 on personal data — CDP).
 
 eGate thresholds are set gate by gate in **eGates & ABC**.

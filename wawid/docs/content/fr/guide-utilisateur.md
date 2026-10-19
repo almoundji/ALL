@@ -12,7 +12,7 @@ Chaque utilisateur de l'espace DPAF (`/dpaf/`) a **un seul rôle**, attribué pa
 | --- | --- | --- | --- |
 | Agent DPAF au guichet | Agent de contrôle | **Nouveau contrôle**, **Contrôle guichet**, **Vérifier un QR**, **Passages**, **Recherche voyageur**, **Threat Monitor**, **Dossiers** | *Contrôle guichet (MRZ, puce NFC, biométrie)* ; *Passages, recherche voyageur, QR et véhicules* |
 | Superviseur des eGates | Superviseur | **eGates & ABC**, **Kiosque eGate**, **Supervision systèmes**, **Passages** | *eGates et kiosques ABC* ; *Kiosque eGate : mise en service et parcours* |
-| Analyste renseignement | Analyste renseignement | **Threat Monitor**, **Dossiers**, **Listes de surveillance**, **Règles de ciblage**, **Connecteurs**, **Vols annoncés**, **e-Visa** | *Threat Monitor, dossiers, listes, règles et connecteurs* ; *APIS et PNR* ; *e-Visa, WawPass et pré-enrôlements* |
+| Analyste renseignement | Analyste renseignement | **Threat Monitor**, **Dossiers**, **Listes de surveillance**, **Règles de ciblage**, **Connecteurs**, **Vols annoncés**, **e-Visa** | *Threat Monitor, dossiers, listes, règles et connecteurs* ; *APIS et PNR* ; *e-Visa et pré-enrôlements eGate* |
 | Superviseur de poste (chef de vacation) | Superviseur | **Tableau de bord**, **Threat Monitor**, **Dossiers**, **eGates & ABC**, **Contrôle guichet**, **Journal d'audit** | *Tableau de bord* ; *Comprendre le score de risque* |
 | Administrateur | Administrateur | **Utilisateurs & rôles**, **Créer un utilisateur**, **Paramètres**, **Journal d'audit**, **Supervision systèmes**, **Connecteurs** | *Administration (équipements, utilisateurs, audit, paramètres)* ; *Déploiement et configuration* |
 | Agent du Trésor | Agent du Trésor (redevance) | **Redevance de sécurité**, **Factures compagnies**, **Paiements à valider**, **Reversements à l'État**, **Rapprochement**, **Répartition** | *Redevance de sécurité* |
@@ -71,7 +71,7 @@ Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle fro
 8. Cliquez sur **Décider**. La décision recommandée est présélectionnée : **Autoriser**, **Contrôle secondaire** ou **Refuser**.
 9. Si vous choisissez une autre décision, saisissez le **Motif** (obligatoire). Ajoutez des **Observations** si utile.
 10. Vérifiez le récapitulatif et cliquez sur **Valider la décision**. La fiche du passage (`PX-…`) s'ouvre.
-11. Si le voyageur présente un e-Visa ou un reçu WawPass, ouvrez **Vérifier un QR** (bouton du contrôle guichet), scannez le QR et comparez le titulaire et le numéro de document avec le passeport.
+11. Si le voyageur présente un e-Visa, ouvrez **Vérifier un QR** (bouton du contrôle guichet), scannez le QR et comparez le titulaire et le numéro de document avec le passeport.
 
 ### Situations courantes
 
@@ -87,7 +87,7 @@ Avec le rôle **Agent de contrôle**, l'accueil affiche l'espace **Contrôle fro
 | Voyageur orienté par une eGate | Le voyageur se présente avec un message de la porte | Faites un contrôle normal. Le motif de l'orientation figure sur le passage eGate (canal **eGate / ABC**, motif préfixé « eGate : ») dans **Passages**. La plupart des orientations ont une cause simple (mineur, puce abîmée, éclairage, passeport expiré). |
 | Voyageur soumis à visa sans e-Visa | **Autorisation de voyage (e-Visa)** en Attention ou Alerte | Vérifiez si le voyageur a une référence `EV…` (recherche dans **Recherche voyageur** ou **e-Visa**). Sans autorisation valide, appliquez la réglementation en vigueur et les consignes du chef de poste. |
 | QR e-Visa refusé | « QR code invalide ou falsifié » ou statut non approuvé | Un QR modifié est un faux document : contrôle secondaire. Un e-Visa non approuvé ou échu n'autorise pas l'entrée. |
-| WawPass « Reçu déjà utilisé » | Résultat **Non valide** | Le reçu a déjà été présenté. Vérifiez dans **WawPass & enrôlements** à quelle date ; ne vérifiez un reçu qu'au moment du contrôle effectif. |
+| Voyageur présentant un ancien reçu WawPass ou une demande de paiement de taxe | — | La redevance de sécurité est incluse dans le billet : aucun reçu n'est exigé du voyageur. Un ancien reçu WawPass n'a qu'une valeur historique (onglet **Historique WawPass** de **Pré-enrôlements eGate**). |
 | Caméra indisponible | Message d'absence de caméra ; capture simulée | Vérifiez le branchement et l'autorisation du navigateur. Ne validez pas de passage en production avec une capture simulée : prévenez le support. |
 | Sources indisponibles | Bandeau **Sources indisponibles** | Le contrôle est fait sur la copie locale des listes. Poursuivez, et signalez la panne au superviseur si elle dure. |
 
@@ -294,7 +294,7 @@ Aucun résultat de ciblage n'est renvoyé à la compagnie : ni sur la plateforme
 2. Si un e-Visa est requis, remplissez les 4 étapes (Identité avec la MRZ, Voyage, Santé, Paiement), donnez votre consentement et cliquez sur **Payer et soumettre**. Conservez la référence `EV…`.
 3. Suivez la demande dans l'onglet **Suivi** (référence et numéro de passeport). Si le statut est **Info. demandée**, répondez dans **Votre réponse**.
 4. Une fois l'e-Visa **Approuvé**, imprimez ou enregistrez le QR code et présentez-le avec le passeport à la frontière.
-5. Le cas échéant, payez la taxe de sécurité dans l'onglet **WawPass** (QR à usage unique) et pré-enregistrez-vous pour les eGates dans l'onglet **eGate**.
+5. Le cas échéant, pré-enregistrez-vous pour les eGates dans l'onglet **eGate**. La redevance de sécurité est incluse dans le billet : vous n'avez rien à payer (carte **Redevance de sécurité** de l'accueil).
 
 ### Avec l'application mobile WawID e-Visa (iPhone et Android)
 
@@ -314,7 +314,7 @@ L'application permet de déposer la demande en lisant la puce du passeport. Elle
 | La puce ne se lit pas | Retirez la coque et l'étui, éloignez toute surface métallique, déplacez lentement le téléphone (la puce peut être dans la couverture ou dans la page de données). Sur Android, vérifiez que le NFC est activé dans les réglages. Vous pouvez continuer sans la puce, l'instruction sera plus longue. |
 | Statut **Info. demandée** | Répondez depuis l'onglet **Suivi** du portail. |
 | Orientation par l'eGate vers un guichet | Présentez-vous au guichet : ce n'est pas une sanction. |
-| WawPass « Reçu déjà utilisé » | Un reçu ne sert qu'une fois ; présentez la preuve de paiement à l'agent. |
+| Demande de paiement d'une taxe de sécurité | N'y donnez pas suite : la redevance est incluse dans le prix du billet et ne vous est jamais réclamée directement. |
 
 ## Continuité de service : mode dégradé, bascule et maintenance
 

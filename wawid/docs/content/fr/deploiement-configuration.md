@@ -89,7 +89,7 @@ Plafonds appliqués : 20 000 passages, 300 vols, 2 000 messages transporteurs co
 
 | Variable | Obligatoire | Rôle |
 | --- | --- | --- |
-| `SESSION_SECRET` | Oui | Clé HMAC de signature des cookies de session et des QR codes e-Visa / WawPass. Longue chaîne aléatoire (64 caractères ou plus). Sans elle, l'API répond par une erreur serveur. La changer invalide toutes les sessions et tous les QR codes émis. |
+| `SESSION_SECRET` | Oui | Clé HMAC de signature des cookies de session et des QR codes e-Visa (et des anciens reçus WawPass). Longue chaîne aléatoire (64 caractères ou plus). Sans elle, l'API répond par une erreur serveur. La changer invalide toutes les sessions et tous les QR codes émis. |
 | `WAWID_ADMIN_PASSWORD` | Oui | Mot de passe du compte `admin`, créé au **premier** login si aucun compte n'existe. Sans elle, aucun compte n'est créé. |
 | `WAWID_DEMO_PASSWORD` | Non | Si définie, crée aussi les comptes `agent`, `analyste`, `superviseur` et `tresor` avec ce mot de passe. À ne pas définir en production. |
 | `WAWID_GATE_KEY` | Oui pour les eGates | Clé partagée des eGates et kiosques (en-tête `X-Gate-Key`). Sans elle, aucun équipement ne peut s'authentifier. |

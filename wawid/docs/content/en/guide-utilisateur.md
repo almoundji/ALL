@@ -12,7 +12,7 @@ Each DPAF space user (`/dpaf/`) has **a single role**, assigned by the administr
 | --- | --- | --- | --- |
 | DPAF counter officer | Border officer | **New check**, **Counter check**, **Verify a QR**, **Crossings**, **Traveler search**, **Threat Monitor**, **Cases** | *Counter check (MRZ, NFC chip, biometrics)*; *Crossings, traveler search, QR and vehicles* |
 | eGate supervisor | Supervisor | **eGates & ABC**, **eGate kiosk**, **System monitoring**, **Crossings** | *eGates and ABC kiosks*; *eGate kiosk: setup and journey* |
-| Intelligence analyst | Intelligence analyst | **Threat Monitor**, **Cases**, **Watchlists**, **Targeting rules**, **Connectors**, **Announced flights**, **e-Visa** | *Threat Monitor, cases, watchlists, rules and connectors*; *APIS and PNR*; *e-Visa, WawPass and pre-enrollments* |
+| Intelligence analyst | Intelligence analyst | **Threat Monitor**, **Cases**, **Watchlists**, **Targeting rules**, **Connectors**, **Announced flights**, **e-Visa** | *Threat Monitor, cases, watchlists, rules and connectors*; *APIS and PNR*; *e-Visa and eGate pre-enrollments* |
 | Post supervisor (shift leader) | Supervisor | **Dashboard**, **Threat Monitor**, **Cases**, **eGates & ABC**, **Counter check**, **Audit log** | *Dashboard*; *Understanding the risk score* |
 | Administrator | Administrator | **Users & roles**, **Create a user**, **Settings**, **Audit log**, **System monitoring**, **Connectors** | *Administration (devices, users, audit, settings)*; *Deployment and configuration* |
 | Treasury officer | Treasury officer (fee) | **Security fee**, **Airline invoices**, **Payments to validate**, **Transfers to the State**, **Reconciliation**, **Revenue split** | *Security fee* |
@@ -71,7 +71,7 @@ With the **Border officer** role, the home page shows the **Border control** spa
 8. Click **Decide**. The recommended decision is preselected: **Clear**, **Secondary inspection** or **Refuse**.
 9. If you choose another decision, enter the **Reason** (mandatory). Add **Remarks** if useful.
 10. Check the summary and click **Confirm decision**. The crossing record (`PX-…`) opens.
-11. If the traveler presents an e-Visa or a WawPass receipt, open **Verify a QR** (button in the counter check), scan the QR and compare the holder and document number with the passport.
+11. If the traveler presents an e-Visa, open **Verify a QR** (button in the counter check), scan the QR and compare the holder and document number with the passport.
 
 ### Common situations
 
@@ -87,7 +87,7 @@ With the **Border officer** role, the home page shows the **Border control** spa
 | Traveler referred by an eGate | The traveler arrives with a message from the gate | Perform a normal check. The referral reason is on the eGate crossing (**eGate / ABC** channel, reason prefixed with "eGate:") in **Crossings**. Most referrals have a simple cause (minor, damaged chip, lighting, expired passport). |
 | Traveler requiring a visa without an e-Visa | **Travel authorization (e-Visa)** in Warning or Alert | Check whether the traveler has an `EV…` reference (search in **Traveler search** or **e-Visa**). Without a valid authorization, apply the regulations in force and the post chief's instructions. |
 | e-Visa QR rejected | "Invalid or forged QR code" or status not approved | A modified QR is a forged document: secondary inspection. An e-Visa that is not approved or has expired does not authorize entry. |
-| WawPass "Receipt already used" | **Not valid** result | The receipt has already been presented. Check the date in **WawPass & enrollments**; only verify a receipt at the moment of the actual check. |
+| Traveler showing a former WawPass receipt or asked to pay a fee | — | The security fee is included in the ticket: no receipt is required from the traveler. A former WawPass receipt only has historical value (**WawPass history** tab of **eGate pre-enrollments**). |
 | Camera unavailable | Message that no camera is available; simulated capture | Check the connection and the browser permission. In production, do not confirm a crossing with a simulated capture: notify support. |
 | Unavailable sources | **Unavailable sources** banner | The check uses the local copy of the lists. Continue, and report the outage to the supervisor if it lasts. |
 
@@ -294,7 +294,7 @@ No targeting result is ever sent back to the airline: neither on the platform no
 2. If an e-Visa is required, complete the 4 steps (Identity with the MRZ, Trip, Health, Payment), give your consent and click **Pay and submit**. Keep the `EV…` reference.
 3. Track the application in the **Tracking** tab (reference and passport number). If the status is **Info requested**, answer in **Your reply**.
 4. Once the e-Visa is **Approved**, print or save the QR code and present it with your passport at the border.
-5. Where applicable, pay the security tax in the **WawPass** tab (single-use QR) and pre-enroll for the eGates in the **eGate** tab.
+5. Where applicable, pre-enroll for the eGates in the **eGate** tab. The security fee is included in the ticket: you have nothing to pay (**Security fee** card on the home page).
 
 ### With the WawID e-Visa mobile app (iPhone and Android)
 
@@ -314,7 +314,7 @@ The app lets you apply by reading your passport chip. It works on **iPhone 7 or 
 | The chip cannot be read | Remove the phone case and the passport cover, move away from metal surfaces, move the phone slowly (the chip may be in the cover or in the data page). On Android, check that NFC is enabled in the settings. You can continue without the chip; processing will take longer. |
 | **Info requested** status | Reply from the portal's **Tracking** tab. |
 | Referred by the eGate to a counter | Go to the counter: it is not a penalty. |
-| WawPass "Receipt already used" | A receipt can only be used once; show your proof of payment to the officer. |
+| Request to pay a security fee | Do not act on it: the fee is included in the ticket price and is never asked of you directly. |
 
 ## Service continuity: degraded mode, failover and maintenance
 

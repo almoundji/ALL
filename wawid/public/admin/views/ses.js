@@ -116,7 +116,7 @@ export function renderSettings(el, ctx) {
     <section class="card"><div class="card-head"><h3>Politique</h3></div><div class="card-body"><dl class="kv">
       <dt>Dispense de visa</dt><dd>${s.visaExempt.map((c) => `<span class="status">${esc(c)}</span>`).join(" ")}</dd>
       <dt>Seuil facial (guichet)</dt><dd>${Math.round(s.faceThreshold * 100)} %</dd>
-      <dt>Frais e-Visa</dt><dd>${fmtNum(s.evisaFee)} FCFA</dd><dt>Taxe de sécurité</dt><dd>${fmtNum(s.passFee)} FCFA</dd>
+      <dt>Frais e-Visa</dt><dd>${fmtNum(s.evisaFee)} FCFA</dd><dt>Redevance de sécurité</dt><dd>Incluse dans le billet (compagnies)</dd>
       <dt>Conservation</dt><dd>${Math.round(s.retentionDays / 365)} ans (Loi n° 2008-12 sur les données personnelles — CDP)</dd></dl></div></section>
     <section class="card"><div class="card-head"><h3>${icon("wifi")} Lecteur NFC de ce poste</h3></div><div class="card-body stack">
       <p class="muted" style="margin:0">Les puces de passeport sont lues par le pont local <span class="mono">tools/nfc-bridge.mjs</span> relié au lecteur (PC/SC ou SDK constructeur). Réglage propre à ce poste de travail.</p>

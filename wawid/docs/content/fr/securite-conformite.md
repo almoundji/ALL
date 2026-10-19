@@ -66,12 +66,12 @@ Les clés doivent être longues, aléatoires, transmises par un canal sûr et re
 
 ## QR codes signés
 
-Les e-Visa approuvés et les reçus WawPass sont présentés sous forme de QR code contenant un jeton `TYPE.REFERENCE.SIGNATURE` (`EV` ou `WP`), signé par HMAC-SHA256 avec `SESSION_SECRET` (signature tronquée à 16 caractères).
+Les e-Visa approuvés (et les anciens reçus WawPass, émis avant la suppression du paiement voyageur) sont présentés sous forme de QR code contenant un jeton `TYPE.REFERENCE.SIGNATURE` (`EV` ou `WP`), signé par HMAC-SHA256 avec `SESSION_SECRET` (signature tronquée à 16 caractères).
 
 - La vérification est réservée aux agents connectés (permission `read`).
 - Un jeton modifié est rejeté (« QR code invalide ou falsifié »).
 - Pour un e-Visa, le statut et la date de validité sont revérifiés **en temps réel** : un e-Visa révoqué ou expiré est refusé même si la signature est correcte.
-- Un WawPass n'est accepté **qu'une seule fois** ; toute validation est journalisée.
+- Un ancien reçu WawPass n'est accepté **qu'une seule fois** ; toute vérification est journalisée. Aucun nouveau reçu n'est émis : la redevance de sécurité est incluse dans le billet.
 
 ## Journal d'audit chaîné
 
@@ -80,7 +80,7 @@ Chaque entrée comporte un numéro de séquence, un horodatage, l'acteur, l'acti
 - Toute modification d'une entrée, suppression ou insertion rompt la chaîne.
 - Le back-office (**Administration → Journal d'audit**) recalcule la chaîne et indique « Chaîne intègre » ou le numéro de l'entrée en défaut.
 - Le journal n'est jamais tronqué automatiquement ; son archivage (export signé) relève de l'exploitation.
-- Actions tracées : connexions et échecs, décisions de passage, transactions eGate, dépôts et décisions e-Visa, paiements et validations WawPass, pré-enrôlements, messages API/PNR, modifications de listes, règles, utilisateurs, paramètres, connecteurs, commandes d'eGate, encaissements, réinitialisation.
+- Actions tracées : connexions et échecs, décisions de passage, transactions eGate, dépôts et décisions e-Visa, validations d'anciens reçus WawPass, pré-enrôlements, messages API/PNR, modifications de listes, règles, utilisateurs, paramètres, connecteurs, commandes d'eGate, encaissements, réinitialisation.
 
 Limite : une personne disposant d'un accès en écriture au stockage pourrait recalculer toute la chaîne. En production, la tête de chaîne doit être **ancrée périodiquement** par une signature HSM.
 

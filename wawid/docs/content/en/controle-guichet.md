@@ -2,7 +2,7 @@
 
 The **Counter check** application guides the officer through a traveler check: reading the document and its chip, capturing biometrics, querying watchlists and files, assessing risk and recording a justified decision. It is available to roles with the counter check permission (**Border officer**, **Supervisor**, **Administrator**).
 
-To start, open the **Counter check** tile or the **New check** create tile. The **New check** button, top right, abandons the current check and starts over; **Verify a QR** opens e-Visa and WawPass verification.
+To start, open the **Counter check** tile or the **New check** create tile. The **New check** button, top right, abandons the current check and starts over; **Verify a QR** opens e-Visa verification.
 
 The wizard has four steps, shown at the top of the page: **Document**, **Biometrics**, **Checks**, **Decision**. The **Previous** and **Next** buttons let you go back without losing what you entered.
 

@@ -7,7 +7,7 @@ Ce guide s'adresse aux voyageurs qui se rendent au Sénégal ou qui en partent. 
 | Ai-je besoin d'un visa ? | Page d'accueil du portail | Savoir si votre nationalité est dispensée de visa |
 | e-Visa | Portail (onglet **e-Visa**) ou app iPhone | Demander une autorisation de voyage en ligne |
 | Suivi | Portail (onglet **Suivi**) ou app iPhone | Consulter l'état de la demande, répondre à l'administration, obtenir le QR code |
-| WawPass | Portail (onglet **WawPass**) | Payer la taxe de sécurité aéroportuaire et obtenir un reçu QR |
+| Redevance de sécurité | Page d'accueil du portail (carte **Redevance de sécurité**) | S'informer : la redevance est incluse dans le billet, rien à payer |
 | eGate | Portail (onglet **eGate**) | Se pré-enregistrer pour les portes automatiques |
 
 Adresse du portail : `https://wawid-waw-telecom.netlify.app`
@@ -103,16 +103,13 @@ Lorsque la demande est **approuvée**, le suivi affiche :
 
 Imprimez la page (bouton **Imprimer**) ou gardez-la sur votre téléphone. À la frontière, présentez **le QR code et votre passeport**, au guichet ou à l'eGate. Le QR code est signé : toute modification le rend invalide. L'agent vérifie en temps réel que l'e-Visa est approuvé et toujours valide.
 
-## WawPass : payer la taxe de sécurité
+## Redevance de sécurité : rien à payer
 
-Le WawPass permet de régler en ligne la **taxe de sécurité aéroportuaire** (15 000 FCFA dans la configuration par défaut) avant le vol.
+**Vous n'avez rien à payer.** La redevance de sécurité est incluse dans le prix de votre billet d'avion et perçue par votre compagnie aérienne. Elle s'applique aux passagers embarqués ou débarqués sur un vol commercial international au Sénégal ; les membres d'équipage, les enfants de moins de 2 ans, les passagers en transit de moins de 24 h et les vols déroutés en sont exonérés.
 
-1. Ouvrez l'onglet **WawPass**.
-2. Renseignez nom, prénoms, nationalité, numéro de passeport, vol (par exemple `HC 404`) et date du voyage. La date doit être **aujourd'hui ou plus tard**.
-3. Choisissez le moyen de paiement (Wave, Orange Money ou carte bancaire), puis cliquez sur **Payer**.
-4. L'écran **Paiement confirmé** affiche un **QR code** et une référence `WP…`. Imprimez-le ou enregistrez-le.
+La carte **Redevance de sécurité** de la page d'accueil du portail ouvre cette information. Aucun reçu n'est à présenter à l'aéroport.
 
-À l'aéroport, le QR code est scanné par un agent. **Il n'est valable qu'une fois** : un reçu déjà présenté est signalé « Reçu déjà utilisé ».
+> **Méfiez-vous de toute demande de paiement** en ligne ou à l'aéroport au titre de cette redevance : elle ne vous sera jamais réclamée directement. L'ancien service de paiement en ligne WawPass a été supprimé.
 
 ## Passer par les eGates
 

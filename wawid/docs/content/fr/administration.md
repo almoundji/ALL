@@ -118,7 +118,7 @@ Le tableau affiche les 1 000 dernières entrées, la plus récente en premier : 
 | Contrôle | `PASSAGE_DECISION`, `EGATE_TRANSACTION`, `EGATE_REJET`, `EGATE_COMMANDE` |
 | Renseignement | `ALERTE_ASSIGN`, `ALERTE_NOTE`, `ALERTE_CLOSE`, `ALERTE_REOPEN`, `DOSSIER_CREATION`, `DOSSIER_MAJ`, `SURVEILLANCE_AJOUT`, `SURVEILLANCE_ACTIVATION`, `SURVEILLANCE_DESACTIVATION`, `REGLE_CREATION`, `REGLE_MODIFICATION`, `REGLE_SUPPRESSION`, `CONNECTEUR_TEST`, `CONNECTEUR_ACTIVATION`, `CONNECTEUR_DESACTIVATION` |
 | APIS | `APIS_PAXLST`, `APIS_PNR`, `APIS_MANIFESTE` |
-| Portail et e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT`, `WAWPASS_VALIDATION`, `PREENROLEMENT` |
+| Portail et e-Visa | `EVISA_DEPOT`, `EVISA_REPONSE`, `EVISA_REQUEST_INFO`, `EVISA_APPROVE`, `EVISA_REJECT`, `WAWPASS_PAIEMENT` (historique, plus émis), `WAWPASS_VALIDATION` (vérification d'un ancien reçu), `PREENROLEMENT` |
 | Redevance | `REDEVANCE_ENCAISSEMENT`, `REDEVANCE_PAIEMENT_DECLARE` (déclaration par une compagnie), `REDEVANCE_PAIEMENT_CONFIRME`, `REDEVANCE_PAIEMENT_REJETE`, `REDEVANCE_REVERSEMENT_ETAT`, `REDEVANCE_PARAMETRES` |
 | Administration | `UTILISATEUR_CREATION`, `UTILISATEUR_MAJ`, `INITIALISATION`, `REINITIALISATION_DEMO` |
 
@@ -133,7 +133,7 @@ La carte **Politique** présente les réglages en vigueur (consultation seule da
 - **Dispense de visa** : nationalités dispensées (CEDEAO et accords bilatéraux) ; les autres nationalités déclenchent le contrôle e-Visa à l'entrée ;
 - **Seuil facial (guichet)** : 80 % ;
 - **Frais e-Visa** : 50 000 FCFA ;
-- **Taxe de sécurité** (WawPass) : 15 000 FCFA ;
+- **Taxe de sécurité** : 15 000 FCFA (paramètre hérité de l'ancien WawPass, sans effet : la redevance de sécurité est incluse dans le billet et se règle dans le module Finances) ;
 - **Conservation** : 5 ans (loi n° 2008-12 sur les données personnelles — CDP).
 
 Les seuils des eGates se règlent porte par porte dans **eGates & ABC**.

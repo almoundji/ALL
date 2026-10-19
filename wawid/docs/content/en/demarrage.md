@@ -1,6 +1,6 @@
 # Getting started with WawID
 
-WawID is the identity and border management platform: traveler checks at counters and eGates, intelligence (Threat Monitor, watchlists, targeting rules), airline passenger pre-screening (APIS / PNR), travel authorizations (e-Visa), the security fee paid by travelers (WawPass), the airline security fee and administration. This page introduces the platforms, signing in, the roles and the elements shared by every screen of the DPAF space.
+WawID is the identity and border management platform: traveler checks at counters and eGates, intelligence (Threat Monitor, watchlists, targeting rules), airline passenger pre-screening (APIS / PNR), travel authorizations (e-Visa), eGate pre-enrollment, the security fee (included in the ticket and collected by airlines) and administration. This page introduces the platforms, signing in, the roles and the elements shared by every screen of the DPAF space.
 
 ## WawID platforms
 
@@ -9,7 +9,7 @@ WawID is organized into **four separate platforms**. Each has its own address (a
 | Platform | Address | Users | Purpose |
 | --- | --- | --- | --- |
 | DPAF space | `/dpaf/` (alias of `/admin/`) | Border officers, intelligence analysts, supervisors, Treasury officers, administrators | Counter check, eGate supervision, intelligence, APIS, e-Visa, finance, administration |
-| Traveler platform | `/` (portal) and `/aide/` (public help) | Travelers (public) | e-Visa application and tracking, WawPass payment, eGate pre-enrollment, help center |
+| Traveler platform | `/` (portal) and `/aide/` (public help) | Travelers (public) | e-Visa application and tracking, eGate pre-enrollment, security fee information (nothing to pay), help center |
 | Mobile apps | `/app/` | Travelers | Download of the WawID e-Visa app: Android (direct APK download) and iPhone (TestFlight); e-Visa application with NFC reading of the passport chip |
 | Airline platform | `/compagnies/` | Airline staff | API / PNR data submission, acknowledgements, data quality, security fee invoices and payments (see *Airline platform*) |
 
@@ -121,4 +121,4 @@ The **?** button opens the page of this documentation that matches the current s
 
 ## Traceability and audit log
 
-All sensitive actions are recorded in the **Audit log**: sign-ins, failed sign-ins and sign-outs, crossing decisions, commands sent to eGates, WawPass validations, case creation, watchlist and rule changes, e-Visa decisions, user management, and more. Each entry records the author, the action, the object and the time. Entries are chained with SHA-256 hashes: any later change or deletion breaks the chain and becomes detectable. The sign-in page reminds users of this: "All actions are logged".
+All sensitive actions are recorded in the **Audit log**: sign-ins, failed sign-ins and sign-outs, crossing decisions, commands sent to eGates, verifications of former WawPass receipts, case creation, watchlist and rule changes, e-Visa decisions, user management, and more. Each entry records the author, the action, the object and the time. Entries are chained with SHA-256 hashes: any later change or deletion breaks the chain and becomes detectable. The sign-in page reminds users of this: "All actions are logged".
