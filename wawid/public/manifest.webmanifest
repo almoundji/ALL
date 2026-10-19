@@ -7,5 +7,5 @@
   "background_color": "#f4f5f7",
   "theme_color": "#14254b",
   "lang": "fr",
-  "icons": [{ "src": "shared/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [{ "src": "shared/wawid-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }, { "src": "shared/wawid-icon-180.png", "sizes": "180x180", "type": "image/png" }]
 }
