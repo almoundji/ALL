@@ -1,4 +1,5 @@
 // Passages : List Report (filtres, tri, export), Object Page et recherche voyageur 360° (résolution d'identité).
+import { locale } from "../../shared/i18n.js";
 import { nameSimilarity, normName } from "../../shared/engine.js";
 import { api, country, downloadCSV, esc, fmtDate, fmtDateTime, fmtPct, icon, riskBadge, status, toast } from "../../shared/ui.js";
 import { mountTable, pageHead } from "./common.js";
@@ -42,7 +43,7 @@ export function render(el, ctx, rest, query) {
       { key: "agent", label: "Agent", render: (c) => `<span class="small">${esc(c.agent)}</span>` },
     ],
   });
-  const refresh = () => { const r = filtered(); el.querySelector("#count").textContent = `Passages (${r.length.toLocaleString("fr-FR")})`; table.update(r); };
+  const refresh = () => { const r = filtered(); el.querySelector("#count").textContent = `Passages (${r.length.toLocaleString(locale())})`; table.update(r); };
   el.querySelectorAll("[data-f]").forEach((i) => (i.oninput = i.onchange = () => { f[i.dataset.f] = i.type === "checkbox" ? i.checked : i.value; refresh(); }));
   el.querySelector("#csv").onclick = () => downloadCSV("wawid-passages.csv", filtered().map((c) => ({
     Id: c.id, Date: c.ts, Poste: ctx.poste(c.posteId), Canal: c.channel, eGate: c.gateId || "", Sens: c.direction, Nom: c.traveler.surname, Prénoms: c.traveler.given,

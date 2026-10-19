@@ -1,0 +1,31 @@
+{
+  "sections": [
+    { "group": { "fr": "Prise en main", "en": "Getting started" }, "pages": [
+      { "slug": "demarrage", "public": false, "routes": [""], "fr": "Démarrer avec WawID", "en": "Getting started with WawID" },
+      { "slug": "portail-voyageur", "public": true, "routes": [], "fr": "Guide du voyageur (portail et app iPhone)", "en": "Traveler guide (portal and iPhone app)" },
+      { "slug": "faq-glossaire", "public": true, "routes": [], "fr": "FAQ et glossaire", "en": "FAQ and glossary" }
+    ]},
+    { "group": { "fr": "Contrôle frontière", "en": "Border control" }, "pages": [
+      { "slug": "tableau-de-bord", "public": false, "routes": ["dashboard"], "fr": "Tableau de bord", "en": "Dashboard" },
+      { "slug": "controle-guichet", "public": false, "routes": ["controle"], "fr": "Contrôle guichet (MRZ, puce NFC, biométrie)", "en": "Counter check (MRZ, NFC chip, biometrics)" },
+      { "slug": "egates", "public": false, "routes": ["egates"], "fr": "eGates et kiosques ABC", "en": "eGates and ABC kiosks" },
+      { "slug": "kiosque-egate", "public": true, "routes": [], "fr": "Kiosque eGate : mise en service et parcours", "en": "eGate kiosk: setup and journey" },
+      { "slug": "passages-voyageurs", "public": false, "routes": ["passages", "voyageurs", "verifier", "vehicules"], "fr": "Passages, recherche voyageur, QR et véhicules", "en": "Crossings, traveler search, QR and vehicles" }
+    ]},
+    { "group": { "fr": "Renseignement", "en": "Intelligence" }, "pages": [
+      { "slug": "renseignement", "public": false, "routes": ["alertes", "dossiers", "surveillance", "regles", "connecteurs"], "fr": "Threat Monitor, dossiers, listes, règles et connecteurs", "en": "Threat Monitor, cases, watchlists, rules and connectors" },
+      { "slug": "score-de-risque", "public": false, "routes": [], "fr": "Comprendre le score de risque", "en": "Understanding the risk score" }
+    ]},
+    { "group": { "fr": "APIS, e-Visa et finances", "en": "APIS, e-Visa and finance" }, "pages": [
+      { "slug": "apis-pnr", "public": false, "routes": ["apis"], "fr": "APIS et PNR", "en": "APIS and PNR" },
+      { "slug": "evisa-wawpass", "public": false, "routes": ["evisa", "wawpass"], "fr": "e-Visa, WawPass et pré-enrôlements", "en": "e-Visa, WawPass and pre-enrollments" },
+      { "slug": "finances-redevance", "public": false, "routes": ["redevance"], "fr": "Redevance de sécurité", "en": "Security fee" }
+    ]},
+    { "group": { "fr": "Administration et technique", "en": "Administration and technical" }, "pages": [
+      { "slug": "administration", "public": false, "routes": ["systemes", "utilisateurs", "audit", "parametres", "projet"], "fr": "Administration (équipements, utilisateurs, audit, paramètres)", "en": "Administration (devices, users, audit, settings)" },
+      { "slug": "api-reference", "public": true, "routes": [], "fr": "Référence API (compagnies, équipements, connecteurs)", "en": "API reference (airlines, devices, connectors)" },
+      { "slug": "deploiement-configuration", "public": false, "routes": [], "fr": "Déploiement et configuration", "en": "Deployment and configuration" },
+      { "slug": "securite-conformite", "public": false, "routes": [], "fr": "Sécurité, données personnelles et conformité", "en": "Security, personal data and compliance" }
+    ]}
+  ]
+}

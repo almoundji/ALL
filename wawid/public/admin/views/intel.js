@@ -1,6 +1,7 @@
 // Renseignement : listes de surveillance multi-sources, règles de ciblage (POI) et connecteurs externes.
 import { RULE_FIELDS, RULE_OPS, nameSimilarity } from "../../shared/engine.js";
 import { api, country, countryOptions, dialog, esc, fmtDateTime, fmtNum, icon, status, toast, ago } from "../../shared/ui.js";
+import { lang, t } from "../../shared/i18n.js";
 import { mountTable, pageHead } from "./common.js";
 
 const SOURCES = {
@@ -76,7 +77,7 @@ function testMatch(ctx) {
 // ---------- Règles de ciblage ----------
 export function renderRules(el, ctx) {
   const canEdit = ctx.can("rules");
-  const describe = (r) => r.conditions.map((c) => `${RULE_FIELDS[c.field]?.label || c.field} ${RULE_OPS[c.op] || c.op} ${c.value}`).join(" ET ");
+  const describe = (r) => r.conditions.map((c) => `${t(RULE_FIELDS[c.field]?.label || c.field)} ${t(RULE_OPS[c.op] || c.op)} ${c.value}`).join(` ${t("ET")} `);
   el.innerHTML = `${pageHead({ title: "Règles de ciblage", sub: "Profils de risque définis par les analystes (équivalent POI / targeting) : chaque règle déclenchée ajoute des points au score, de façon explicable.", crumbs: [[null, "Renseignement"]],
     actions: canEdit ? `<button class="btn btn-primary" id="new">${icon("plus")} Nouvelle règle</button>` : "" })}
   <div class="stack">${ctx.data.rules.map((r) => {
@@ -84,7 +85,7 @@ export function renderRules(el, ctx) {
     return `<article class="card card-pad row" style="align-items:flex-start">
       <div class="tile-icon">${icon("filter")}</div>
       <div class="grow"><b>${esc(r.name)}</b> <span class="status ${r.enabled ? "good" : ""}">${r.enabled ? "Active" : "Inactive"}</span>
-        <div class="small muted" style="margin-top:4px">SI ${esc(describe(r))} ALORS +${r.points} points</div>
+        <div class="small muted" style="margin-top:4px" data-no-i18n>${t("SI")} ${esc(describe(r))} ${t("ALORS")} +${r.points} points</div>
         <div class="small muted">${fmtNum(hits)} déclenchement(s) sur la période · modifiée par ${esc(r.author)} ${ago(r.updatedAt)}</div></div>
       ${canEdit ? `<div class="row"><button class="btn btn-sm" data-edit="${r.id}">Modifier</button><button class="btn btn-sm btn-ghost" data-tog="${r.id}">${r.enabled ? "Désactiver" : "Activer"}</button><button class="btn btn-sm btn-ghost btn-danger" data-del="${r.id}" title="Supprimer">${icon("trash")}</button></div>` : ""}
     </article>`;
@@ -129,7 +130,9 @@ async function ruleDialog(rule = { name: "", points: 10, enabled: true, conditio
 export function renderConnectors(el, ctx) {
   const canAdmin = ctx.can("system");
   el.innerHTML = `${pageHead({ title: "Connecteurs", sub: "Interfaçage avec les fichiers de recherche nationaux et internationaux. Chaque contrôle interroge en parallèle les connecteurs actifs ; en cas d'indisponibilité, la copie locale synchronisée prend le relais (mode dégradé).", crumbs: [[null, "Renseignement"]] })}
-  <div class="msg info" style="margin-bottom:16px">${icon("link")}<span>Pour brancher un service réel, définissez dans Netlify les variables <span class="mono">&lt;PRÉFIXE&gt;_URL</span> et <span class="mono">&lt;PRÉFIXE&gt;_TOKEN</span>. WawID envoie <span class="mono">POST {surname, given, dob, nat, docNo, issuer}</span> et attend <span class="mono">{hits:[{list, severity, reason, reference, kind}]}</span>. L'accès à Interpol I-24/7 se fait via le Bureau central national (BCN) ; WAPIS via la plateforme nationale.</span></div>
+  <div class="msg info" style="margin-bottom:16px" data-no-i18n>${icon("link")}<span>${lang() === "en"
+    ? `To connect a real service, set the <span class="mono">&lt;PREFIX&gt;_URL</span> and <span class="mono">&lt;PREFIX&gt;_TOKEN</span> variables in Netlify. WawID sends <span class="mono">POST {surname, given, dob, nat, docNo, issuer}</span> and expects <span class="mono">{hits:[{list, severity, reason, reference, kind}]}</span>. Interpol I-24/7 is accessed through the National Central Bureau (NCB); WAPIS through the national platform.`
+    : `Pour brancher un service réel, définissez dans Netlify les variables <span class="mono">&lt;PRÉFIXE&gt;_URL</span> et <span class="mono">&lt;PRÉFIXE&gt;_TOKEN</span>. WawID envoie <span class="mono">POST {surname, given, dob, nat, docNo, issuer}</span> et attend <span class="mono">{hits:[{list, severity, reason, reference, kind}]}</span>. L'accès à Interpol I-24/7 se fait via le Bureau central national (BCN) ; WAPIS via la plateforme nationale.`}</span></div>
   <div class="gate-grid">${ctx.data.connectors.map((c) => `<article class="card gate-card">
     <header><span class="tile-icon">${icon(c.source === "APIS" ? "plane" : c.source.startsWith("INTERPOL") ? "globe" : "database")}</span><div class="grow"><b>${esc(c.name)}</b></div></header>
     <div>${status("connector", c.status)}</div>

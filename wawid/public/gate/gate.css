@@ -10,7 +10,10 @@ body { background: #06121f; color: #f0efec; min-height: 100vh; overflow-x: hidde
 .k-title em { font-style: normal; color: var(--accent); }
 .k-lead { font-size: 20px; color: #c3c2b7; margin-top: 16px; }
 .k-langs { display: flex; gap: 8px; margin-top: 22px; }
-.k-langs span { padding: 6px 12px; border-radius: 999px; border: 1px solid #3a3a38; font-size: 13px; color: #bbb; }
+.k-langs span, .k-langs button { padding: 8px 14px; border-radius: 999px; border: 1px solid #2a4366; font-size: 14px; color: #bbb; background: none; }
+.k-langs button { cursor: pointer; color: #fff; }
+.k-langs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.k-langs span { opacity: .5; }
 .k-visual { aspect-ratio: 1; border-radius: 32px; background: #0b1f33; border: 1px solid #1c3350; display: grid; place-items: center; position: relative; overflow: hidden; }
 .k-visual video, .k-visual canvas { width: 100%; height: 100%; object-fit: cover; }
 .k-visual .icon { width: 120px; height: 120px; stroke-width: 1.2; color: var(--accent); }

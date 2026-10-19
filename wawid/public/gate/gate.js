@@ -1,6 +1,7 @@
 // Kiosque eGate / ABC : parcours voyageur (document → visage → décision) piloté par le serveur WawID.
 import { buildTD3, simulatedBiometric } from "../shared/engine.js";
 import { chipPayload, readChip } from "../shared/nfc.js";
+import { initI18n, lang, setLang } from "../shared/i18n.js";
 import { LOGO, esc, icon } from "../shared/ui.js";
 
 const root = document.getElementById("kiosk");
@@ -79,7 +80,7 @@ function idle() {
   frame(`<div class="k-card">
     <div><div class="k-title">Placez votre <em>passeport</em> ouvert sur le lecteur</div>
       <p class="k-lead">Page photo vers le bas. Le passage automatisé est réservé aux voyageurs majeurs munis d'un passeport biométrique.</p>
-      <div class="k-langs"><span>Français</span><span>English</span><span>Wolof</span><span>العربية</span></div></div>
+      <div class="k-langs" data-no-i18n><button data-l="fr" aria-pressed="${lang() === "fr"}">Français</button><button data-l="en" aria-pressed="${lang() === "en"}">English</button><span title="${lang() === "en" ? "Coming soon" : "Bientôt"}">Wolof</span><span title="${lang() === "en" ? "Coming soon" : "Bientôt"}">العربية</span></div></div>
     <div class="k-visual">${icon("idCard")}<span class="k-scanline"></span></div>
   </div>
   <details class="k-sim" open><summary>Simulateur (démonstration)</summary>
@@ -88,6 +89,7 @@ function idle() {
     <textarea class="textarea" id="mrz" spellcheck="false"></textarea>
     <label class="check small"><input type="checkbox" id="cam"> Utiliser la caméra de cet appareil</label>
     <button class="btn btn-primary" id="go">${icon("scan")} Présenter le passeport</button></details>`, 1);
+  root.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => { if (b.dataset.l !== lang()) setLang(b.dataset.l); }));
   const sc = root.querySelector("#sc"), mrz = root.querySelector("#mrz");
   const fill = () => (mrz.value = SCENARIOS[sc.value].mrz);
   sc.onchange = fill; fill();
@@ -147,4 +149,4 @@ setInterval(async () => {
   } catch { /* réseau : on garde l'état connu */ }
 }, 15000);
 
-boot();
+initI18n("../").then(boot);

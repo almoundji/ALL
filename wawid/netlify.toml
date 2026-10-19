@@ -1,7 +1,7 @@
 # WawID — site Netlify autonome (répertoire de base : wawid/)
 [build]
   publish = "public"
-  command = "npm test"
+  command = "npm run build && npm test"
   [build.environment]
     NODE_VERSION = "22"
 

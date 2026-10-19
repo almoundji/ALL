@@ -1,4 +1,5 @@
 // Back-office WawID : session, shell Fiori, launchpad et routeur.
+import { bindLangSwitch, initI18n, langSwitch, locale, t } from "../shared/i18n.js";
 import { LOGO, WORDMARK, api, esc, fmtNum, icon, initTheme, toast, toggleTheme, ago, status } from "../shared/ui.js";
 import * as dashboard from "./views/dashboard.js";
 import * as control from "./views/control.js";
@@ -11,6 +12,7 @@ import * as evisa from "./views/evisa.js";
 import * as ses from "./views/ses.js";
 import * as scrum from "./views/scrum.js";
 import * as redevance from "./views/redevance.js";
+import * as help from "./views/help.js";
 
 initTheme();
 const root = document.getElementById("root");
@@ -65,9 +67,12 @@ const APPS = [
   { space: "Administration", id: "parametres", path: "parametres", title: "Paramètres", sub: "Politique, NFC, données", icon: "settings", perm: "system", view: ses, fn: "renderSettings" },
   { space: "Administration", id: "new-user", create: true, href: "#/utilisateurs?new=1", title: "Créer un utilisateur", sub: "Agent, analyste, superviseur", perm: "users" },
 
+  { space: "Aide", id: "aide", path: "aide", title: "Centre d'aide", sub: "Documentation FR / EN", icon: "file", perm: "read", view: help },
+  { space: "Aide", id: "aide-api", href: "#/aide?page=api-reference", title: "Référence API", sub: "Compagnies, équipements", icon: "link", perm: "read" },
+  { space: "Aide", id: "aide-faq", href: "#/aide?page=faq-glossaire", title: "FAQ et glossaire", sub: "Questions fréquentes", icon: "list", perm: "read" },
   { space: "Projet", id: "projet", path: "projet", title: "Projet (Scrum)", sub: "Backlog & sprints", icon: "kanban", perm: "read", view: scrum, kpi: () => [5, "sprint en cours"] },
 ];
-const SPACES = ["Contrôle frontière", "Renseignement", "APIS & PNR", "e-Visa & voyageurs", "Finances", "Administration", "Projet"];
+const SPACES = ["Contrôle frontière", "Renseignement", "APIS & PNR", "e-Visa & voyageurs", "Finances", "Administration", "Aide", "Projet"];
 const today = (d) => d.crossings.filter((c) => Date.now() - Date.parse(c.ts) < 86400000);
 
 // ---------- Connexion ----------
@@ -85,6 +90,7 @@ function renderLogin(error = "") {
     </section>
     <section class="login-form">
       <form id="login-form">
+        <div style="justify-self:end">${langSwitch()}</div>
         <div><h2 style="font:800 26px var(--display)">Connexion</h2><p class="muted">Accès réservé aux agents habilités. Toutes les actions sont journalisées.</p></div>
         <label class="field"><span>Identifiant</span><input class="input" name="username" autocomplete="username" required autofocus></label>
         <label class="field"><span>Mot de passe</span><input class="input" name="password" type="password" autocomplete="current-password" required></label>
@@ -94,6 +100,7 @@ function renderLogin(error = "") {
       </form>
     </section>
   </main>`;
+  bindLangSwitch(root);
   root.querySelector("#login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -124,6 +131,8 @@ function renderShell() {
       <form class="shell-search" id="shell-search" role="search">${icon("search")}<input id="q" placeholder="Rechercher un voyageur, un document, une application…" aria-label="Recherche globale"><kbd>/</kbd></form>
       <div class="shell-actions">
         <span class="poste-chip" title="Poste et connexion"><span class="net-dot" id="net-dot"></span>${esc(ctx.poste(ctx.me.posteId))}</span>
+        ${langSwitch("shell-lang")}
+        <button class="btn btn-ghost btn-icon" id="help" title="Aide sur cette page" aria-label="Aide sur cette page"><b style="font-size:16px">?</b></button>
         <button class="btn btn-ghost btn-icon" id="theme" title="Thème clair / sombre">${icon("moon")}</button>
         <div style="position:relative"><button class="btn btn-ghost btn-icon" id="notif" title="Notifications">${icon("bell")}<span class="badge-count" id="notif-count" hidden></span></button><div class="popover" id="notif-pop" hidden></div></div>
         <div style="position:relative"><button class="avatar" id="me" title="${esc(ctx.me.name)}">${esc(initials)}</button><div class="popover" id="me-pop" hidden style="width:280px">
@@ -138,6 +147,11 @@ function renderShell() {
   <main class="page" id="view"></main>`;
 
   root.querySelector("#theme").onclick = toggleTheme;
+  bindLangSwitch(root);
+  root.querySelector("#help").onclick = async () => {
+    const section = location.hash.replace(/^#\/?/, "").split(/[/?]/)[0];
+    location.hash = `#/aide?page=${section === "aide" ? "demarrage" : await help.slugForRoute(section)}`;
+  };
   // Retour : page précédente de l'outil, sinon l'accueil (ouverture directe d'un lien).
   root.querySelector("#back").onclick = () => (history.length > 1 && sessionStorage.getItem("wawid:navigated") ? history.back() : (location.hash = "#/"));
   root.querySelector("#logout").onclick = logout;
@@ -185,7 +199,7 @@ function renderHome(el) {
   const space = sessionStorage.getItem("wawid:space") || "Mon accueil";
   const hidden = hiddenTiles();
   const visible = APPS.filter((a) => ctx.can(a.perm));
-  const date = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const date = new Date().toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const tile = (a) => {
     const off = hidden.includes(a.id);
     if (off && !editing && space === "Mon accueil") return "";
@@ -273,6 +287,7 @@ addEventListener("keydown", (e) => {
 });
 
 (async () => {
+  await initI18n("../");
   try {
     ctx.me = (await api("/api/session")).user;
     await start();

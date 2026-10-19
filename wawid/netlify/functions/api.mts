@@ -8,6 +8,7 @@ import {
 } from "../lib/auth.mts";
 import { detectFormat, parsePaxlst, parsePnr, pnrFactors, samples as carrierSamples } from "../lib/carrier.mts";
 import { decorate, externalHits, testConnector } from "../lib/connectors.mts";
+import DOCS from "../lib/docs-content.mjs";
 import { audit, ensureSeeded, load, loadMany, save, verifyChain } from "../lib/store.mts";
 
 class HttpError extends Error {
@@ -543,6 +544,18 @@ on("POST", "/api/apis/manifest", async (req, _p, user) => {
   await Promise.all([save("flights", d.flights.slice(0, 200)), save("alerts", d.alerts)]);
   await audit(user.username, "APIS_MANIFESTE", flight.id, `${flight.flight} · ${passengers.length} passagers`);
   return json(flight);
+});
+
+// --- Documentation bilingue (pages publiques sans session, pages internes réservées aux agents) ---
+on("GET", "/api/docs", async (_r, _p, user) => {
+  const sections = DOCS.manifest.sections.map((s: any) => ({ ...s, pages: s.pages.filter((p: any) => p.public || user) })).filter((s: any) => s.pages.length);
+  return json({ sections, internal: Boolean(user) });
+});
+on("GET", "/api/docs/:lang/:slug", async (_r, p, user) => {
+  const lang = p.lang === "en" ? "en" : "fr";
+  const page = DOCS.manifest.sections.flatMap((s: any) => s.pages).find((x: any) => x.slug === p.slug) ?? fail(404, "Page introuvable");
+  if (!page.public && !user) fail(401, "Page réservée aux agents connectés");
+  return json({ slug: page.slug, title: page[lang], markdown: DOCS.pages[lang][page.slug] });
 });
 
 // --- Redevance de sécurité ---

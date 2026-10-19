@@ -1,6 +1,7 @@
 // Redevance de sécurité (décret 2011-652, arrêté de recouvrement, décret 2012-519) :
 // assiette par compagnie, exonérations, factures en FCFA, pénalités, encaissements au Trésor,
 // rapprochement déclarations / comptage WawID, répartition et simulateur de modèle économique.
+import { locale } from "../../shared/i18n.js";
 import { api, dialog, downloadCSV, esc, fmtDate, fmtNum, icon, toast } from "../../shared/ui.js";
 import { barChart, bindTooltips, legend, mountTable, pageHead } from "./common.js";
 
@@ -9,7 +10,7 @@ const EXEMPT = { equipage: "Équipage", billetsID: "Billets ID (personnel)", enf
 const TABS = [["synthese", "Synthèse"], ["factures", "Factures compagnies"], ["rapprochement", "Rapprochement"], ["repartition", "Répartition"], ["simulateur", "Simulateur de modèle"]];
 const xof = (n) => `${fmtNum(Math.round(n))} FCFA`;
 const mds = (n) => (Math.abs(n) >= 1e9 ? `${fmtNum(n / 1e9, 2)} Mds` : `${fmtNum(n / 1e6, 1)} M`);
-const monthLabel = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString("fr-FR", { month: "short", year: "numeric", timeZone: "UTC" });
+const monthLabel = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(locale(), { month: "short", year: "numeric", timeZone: "UTC" });
 
 /** État d'une facture : payé, reste dû, mois de retard et pénalité (5 % par mois de retard sur le reste dû). */
 export function invoiceState(inv, r = DEFAULTS, now = new Date()) {

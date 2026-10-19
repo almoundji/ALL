@@ -1,4 +1,5 @@
 // Tableau de bord intégré : entrées / sorties, canaux, fraude, décisions, postes.
+import { locale } from "../../shared/i18n.js";
 import { country, downloadCSV, esc, fmtDateTime, fmtNum, icon, riskBadge, status } from "../../shared/ui.js";
 import { barChart, bindTooltips, hbars, legend, lineChart, pageHead, shareBar } from "./common.js";
 
@@ -30,7 +31,7 @@ export function render(el, ctx, _rest, query) {
   // Série temporelle : par heure (24 h) ou par jour.
   const buckets = [];
   if (days === 1) for (let h = 23; h >= 0; h--) { const t = new Date(Date.now() - h * 3600000); buckets.push({ key: t.toISOString().slice(0, 13), label: `${String(t.getHours()).padStart(2, "0")}h` }); }
-  else for (let k = days - 1; k >= 0; k--) { const t = new Date(Date.now() - k * 86400000); buckets.push({ key: t.toISOString().slice(0, 10), label: t.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) }); }
+  else for (let k = days - 1; k >= 0; k--) { const t = new Date(Date.now() - k * 86400000); buckets.push({ key: t.toISOString().slice(0, 10), label: t.toLocaleDateString(locale(), { day: "2-digit", month: "2-digit" }) }); }
   const keyOf = (c) => (days === 1 ? new Date(c.ts).toISOString().slice(0, 13) : c.ts.slice(0, 10));
   const count = (pred) => buckets.map((b) => rows.filter((c) => keyOf(c) === b.key && pred(c)).length);
   const flow = [

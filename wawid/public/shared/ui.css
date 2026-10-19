@@ -179,3 +179,41 @@ dialog.dialog::backdrop { background: rgba(20, 20, 20, .45); backdrop-filter: bl
 .qr { background: #fff; padding: 10px; border-radius: 12px; display: inline-block; line-height: 0; }
 .qr img, .qr svg { width: 180px; height: 180px; }
 @media print { .no-print { display: none !important; } body { background: #fff; } }
+
+/* ---------- Sélecteur de langue ---------- */
+.lang-switch { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; flex: none; }
+.lang-switch button { border: 0; background: var(--surface); color: var(--ink-2); font: 600 12px var(--font); padding: 6px 9px; cursor: pointer; }
+.lang-switch button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+
+/* ---------- Centre d'aide / documentation ---------- */
+.help-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 16px; align-items: start; }
+.help-nav { padding: 12px; position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow: auto; }
+.help-search { position: relative; margin-bottom: 8px; }
+.help-search .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.help-search input { width: 100%; height: 36px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 0 10px 0 34px; background: var(--surface-2); }
+.help-group { font: 700 11px var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 8px 6px; }
+.help-nav a { display: block; padding: 7px 10px; border-radius: 8px; text-decoration: none; color: var(--ink-2); font-size: 13px; }
+.help-nav a:hover { background: var(--surface-2); color: var(--heading); }
+.help-nav a.on { background: var(--brand-soft); color: var(--heading); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+.help-lock .icon { width: 12px; height: 12px; color: var(--muted); }
+.help-doc { padding: 26px 34px; min-height: 60vh; }
+.help-toc { float: right; width: 230px; margin: 0 0 16px 24px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); font-size: 12px; display: grid; gap: 4px; }
+.help-toc a { text-decoration: none; color: var(--brand); }
+.help-toc a.lvl3 { padding-left: 12px; color: var(--ink-2); }
+.help-hit { display: grid; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
+.help-hit span { font-size: 13px; color: var(--muted); }
+.md { line-height: 1.65; font-size: 15px; color: var(--ink); }
+.md h1 { font: 800 26px/1.25 var(--display); margin: 0 0 18px; }
+.md h2 { font: 700 20px/1.3 var(--display); margin: 30px 0 10px; padding-top: 6px; border-top: 1px solid var(--line); }
+.md h3 { font: 700 16px/1.35 var(--display); margin: 22px 0 8px; }
+.md h4 { font: 700 14px var(--font); margin: 16px 0 6px; }
+.md p, .md ul, .md ol { margin: 0 0 12px; }
+.md li { margin: 4px 0; }
+.md code { font: 13px var(--mono); background: var(--surface-3); padding: 1px 5px; border-radius: 5px; }
+.md pre { background: #0f1520; color: #e7ecf3; padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }
+.md pre code { background: none; padding: 0; color: inherit; }
+.md blockquote { margin: 0 0 14px; padding: 10px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; }
+.md table { margin-bottom: 14px; }
+.md a { color: var(--brand); }
+@media (max-width: 900px) { .help-layout { grid-template-columns: minmax(0, 1fr); } .help-nav { position: static; max-height: none; } .help-toc { float: none; width: auto; margin: 0 0 16px; } .help-doc { padding: 18px; } }
+@media print { .help-nav, .help-toc { display: none !important; } .help-layout { display: block; } }

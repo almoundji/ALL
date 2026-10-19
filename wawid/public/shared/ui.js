@@ -1,4 +1,5 @@
 // WawID — utilitaires d'interface partagés (icônes, format, API, dialogues, toasts, thème, QR).
+import { locale } from "./i18n.js";
 import { COUNTRIES } from "./engine.js";
 
 const PATHS = {
@@ -74,13 +75,13 @@ export const WORDMARK = `Waw<b>ID</b>`;
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 export const country = (code) => COUNTRIES[code] || code || "—";
 
-const dtf = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-const dtt = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-const tf = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const dtf = new Intl.DateTimeFormat(locale(), { day: "2-digit", month: "2-digit", year: "numeric" });
+const dtt = new Intl.DateTimeFormat(locale(), { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+const tf = new Intl.DateTimeFormat(locale(), { hour: "2-digit", minute: "2-digit" });
 export const fmtDate = (iso) => (iso ? dtf.format(new Date(iso.length === 10 ? iso + "T00:00:00" : iso)) : "—");
 export const fmtDateTime = (iso) => (iso ? dtt.format(new Date(iso)) : "—");
 export const fmtTime = (iso) => (iso ? tf.format(new Date(iso)) : "—");
-export const fmtNum = (n, d = 0) => (n ?? 0).toLocaleString("fr-FR", { maximumFractionDigits: d, minimumFractionDigits: d });
+export const fmtNum = (n, d = 0) => (n ?? 0).toLocaleString(locale(), { maximumFractionDigits: d, minimumFractionDigits: d });
 export const fmtPct = (n, d = 1) => `${fmtNum(n * 100, d)} %`;
 export const fmtXOF = (n) => `${fmtNum(n)} FCFA`;
 export function ago(iso) {
