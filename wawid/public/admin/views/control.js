@@ -11,7 +11,8 @@ export const SAMPLES = {
   "Passeport volé (SLTD)": buildTD3({ issuer: "SEN", nat: "SEN", sex: "M", surname: "Diatta", given: "Moustapha", docNo: "A04718823", dob: "1992-02-02", expiry: "2031-01-01" }),
   "Sans e-Visa": buildTD3({ issuer: "CHN", nat: "CHN", sex: "M", surname: "Wang", given: "Lei", docNo: "E81234567", dob: "1985-03-09", expiry: "2030-08-01" }),
   "Puce clonée": buildTD3({ issuer: "NGA", nat: "NGA", sex: "M", surname: "Adeyemi", given: "Tunde", docNo: "NG8812345", dob: "1984-09-17", expiry: "2030-10-10" }),
-  "MRZ falsifiée": buildTD3({ issuer: "FRA", nat: "FRA", sex: "M", surname: "Martin", given: "Paul", docNo: "19AB12345", dob: "1980-01-01", expiry: "2032-01-01" }).replace("<<<<<<<<<<<<<<0", "<<<<<<<<<<<<<<7").replace("8001011M", "8001021M"),
+  // Page biographique altérée : date de naissance modifiée sur la MRZ imprimée (chiffre de contrôle non recalculé).
+  "MRZ falsifiée": (() => { const [l1, l2] = buildTD3({ issuer: "FRA", nat: "FRA", sex: "M", surname: "Martin", given: "Paul", docNo: "19AB12345", dob: "1980-01-01", expiry: "2032-01-01" }).split("\n"); return `${l1}\n${l2.slice(0, 13)}800102${l2.slice(19)}`; })(),
 };
 
 // Pour « MRZ falsifiée », la puce contient les vraies données : l'incohérence DG1 ↔ MRZ est détectée.
@@ -63,6 +64,7 @@ function stepDocument(host, ctx, next) {
   const mrz = host.querySelector("#mrz");
   const update = () => {
     s.mrz = mrz.value;
+    if (s.scenario && SAMPLES[s.scenario] !== s.mrz) s.scenario = null;
     s.parsed = s.mrz.trim() ? parseMRZ(s.mrz) : null;
     if (s.chip && s.chip.mrz !== s.mrz) { s.chip = null; host.querySelector("#chip").innerHTML = chipPanel(); }
     host.querySelector("#parsed").innerHTML = parsedPanel(s.parsed);
@@ -72,12 +74,13 @@ function stepDocument(host, ctx, next) {
   mrz.oninput = update;
   host.querySelectorAll("[data-sample]").forEach((b) => (b.onclick = () => { mrz.value = SAMPLES[b.dataset.sample]; s.scenario = b.dataset.sample; s.spoof = ""; update(); }));
   host.querySelector("#chip-read").onclick = async (e) => {
-    e.target.disabled = true;
+    const btn = e.currentTarget;
+    btn.disabled = true;
     host.querySelector("#chip").innerHTML = `<div class="row"><div class="spinner"></div>Posez le document sur le lecteur — authentification PACE/BAC…</div>`;
     const chip = await readChip(s.mrz, CHIP_SIM[s.scenario] || {});
     s.chip = { ...chip, mrz: s.mrz };
     host.querySelector("#chip").innerHTML = chipPanel();
-    e.target.disabled = false;
+    btn.disabled = false;
   };
   host.querySelectorAll("#dir button").forEach((b) => (b.onclick = () => { s.direction = b.dataset.v; host.querySelectorAll("#dir button").forEach((x) => x.setAttribute("aria-pressed", x === b)); }));
   host.querySelector("#poste").onchange = (e) => (s.posteId = e.target.value);

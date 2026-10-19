@@ -190,7 +190,7 @@ export function qrSvg(text) {
 
 /** Exporte un tableau d'objets en CSV (séparateur ; pour Excel FR). */
 export function downloadCSV(filename, rows) {
-  if (!rows.length) return;
+  if (!rows.length) { toast("Aucune ligne à exporter", "critical"); return; }
   const cols = Object.keys(rows[0]);
   const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const csv = "﻿" + [cols.join(";"), ...rows.map((r) => cols.map((c) => cell(r[c])).join(";"))].join("\r\n");

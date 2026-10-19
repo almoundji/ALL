@@ -77,6 +77,9 @@ async function upload(ctx) {
   const lines = f.csv.trim().split(/\r?\n/).filter((l) => l.trim());
   if (/nom/i.test(lines[0])) lines.shift();
   const passengers = lines.map((l) => { const [seat, surname, given, dob, nat, docNo, expiry] = l.split(/[;,\t]/).map((x) => x.trim()); return { seat, surname, given, dob, nat, docNo, expiry }; });
+  const invalid = passengers.map((p, i) => (!p.surname || !p.docNo || !/^[A-Z]{3}$/i.test(p.nat || "") || !/^\d{4}-\d{2}-\d{2}$/.test(p.dob || "") ? i + 1 : 0)).filter(Boolean);
+  if (!f.carrier.trim()) return toast("Indiquez le transporteur", "critical");
+  if (!passengers.length || invalid.length) return toast(invalid.length ? `Lignes invalides : ${invalid.slice(0, 10).join(", ")} (nom, document, nationalité ISO et date AAAA-MM-JJ obligatoires)` : "Aucun passager", "critical");
   try {
     const fl = await api("/api/apis/manifest", { method: "POST", body: { ...f, eta: f.eta ? new Date(f.eta).toISOString() : undefined, passengers } });
     await ctx.reload();

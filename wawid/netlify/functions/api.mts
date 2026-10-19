@@ -110,7 +110,8 @@ const bounded = (v: unknown, min: number, max: number, fallback: number) => {
   const n = typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN;
   return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
 };
-const travelerOf = (p: any) => ({ surname: p.surname, given: p.given, dob: p.dob, sex: p.sex, nat: p.nat, issuer: p.issuer, docNo: p.docNo, docType: p.docType, expiry: p.expiry });
+const titleCase = (s: string) => String(s || "").toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
+const travelerOf = (p: any) => ({ surname: titleCase(p.surname), given: titleCase(p.given), dob: p.dob, sex: p.sex, nat: p.nat, issuer: p.issuer, docNo: p.docNo, docType: p.docType, expiry: p.expiry });
 
 // ---------- Routes ----------
 
@@ -280,7 +281,7 @@ on("POST", "/api/gate/transaction", async (req, _p, user) => {
 on("GET", "/api/data", async (_r, _p, user) => {
   need(user, "read");
   const d = await loadMany(["settings", "watchlist", "rules", "crossings", "alerts", "cases", "evisas", "gates", "flights", "passes", "vehicles", "devices", "connectors", "enrolments"]);
-  d.crossings = d.crossings.slice(0, 4000);
+  d.crossings = d.crossings.sort((a: any, b: any) => b.ts.localeCompare(a.ts)).slice(0, 4000);
   d.connectors = decorate(d.connectors);
   // Statistiques des eGates sur 24 h glissantes, recalculées à partir des passages.
   const dayAgo = Date.now() - 86400000;
@@ -339,6 +340,8 @@ on("POST", "/api/cases", async (req, _p, user) => {
   const b = await body(req);
   const [alerts, cases] = await Promise.all([load<any[]>("alerts"), load<any[]>("cases")]);
   const a = (alerts || []).find((x) => x.id === b.alertId);
+  const open = a && (cases || []).find((c) => c.alertId === a.id && c.status === "OUVERT");
+  if (open) return json({ ...open, existing: true });
   const c = {
     id: uid("DS"), createdAt: nowIso(), title: str(b.title, 160) || a?.title || "Contrôle secondaire", alertId: a?.id ?? null, crossingId: str(b.crossingId, 30) || a?.crossingId || null,
     traveler: str(b.traveler, 120) || a?.traveler || "", posteId: a?.posteId || user.posteId, status: "OUVERT", owner: user.name, priority: a?.severity || "moyenne",
@@ -483,7 +486,7 @@ on("POST", "/api/apis/manifest", async (req, _p, user) => {
   need(user, "apis");
   const b = await body(req);
   const pax = Array.isArray(b.passengers) ? b.passengers.slice(0, 600).filter((x: any) => x && typeof x === "object") : [];
-  if (!str(b.flight) || !pax.length) fail(400, "Vol et passagers requis");
+  if (!str(b.flight) || !str(b.carrier) || !pax.length) fail(400, "Vol, transporteur et passagers requis");
   const d = await loadMany(["watchlist", "rules", "evisas", "settings", "flights", "alerts"]);
   const direction = b.direction === "DEPART" ? "DEPART" : "ARRIVEE";
   const passengers = pax.map((x: any, i: number) => {

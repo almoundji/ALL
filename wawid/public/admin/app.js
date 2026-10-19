@@ -133,6 +133,7 @@ function renderShell() {
   root.querySelector("#shell-search").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = root.querySelector("#q").value.trim();
+    if (!q) return;
     const app = APPS.find((a) => q && a.title.toLowerCase().includes(q.toLowerCase()) && ctx.can(a.perm));
     location.hash = app ? `#/${app.path}` : `#/voyageurs?q=${encodeURIComponent(q)}`;
   });

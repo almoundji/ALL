@@ -63,7 +63,7 @@ export function render(el, ctx, _rest, query) {
     ${kpi("Part eGate / ABC", `${fmtNum(rows.length ? (egate.length / rows.length) * 100 : 0, 0)} %`, `${fmtNum(egate.length)} passages automatisés`, "gate")}
     ${kpi("Suspicions de fraude", fmtNum(fraud.length), delta(fraud.length, prevRows.filter((c) => c.risk.fraud).length), "shieldAlert", fraud.length ? "critical" : "")}
     ${kpi("Refus d'entrée / sortie", fmtNum(refused), `${fmtNum(openAlerts.length)} alertes ouvertes`, "xCircle", refused ? "warning" : "")}
-    ${kpi("Durée moyenne", `${avg(rows.filter((c) => c.channel === "GUICHET"))} s`, `guichet · eGate ${avg(egate)} s`, "clock")}
+    ${kpi("Durée moyenne", `${avg(rows)} s`, `guichet ${avg(rows.filter((c) => c.channel === "GUICHET"))} s · eGate ${avg(egate)} s`, "clock")}
   </div>
 
   <div class="grid-main">
@@ -111,7 +111,7 @@ export function render(el, ctx, _rest, query) {
   </div>
 
   <section class="card" style="margin-top:16px">
-    <div class="card-head"><h3>Dernières suspicions de fraude</h3><a class="btn btn-sm btn-ghost" style="margin-left:auto" href="#/passages?fraude=1">Tout voir</a></div>
+    <div class="card-head"><h3>Dernières suspicions de fraude</h3><a class="btn btn-sm btn-ghost" style="margin-left:auto" href="#/passages?fraude=1&periode=${days}">Tout voir</a></div>
     <div class="table-wrap"><table class="table"><tbody>${fraud.slice(0, 8).map((c) => `<tr class="clickable" data-id="${c.id}"><td class="nowrap">${fmtDateTime(c.ts)}</td><td><div class="cell-title">${esc(c.traveler.surname)} ${esc(c.traveler.given)}</div><div class="cell-sub">${esc(country(c.traveler.nat))} · ${esc(c.traveler.docNo)}</div></td><td>${esc(c.risk.factors.filter((f) => f.points >= 25).map((f) => f.label).join(" · "))}</td><td>${esc(ctx.poste(c.posteId))}<div class="cell-sub">${c.channel === "EGATE" ? "eGate" : "Guichet"}</div></td><td>${riskBadge(c.risk.score, c.risk.level)}</td><td>${status("decision", c.decision)}</td></tr>`).join("") || `<tr><td class="empty">Aucune suspicion sur la période</td></tr>`}</tbody></table></div>
   </section>`;
 
@@ -125,14 +125,19 @@ export function render(el, ctx, _rest, query) {
     sw.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
     el.querySelector(`[data-pane="${sw.dataset.switch}-chart"]`).hidden = b.dataset.v !== "chart";
     el.querySelector(`[data-pane="${sw.dataset.switch}-table"]`).hidden = b.dataset.v !== "table";
+    sessionStorage.setItem("wawid:flowView", b.dataset.v);
   })));
   el.querySelectorAll("[data-poste]").forEach((tr) => (tr.onclick = () => (location.hash = `#/dashboard?p=${period}&poste=${tr.dataset.poste}&canal=${channel}`)));
   el.querySelectorAll("tr[data-id]").forEach((tr) => (tr.onclick = () => (location.hash = `#/passages/${tr.dataset.id}`)));
   el.querySelector("#export").onclick = () => downloadCSV(`wawid-tableau-de-bord-${period}.csv`, perPoste.map((x) => ({
     Poste: x.p.name, Entrées: x.in, Sorties: x.out, "eGate/ABC": x.egate, "Suspicions de fraude": x.fraud, Refus: x.refused, "Durée moyenne (s)": x.avg,
   })));
-  const onData = () => { if (location.hash.startsWith("#/dashboard")) render(el, ctx, _rest, query); };
+  // Un seul abonnement au rafraîchissement ; la vue Graphique / Tableau choisie est conservée.
+  document.removeEventListener("wawid:data", onData);
+  onData = () => { if (location.hash.startsWith("#/dashboard")) render(el, ctx, _rest, query); };
   document.addEventListener("wawid:data", onData, { once: true });
+  if (sessionStorage.getItem("wawid:flowView") === "table") el.querySelector('[data-switch="flow"] [data-v="table"]').click();
 }
 
+let onData = null;
 const kpi = (label, value, sub, ic, tone = "") => `<div class="card kpi"><div class="kpi-label">${icon(ic)} ${esc(label)}</div><div class="kpi-value ${tone ? `tile-kpi ${tone}` : ""}" style="${tone ? "font-size:30px" : ""}">${value}</div><div class="kpi-delta">${esc(sub)}</div></div>`;

@@ -21,14 +21,14 @@ export function render(el, ctx, _rest, query) {
       { key: "type", label: "Type" },
       { key: "posteId", label: "Poste", render: (x) => esc(ctx.poste(x.posteId)) },
       { key: "version", label: "Version", render: (x) => `<span class="small muted">${esc(x.version)}</span>` },
-      { key: "status", label: "État", value: (x) => (x.status === "EN_LIGNE" ? 1 : 0), render: (x) => status("device", x.status) },
+      { key: "status", label: "État", value: (x) => (x.status === "EN_LIGNE" ? 0 : 1), render: (x) => status("device", x.status) },
     ],
   });
 }
 
 export function renderVehicles(el, ctx) {
   el.innerHTML = `${pageHead({ title: "Véhicules (VRS)", sub: "Identification des véhicules et de leurs occupants aux postes terrestres (lecture de plaques, déclaration des occupants).", crumbs: [[null, "Contrôle frontière"]] })}
-  <div class="card filterbar"><label class="field" style="max-width:none;flex:1"><span>Plaque, conducteur</span><input class="input" id="q"></label><label class="check" style="align-self:center"><input type="checkbox" id="flag"> Signalés uniquement</label></div>
+  <div class="card filterbar"><label class="field" style="max-width:none;flex:1"><span>Plaque, conducteur</span><input class="input" id="vq"></label><label class="check" style="align-self:center"><input type="checkbox" id="flag"> Signalés uniquement</label></div>
   <section class="card" id="t"></section>`;
   const table = mountTable(el.querySelector("#t"), {
     rows: ctx.data.vehicles, sort: "ts",
@@ -41,10 +41,10 @@ export function renderVehicles(el, ctx) {
     ],
   });
   const apply = () => {
-    const q = el.querySelector("#q").value.toUpperCase();
+    const q = el.querySelector("#vq").value.toUpperCase();
     table.update(ctx.data.vehicles.filter((v) => (!el.querySelector("#flag").checked || v.flagged) && (!q || `${v.plate} ${v.driver}`.toUpperCase().includes(q))));
   };
-  el.querySelector("#q").oninput = apply;
+  el.querySelector("#vq").oninput = apply;
   el.querySelector("#flag").onchange = apply;
 }
 
@@ -57,8 +57,9 @@ export async function renderUsers(el, ctx) {
   <section class="card" style="margin-top:16px"><div class="card-head"><h3>Matrice des droits</h3></div><div class="table-wrap"><table class="table"><thead><tr><th>Droit</th>${Object.values(roles).map((r) => `<th>${esc(r.label)}</th>`).join("")}</tr></thead><tbody>
     ${[["read", "Consultation"], ["control", "Contrôle guichet"], ["alerts", "Traitement des alertes"], ["cases", "Dossiers"], ["watchlist", "Listes de surveillance"], ["rules", "Règles de ciblage"], ["apis", "APIS"], ["evisa", "Décisions e-Visa"], ["gates", "Pilotage eGates"], ["users", "Utilisateurs"], ["system", "Paramètres système"]].map(([p, l]) => `<tr><td>${l}</td>${Object.values(roles).map((r) => `<td>${r.perms.includes(p) ? `<span class="status good">Oui</span>` : '<span class="muted">—</span>'}</td>`).join("")}</tr>`).join("")}
   </tbody></table></div></section>`;
+  const bindEdit = (t) => t.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => editUser(b.dataset.edit)));
   mountTable(el.querySelector("#t"), {
-    rows: users,
+    rows: users, onRender: bindEdit,
     columns: [
       { key: "name", label: "Nom", render: (u) => `<div class="cell-title">${esc(u.name)}</div><div class="cell-sub mono">${esc(u.username)}</div>` },
       { key: "role", label: "Rôle", render: (u) => esc(u.roleLabel) },
@@ -74,15 +75,17 @@ export async function renderUsers(el, ctx) {
     if (!value) return;
     try { await api("/api/users", { method: "POST", body: Object.fromEntries(new FormData(form)) }); toast("Utilisateur créé"); renderUsers(el, ctx); } catch (e) { toast(e.message, "critical"); }
   };
-  el.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = async () => {
-    const u = users.find((x) => x.id === b.dataset.edit);
+  async function editUser(id) {
+    {
+    const u = users.find((x) => x.id === id);
     const { value, form } = await dialog({ title: `Modifier ${u.username}`, body: `<div class="form-grid"><label class="field"><span>Rôle</span><select class="select" name="role">${roleOpts(u.role)}</select></label><label class="field"><span>Poste</span><select class="select" name="posteId">${posteOpts(u.posteId)}</select></label><label class="field" style="grid-column:1/-1"><span>Nouveau mot de passe (laisser vide pour conserver)</span><input class="input" name="password" type="password" autocomplete="new-password"></label><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""}> Compte actif</label></div>`, actions: [{ label: "Annuler", value: null }, { label: "Enregistrer", cls: "btn-primary", value: "ok" }] });
     if (!value) return;
     const f = new FormData(form);
     const body = { role: f.get("role"), posteId: f.get("posteId"), active: f.has("active") };
     if (f.get("password")) body.password = f.get("password");
     try { await api(`/api/users/${u.id}`, { method: "PATCH", body }); toast("Utilisateur mis à jour"); renderUsers(el, ctx); } catch (e) { toast(e.message, "critical"); }
-  }));
+    }
+  }
 }
 
 export async function renderAudit(el) {

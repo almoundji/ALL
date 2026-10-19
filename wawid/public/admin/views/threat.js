@@ -62,7 +62,7 @@ function bindDetail(el, ctx, a, rerender) {
       const f = new FormData(form);
       body.resolution = [f.get("preset"), f.get("detail")].filter(Boolean).join(" — ");
     } else if (act === "note") {
-      const { value, form } = await dialog({ title: "Ajouter une note", body: `<textarea class="textarea" name="note" required></textarea>`, actions: [{ label: "Annuler", value: null }, { label: "Ajouter", cls: "btn-primary", value: "ok" }] });
+      const { value, form } = await dialog({ title: "Ajouter une note", body: `<textarea class="textarea" name="note" required></textarea>`, actions: [{ label: "Annuler", value: null }, { label: "Ajouter", cls: "btn-primary", value: "ok", validate: (f) => (!f.note.value.trim() ? "La note est vide" : "") }] });
       if (!value) return;
       body.note = new FormData(form).get("note");
     } else if (act === "case") {
@@ -103,7 +103,7 @@ function renderCase(el, ctx, id) {
   el.innerHTML = `${pageHead({ title: c.title, sub: `${esc(c.traveler)} · ${esc(ctx.poste(c.posteId))}`, crumbs: [["#/dossiers", "Dossiers"], [null, c.id]],
     actions: `${status("case", c.status)}${c.crossingId ? `<a class="btn" href="#/passages/${c.crossingId}">${icon("list")} Passage</a>` : ""}<button class="btn ${c.status === "OUVERT" ? "btn-good" : ""}" id="toggle">${c.status === "OUVERT" ? "Clore le dossier" : "Rouvrir"}</button>` })}
   <div class="grid-main">
-    <form class="card" id="iv"><div class="card-head"><h3>Entretien structuré</h3><button class="btn btn-primary btn-sm" style="margin-left:auto">${icon("check")} Enregistrer</button></div>
+    <form class="card" id="iv"><div class="card-head"><h3>Entretien structuré</h3><button class="btn btn-primary btn-sm" style="margin-left:auto" ${c.status === "CLOS" ? "disabled" : ""}>${icon("check")} Enregistrer</button></div>
       <div class="card-body stack">${q.map(([k, l]) => `<label class="field"><span>${l}</span><textarea class="textarea" name="${k}" ${c.status === "CLOS" ? "readonly" : ""}>${esc(c.interview[k])}</textarea></label>`).join("")}</div></form>
     <section class="card"><div class="card-head"><h3>Notes</h3></div><div class="card-body stack">
       <div class="timeline">${c.notes.map((n) => `<div><b>${fmtDateTime(n.at)}</b> · ${esc(n.by || "")}<br>${esc(n.text)}</div>`).join("")}</div>

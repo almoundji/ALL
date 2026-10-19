@@ -15,7 +15,7 @@ export function render(el, ctx, _rest, query) {
   el.innerHTML = `${pageHead({ title: "eGates & ABC", sub: "Passage automatisé : portes biométriques, kiosques ABC et corridor sans contact. Pilotage à distance et orientation vers les guichets.", crumbs: [[null, "Contrôle frontière"]],
     actions: `<select class="select" id="poste" style="width:auto"><option value="">Tous les postes</option>${d.postes.filter((p) => d.gates.some((g) => g.posteId === p.id)).map((p) => `<option value="${p.id}" ${p.id === poste ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select><a class="btn btn-primary" href="../gate/" target="_blank">${icon("play")} Ouvrir le kiosque</a>` })}
   <div class="kpis">
-    ${kpi("En service", `${gates.filter((g) => g.status === "EN_SERVICE").length} / ${gates.length}`, "équipements opérationnels")}
+    ${kpi("Ouvertes", `${gates.filter((g) => g.status === "EN_SERVICE" && g.mode === "AUTO").length} / ${gates.length}`, "en service, mode automatique")}
     ${kpi("Alarmes", gates.filter((g) => g.status === "ALARME").length, "intervention requise", gates.some((g) => g.status === "ALARME") ? "critical" : "")}
     ${kpi("Transactions 24 h", fmtNum(tx.length), `${fmtNum(tx.filter((c) => c.decision === "AUTORISE").length)} ouvertures`)}
     ${kpi("Taux d'orientation guichet", `${fmtNum(tx.length ? (rejected.length / tx.length) * 100 : 0, 1)} %`, "rejets et contrôles complémentaires", "warning")}
@@ -32,9 +32,12 @@ export function render(el, ctx, _rest, query) {
   bindTooltips(el);
   el.querySelector("#poste").onchange = (e) => (location.hash = `#/egates${e.target.value ? `?poste=${e.target.value}` : ""}`);
   el.querySelectorAll("[data-cmd]").forEach((b) => (b.onclick = () => command(el, ctx, b.dataset.id, b.dataset.cmd, query)));
-  document.addEventListener("wawid:data", () => { if (location.hash.startsWith("#/egates")) render(el, ctx, _rest, query); }, { once: true });
+  document.removeEventListener("wawid:data", onData);
+  onData = () => { if (location.hash.startsWith("#/egates")) render(el, ctx, _rest, query); };
+  document.addEventListener("wawid:data", onData, { once: true });
 }
 
+let onData = null;
 function gateCard(g, ctx, canManage) {
   const bars = [g.stats?.today || 0, g.stats?.rejected || 0];
   const devices = Object.entries(g.devices || {});

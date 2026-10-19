@@ -7,7 +7,7 @@ import { riskPanel } from "./control.js";
 export function render(el, ctx, rest, query) {
   if (rest[0]) return renderObject(el, ctx, rest[0]);
   const d = ctx.data;
-  const f = { q: query.q || "", poste: query.poste || "", decision: "", level: "", channel: "", direction: "", period: "14", fraud: query.fraude === "1" };
+  const f = { q: query.q || "", poste: query.poste || "", decision: "", level: "", channel: "", direction: "", period: ["1", "7", "14"].includes(query.periode) ? query.periode : "14", fraud: query.fraude === "1" };
   el.innerHTML = `${pageHead({ title: "Passages", sub: "Tous les franchissements enregistrés aux guichets, eGates et kiosques ABC.", crumbs: [[null, "Contrôle frontière"]],
     actions: `<button class="btn" id="csv">${icon("download")} Exporter CSV</button>` })}
   <div class="card filterbar">
@@ -17,7 +17,7 @@ export function render(el, ctx, rest, query) {
     <label class="field"><span>Canal</span><select class="select" data-f="channel"><option value="">Tous</option><option value="GUICHET">Guichet</option><option value="EGATE">eGate / ABC</option></select></label>
     <label class="field"><span>Décision</span><select class="select" data-f="decision"><option value="">Toutes</option><option value="AUTORISE">Autorisé</option><option value="SECONDAIRE">Contrôle secondaire</option><option value="REFUSE">Refusé</option></select></label>
     <label class="field"><span>Risque</span><select class="select" data-f="level"><option value="">Tous</option><option value="FAIBLE">Faible</option><option value="MODERE">Modéré</option><option value="ELEVE">Élevé</option></select></label>
-    <label class="field"><span>Période</span><select class="select" data-f="period"><option value="1">24 h</option><option value="7">7 jours</option><option value="14" selected>14 jours</option></select></label>
+    <label class="field"><span>Période</span><select class="select" data-f="period">${[["1", "24 h"], ["7", "7 jours"], ["14", "14 jours"]].map(([v, l]) => `<option value="${v}" ${f.period === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
     <label class="check" style="align-self:center"><input type="checkbox" data-f="fraud" ${f.fraud ? "checked" : ""}> Suspicion de fraude</label>
   </div>
   <section class="card"><div class="toolbar"><h3 id="count"></h3></div><div id="table"></div></section>`;

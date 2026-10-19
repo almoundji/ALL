@@ -19,7 +19,10 @@ export function render(el, ctx, _rest, query) {
   <section class="card" id="t"></section>`;
   el.querySelectorAll("[data-src]").forEach((b) => (b.onclick = () => (location.hash = `#/surveillance${b.dataset.src ? `?source=${b.dataset.src}` : ""}`)));
   mountTable(el.querySelector("#t"), {
-    rows, sort: "addedAt",
+    rows, sort: "addedAt", onRender: (t) => t.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = async () => {
+      const w = d.watchlist.find((x) => x.id === b.dataset.toggle);
+      try { await api(`/api/watchlist/${w.id}`, { method: "PATCH", body: { active: !w.active } }); await ctx.reload(); render(el, ctx, _rest, query); } catch (e) { toast(e.message, "critical"); }
+    })),
     columns: [
       { key: "kind", label: "Type", render: (w) => (w.kind === "document" ? `${icon("idCard")} Document` : `${icon("user")} Personne`) },
       { key: "name", label: "Identité / document", value: (w) => w.surname || w.docNo, render: (w) => (w.kind === "document" ? `<span class="mono cell-title">${esc(w.docNo)}</span><div class="cell-sub">Émis par ${esc(country(w.issuer))}</div>` : `<div class="cell-title">${esc(w.surname)} ${esc(w.given)}</div><div class="cell-sub">${w.dob ? `né(e) le ${esc(w.dob)} · ` : ""}${esc(country(w.nat))}</div>`) },
@@ -29,10 +32,6 @@ export function render(el, ctx, _rest, query) {
       { key: "active", label: "État", render: (w) => `${w.active ? '<span class="status good">Active</span>' : '<span class="status">Inactive</span>'}${canEdit ? ` <button class="btn btn-sm btn-ghost" data-toggle="${w.id}">${w.active ? "Désactiver" : "Activer"}</button>` : ""}` },
     ],
   });
-  el.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = async () => {
-    const w = d.watchlist.find((x) => x.id === b.dataset.toggle);
-    try { await api(`/api/watchlist/${w.id}`, { method: "PATCH", body: { active: !w.active } }); await ctx.reload(); render(el, ctx, _rest, query); } catch (e) { toast(e.message, "critical"); }
-  }));
   el.querySelector("#add")?.addEventListener("click", () => addEntry(el, ctx, _rest, query));
   el.querySelector("#test").onclick = () => testMatch(ctx);
 }
@@ -96,7 +95,7 @@ export function renderRules(el, ctx) {
   el.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
     const { value } = await dialog({ title: "Supprimer la règle ?", body: "<p>Les passages déjà évalués conservent leur score.</p>", actions: [{ label: "Annuler", value: null }, { label: "Supprimer", cls: "btn-danger", value: "ok" }] });
     if (!value) return;
-    try { await api(`/api/rules/${b.dataset.del}`, { method: "DELETE" }); await ctx.reload(); renderRules(el, ctx); } catch (e) { toast(e.message, "critical"); }
+    try { await api(`/api/rules/${b.dataset.del}`, { method: "DELETE" }); await ctx.reload(); toast("Règle supprimée"); renderRules(el, ctx); } catch (e) { toast(e.message, "critical"); }
   }));
 }
 
@@ -134,7 +133,7 @@ export function renderConnectors(el, ctx) {
     <header><span class="tile-icon">${icon(c.source === "APIS" ? "plane" : c.source.startsWith("INTERPOL") ? "globe" : "database")}</span><div class="grow"><b>${esc(c.name)}</b></div></header>
     <div>${status("connector", c.status)}</div>
     <dl class="kv small"><dt>Protocole</dt><dd>${esc(c.protocol)}</dd><dt>Mode</dt><dd>${esc(c.mode)}</dd><dt>Enregistrements</dt><dd>${fmtNum(c.records)}</dd><dt>Dernière synchro</dt><dd>${fmtDateTime(c.lastSync)}</dd><dt>Variables</dt><dd class="mono" style="font-size:11px">${esc(c.envPrefix)}_URL</dd></dl>
-    <div class="row"><button class="btn btn-sm" data-test="${c.id}">${icon("zap")} Tester</button>${canAdmin ? `<button class="btn btn-sm btn-ghost" data-en="${c.id}">${c.status === "DÉSACTIVÉ" ? "Activer" : "Désactiver"}</button>` : ""}<span class="small muted" data-res="${c.id}"></span></div>
+    <div class="row">${ctx.can("watchlist") ? `<button class="btn btn-sm" data-test="${c.id}">${icon("zap")} Tester</button>` : ""}${canAdmin ? `<button class="btn btn-sm btn-ghost" data-en="${c.id}">${c.status === "DÉSACTIVÉ" ? "Activer" : "Désactiver"}</button>` : ""}<span class="small muted" data-res="${c.id}"></span></div>
   </article>`).join("")}</div>`;
   el.querySelectorAll("[data-test]").forEach((b) => (b.onclick = async () => {
     const out = el.querySelector(`[data-res="${b.dataset.test}"]`);

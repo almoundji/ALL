@@ -13,8 +13,8 @@ export function pageHead({ title, sub = "", crumbs = [], actions = "" }) {
  * Tableau triable avec chargement progressif.
  * columns : [{ key, label, value?(row), render?(row), num?, sortable? }]
  */
-export function mountTable(el, { columns, rows, onRow, pageSize = 50, empty = "Aucun élément", sort = null }) {
-  let state = { sort, dir: -1, shown: pageSize };
+export function mountTable(el, { columns, rows, onRow, pageSize = 50, empty = "Aucun élément", sort = null, dir = -1, onRender }) {
+  let state = { sort, dir, shown: pageSize };
   const draw = () => {
     let list = rows;
     if (state.sort) {
@@ -34,6 +34,7 @@ export function mountTable(el, { columns, rows, onRow, pageSize = 50, empty = "A
     }));
     el.querySelector("[data-more]")?.addEventListener("click", () => { state.shown += pageSize; draw(); });
     if (onRow) el.querySelectorAll("tbody tr").forEach((tr) => (tr.onclick = (e) => { if (!e.target.closest("button,a,input")) onRow(list[+tr.dataset.i]); }));
+    onRender?.(el);
   };
   draw();
   return { update(newRows) { rows = newRows; state.shown = pageSize; draw(); } };
@@ -59,7 +60,8 @@ export function bindTooltips(scope) {
   });
 }
 
-const niceMax = (v) => { if (v <= 5) return 5; const p = 10 ** Math.floor(Math.log10(v)); return Math.ceil(v / p) * p; };
+// Maximum « rond » et pair, pour que la graduation médiane tombe sur un entier.
+const niceMax = (v) => { if (v <= 2) return 2; const p = 10 ** Math.floor(Math.log10(v)); let m = Math.ceil(v / p) * p; if ((m / p) % 2) m += p; return m; };
 
 /** Barres groupées ou empilées verticales. series : [{ name, color, values[] }] */
 export function barChart({ labels, series, stacked = false, height = 240, unit = "" }) {

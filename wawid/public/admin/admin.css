@@ -39,7 +39,11 @@ body { min-height: 100vh; background: radial-gradient(1200px 500px at 80% -10%, 
   .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   .shell-search, .poste-chip, .shell-title { display: none; }
   .page-head h1 { font-size: 22px; }
+  .popover { position: fixed; left: 16px; right: 16px; top: 76px; width: auto !important; }
+  .kv { grid-template-columns: minmax(90px, 38%) minmax(0, 1fr); }
+  .object-head { padding: 16px; }
 }
+.card, .grid-main > *, .grid-2 > * { min-width: 0; }
 
 /* ---------- Launchpad ---------- */
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin: 18px 0 30px; }
