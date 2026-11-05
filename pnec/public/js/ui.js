@@ -47,6 +47,7 @@ const P = {
   handshake: '<path d="M11 17l2 2a1.4 1.4 0 0 0 2-2"/><path d="M14 14l2.5 2.5a1.4 1.4 0 0 0 2-2L15 11"/><path d="M2 12l4-4 5 1 3-2 4 1 4 4"/><path d="M6 8l-4 6 5 5 2-2"/><path d="M18 9l4 5-3 3"/>',
   alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   menu: '<path d="M3 6h18M3 12h18M3 18h18"/>',
 };
 export const icon = (name, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || P.grid}</svg>`;

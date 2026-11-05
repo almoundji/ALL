@@ -22,11 +22,54 @@ accueil à tuiles par profil.
 | 11 | Administration : comptes, rôles & habilitations, paramètres (taux, seuil IA, visio), journal d'audit | Admin | `#/admin/*` |
 | 12 | Tableau de bord national (entonnoir, régions, secteurs, budget État) | Primature, Ministère, DE | `#/pilotage` |
 
-## Démonstration
+## Connexion et sécurité
 
-La page **Connexion** propose de choisir un profil (stagiaire, entreprise, Ministère, DE, Primature,
-administrateur). Les données de démonstration sont fictives et stockées dans le navigateur
-(localStorage) ; *Administration → Paramètres → Réinitialiser* les régénère.
+| Portail | Adresse | Profils |
+|---|---|---|
+| Public | `#/connexion` (lien « Connexion » du site) | jeunes, entreprises |
+| Privé | `#/portail-agents` (non référencé sur le site) | administrateur, Primature, Ministère, Direction de l'Emploi |
+
+- Identifiants vérifiés **côté serveur** (`netlify/functions/auth.mts`) : mots de passe hachés avec scrypt,
+  session dans un cookie `HttpOnly; Secure; SameSite=Strict` signé HMAC-SHA256 (8 h public, 2 h agents).
+- Un compte ne peut se connecter que sur son portail ; message d'erreur identique dans tous les cas.
+- Verrouillage 15 min après 5 échecs, limitation par IP, contrôle d'origine (CSRF) sur toutes les requêtes d'écriture.
+- Inscription libre uniquement pour les jeunes et les entreprises ; comptes d'agents créés par un administrateur
+  (mot de passe provisoire affiché une seule fois).
+- Politique de sécurité du contenu (CSP) stricte, HSTS, `X-Frame-Options: DENY` (`netlify.toml`).
+- Les routes IA (`/api/tri-cv`, `/api/assistant`) sont réservées aux recruteurs connectés.
+
+Variables d'environnement Netlify : `SESSION_SECRET` (obligatoire, ≥ 32 caractères), `ANTHROPIC_API_KEY` (facultatif).
+Les comptes créés en ligne sont stockés dans Netlify Blobs (`pnec-comptes`).
+
+### Comptes de test
+
+`node scripts/generer-comptes-test.mjs <dossier-hors-dépôt>` régénère les 89 comptes de démonstration :
+les empreintes vont dans `netlify/lib/test-users.json` (versionné), les mots de passe en clair dans le dossier
+indiqué (à ne jamais versionner). Les données métier de démonstration restent dans le navigateur (localStorage).
+
+## Espace recruteur (ATS)
+
+Inspiré des outils du marché (Socium Job…) :
+- **Pipeline Kanban** par offre (Nouveaux → Présélection → Entretien → Évalués → Retenus / Non retenus),
+  glisser-déposer avec contrôle des transitions, filtres, sélection multiple et actions groupées.
+- **Score IA en étoiles** avec « Analyse du recruteur IA », compétences attendues vs. actuelles, détail du score.
+- **Fiche candidat collaborative** : évaluations multi-évaluateurs, notes internes avec @mentions, étiquettes,
+  messages, historique complet.
+- **Recrutement à l'aveugle** (noms et coordonnées masqués).
+- **CVthèque / sourcing** : profils anonymisés, classement par adéquation à une offre, vivier, invitation à postuler.
+- **Modèles de messages** avec variables et envoi en masse ; messagerie côté jeune.
+- **Fiche de poste rédigée par IA**, **rapport de fin de recrutement** (synthèse IA), **page carrière** publique.
+
+## Photo de la page d'accueil
+
+`python3 scripts/preparer-photo.py <photo> public/img/mobilisation.jpg` recadre, retouche, compresse et
+supprime les métadonnées. Sans fichier, la page affiche un dégradé aux couleurs du programme.
+
+## Développement local
+
+```bash
+SESSION_SECRET=$(openssl rand -hex 32) PNEC_BLOBS_MEMOIRE=1 node --experimental-strip-types scripts/serveur-local.mjs
+```
 
 ## Tri IA
 
@@ -48,6 +91,6 @@ cd pnec && npx netlify deploy --prod
 ## Pour passer en production
 
 Le prototype garde tout dans le navigateur. Les étapes suivantes sont nécessaires avant une mise en service réelle :
-remplacer `public/js/store.js` par une API et une base de données, mettre en place une authentification réelle
-(mot de passe + OTP SMS, SSO pour les agents de l'État), utiliser une signature électronique qualifiée,
+déplacer les données métier de `public/js/store.js` vers une base de données côté serveur (Netlify DB) avec
+contrôle d'accès par rôle, ajouter un second facteur (OTP SMS) pour les agents, utiliser une signature électronique qualifiée,
 héberger la visioconférence (par ex. Jitsi auto-hébergé) et déclarer le traitement auprès de la CDP (loi n° 2008-12).

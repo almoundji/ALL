@@ -1,0 +1,799 @@
+[
+ {
+  "id": "u-admin",
+  "email": "admin@pnec.sn",
+  "nom": "Administrateur PNEC",
+  "role": "admin",
+  "sel": "OFHlLgMlD5aQrP6D72CDaQ==",
+  "hash": "g9O5UwRg3/33amE5DL0bFWMKrDe/8qlHwspLHjORjts="
+ },
+ {
+  "id": "u-mfp",
+  "email": "dfp@mfpai.gouv.sn",
+  "nom": "Direction de la Formation professionnelle",
+  "role": "mfp",
+  "sel": "L5dWLC2sjus8v6nCdbZM3w==",
+  "hash": "c6sOFf7KYpvCRPnPHCbOglBJ8SUOz1RMSMRvPd2gXFw="
+ },
+ {
+  "id": "u-de",
+  "email": "de@emploi.gouv.sn",
+  "nom": "Direction de l'Emploi",
+  "role": "de",
+  "sel": "iHeQMVmSJVtTy3W6LEVQRA==",
+  "hash": "8pFdClxqYwX87dH+i1NayoaKpzzzITnSTSDP0FgdJKs="
+ },
+ {
+  "id": "u-prim",
+  "email": "suivi@primature.sn",
+  "nom": "Cellule de suivi — Primature",
+  "role": "primature",
+  "sel": "9VqvbToHvCmBWVyWdAvevQ==",
+  "hash": "NHh05uQ3ld1CRRXKI17MNvFLQfROxTLjy8EuuzZdY5g="
+ },
+ {
+  "id": "u-ent-1",
+  "email": "rh@terangadigital.sn",
+  "nom": "Teranga Digital SA",
+  "role": "entreprise",
+  "orgId": "ent-1",
+  "sel": "fKXsK8EKQT0XjYbPmP7pqQ==",
+  "hash": "vQ2vs3EvPy41HJbeKuSFc5v6c/gxDDdH96stzZUJQLY="
+ },
+ {
+  "id": "u-ent-2",
+  "email": "rh@sahelagroindus.sn",
+  "nom": "Sahel Agro Industries",
+  "role": "entreprise",
+  "orgId": "ent-2",
+  "sel": "QEf6V81Sw5TL26rU5Qhhnw==",
+  "hash": "DBN+/cZhpbA+lqo0YRrb6MuEamxvmVeVCO/Uo9lb4oU="
+ },
+ {
+  "id": "u-ent-3",
+  "email": "rh@dakarbtpservic.sn",
+  "nom": "Dakar BTP Services",
+  "role": "entreprise",
+  "orgId": "ent-3",
+  "sel": "KhjqGNQIJCtlG4Lo4+5Xmg==",
+  "hash": "35NcmToBbSYKv5FSgwfFAUfLdOG/efcZ+Ilp5ISStQU="
+ },
+ {
+  "id": "u-ent-4",
+  "email": "rh@banquepopulair.sn",
+  "nom": "Banque Populaire du Littoral",
+  "role": "entreprise",
+  "orgId": "ent-4",
+  "sel": "xSvUhmmXO/G4ESEA4Ax3Rg==",
+  "hash": "5kNb730ncAP7BfW12ReFdjueioT6tdho5U6VmBq4MUo="
+ },
+ {
+  "id": "u-ent-5",
+  "email": "rh@casamanceenerg.sn",
+  "nom": "Casamance Énergie Solaire",
+  "role": "entreprise",
+  "orgId": "ent-5",
+  "sel": "HVvOGFsIHQhxc1h/ls6UJA==",
+  "hash": "h8aDOcrJji1opulWDbwaDQWsCMC+GlnlG9R8euG2WMI="
+ },
+ {
+  "id": "u-ent-6",
+  "email": "rh@atlantiquelogi.sn",
+  "nom": "Atlantique Logistique",
+  "role": "entreprise",
+  "orgId": "ent-6",
+  "sel": "EkWJuTSEZ/0qEJgGJfmBXA==",
+  "hash": "GXhtOwHNuRz2Mvgm5yposinHGdEOXnWMq91PBT4CikY="
+ },
+ {
+  "id": "u-ent-7",
+  "email": "rh@cliniquebaobab.sn",
+  "nom": "Clinique Baobab",
+  "role": "entreprise",
+  "orgId": "ent-7",
+  "sel": "PnEH874HhoII9zuY5u16EA==",
+  "hash": "ZOMtAYttM4uIV9AcaMUiQtgaLPpsZVfAdGWr+HQggig="
+ },
+ {
+  "id": "u-ent-8",
+  "email": "rh@saloumhotelsre.sn",
+  "nom": "Saloum Hôtels & Resorts",
+  "role": "entreprise",
+  "orgId": "ent-8",
+  "sel": "UJq5lHJHs3/XJFyf+zPTgg==",
+  "hash": "fLdIomcYcazpr77z2QoxrHl9eErmAtU/f02h6Kg6Zro="
+ },
+ {
+  "id": "u-ent-9",
+  "email": "rh@marchecentrald.sn",
+  "nom": "Marché Central Distribution",
+  "role": "entreprise",
+  "orgId": "ent-9",
+  "sel": "+lme1gBH0TK/8DJix3FWaw==",
+  "hash": "FjFKaypZ0NPzjiiBZW6aeFi9qwIYBNatuL64vbalZo4="
+ },
+ {
+  "id": "u-ent-10",
+  "email": "rh@pecheriesducap.sn",
+  "nom": "Pêcheries du Cap-Vert",
+  "role": "entreprise",
+  "orgId": "ent-10",
+  "sel": "GjiSQqKcY59DKLxU2LLsSQ==",
+  "hash": "A+ifCv674YNyJOUMcdLjXrowrGXAFwkZ0IQoZM+Jryk="
+ },
+ {
+  "id": "u-ent-11",
+  "email": "rh@cimentsdusine.sn",
+  "nom": "Ciments du Sine",
+  "role": "entreprise",
+  "orgId": "ent-11",
+  "sel": "cY1lhmqFYYIs8wChd12LGQ==",
+  "hash": "OEOYGOE/jA1LBFNud9Ij3lWpXhUx5V4LgPaduXf4ic8="
+ },
+ {
+  "id": "u-ent-12",
+  "email": "rh@ordusenegalori.sn",
+  "nom": "Or du Sénégal Oriental",
+  "role": "entreprise",
+  "orgId": "ent-12",
+  "sel": "5TEjnKhcnhFaKLEKAkz5hA==",
+  "hash": "c7xMkMyg+12E16nxD8T0805F4ZJUxqUFlj6ZBNsykHk="
+ },
+ {
+  "id": "u-ent-13",
+  "email": "rh@niayesmaraicha.sn",
+  "nom": "Niayes Maraîchage Coop",
+  "role": "entreprise",
+  "orgId": "ent-13",
+  "sel": "TLaZ4ZCicqlHXrrPEKtaHw==",
+  "hash": "XqAW0A/qD7EANBFXYQR8t/l2SmniW/db8bH/C1hQSAo="
+ },
+ {
+  "id": "u-ent-14",
+  "email": "rh@fleuverizsa.sn",
+  "nom": "Fleuve Riz SA",
+  "role": "entreprise",
+  "orgId": "ent-14",
+  "sel": "Fd5zUdr6ZO4BZRkRh9+vDA==",
+  "hash": "ZcGsG2V6yfLC5UjiENpcO2Ewf9nLSKdcZxcSoU/NK9Y="
+ },
+ {
+  "id": "u-ent-15",
+  "email": "rh@koldatransform.sn",
+  "nom": "Kolda Transformation",
+  "role": "entreprise",
+  "orgId": "ent-15",
+  "sel": "wWxl61QLI4l4Tk+DfgbRsg==",
+  "hash": "JJjlvKuuWAASRD9QykNYffHQ94JqHre67A+eYxwfeKw="
+ },
+ {
+  "id": "u-stg-1",
+  "email": "abdoulaye.kane0@mail.sn",
+  "nom": "Abdoulaye Kane",
+  "role": "stagiaire",
+  "orgId": "stg-1",
+  "sel": "GSXw4JYEJ4OAnPmdkHzGLQ==",
+  "hash": "VKDZCIhJqC2mcz8n9dokvGcz11bQPckVlx1f/gOH+5s="
+ },
+ {
+  "id": "u-stg-2",
+  "email": "alioune.sarr1@mail.sn",
+  "nom": "Alioune Sarr",
+  "role": "stagiaire",
+  "orgId": "stg-2",
+  "sel": "4XvIc8yTk/h7tC7pi8oqpw==",
+  "hash": "Whcq/UlU8NKMOCjrV/OikDI4H/tqyFF1+MNwanjp5Nk="
+ },
+ {
+  "id": "u-stg-3",
+  "email": "pape.mane2@mail.sn",
+  "nom": "Pape Mané",
+  "role": "stagiaire",
+  "orgId": "stg-3",
+  "sel": "rIeSzarOpzgc0Ij3DZQKIw==",
+  "hash": "x0kB+0ClCBt3hxbWMd9yYsP19qVbFhdOTZgRtduBjNA="
+ },
+ {
+  "id": "u-stg-4",
+  "email": "mariama.seck3@mail.sn",
+  "nom": "Mariama Seck",
+  "role": "stagiaire",
+  "orgId": "stg-4",
+  "sel": "bBmejUe7oQCFR7vNxEwtMw==",
+  "hash": "YDsaAmkbl7IYOP97/Fxes4nTkED63fMhzlT9/9TBf8g="
+ },
+ {
+  "id": "u-stg-5",
+  "email": "coumba.sow4@mail.sn",
+  "nom": "Coumba Sow",
+  "role": "stagiaire",
+  "orgId": "stg-5",
+  "sel": "7RZPluL/bCURHn3wbXIyvQ==",
+  "hash": "JHCI6uyvB+OddzM6Vvb+KjcndmBgOg9vbozjbN4pwoY="
+ },
+ {
+  "id": "u-stg-6",
+  "email": "serigne.cisse5@mail.sn",
+  "nom": "Serigne Cissé",
+  "role": "stagiaire",
+  "orgId": "stg-6",
+  "sel": "Z7ASYkYzl01ZQv7iEdr4DQ==",
+  "hash": "rPM4Blx7jCJ29oYvhiC7Jt3Jux0fxvP0WdAgy9+qPD0="
+ },
+ {
+  "id": "u-stg-7",
+  "email": "astou.diop6@mail.sn",
+  "nom": "Astou Diop",
+  "role": "stagiaire",
+  "orgId": "stg-7",
+  "sel": "uFYM/H0xaY7xiSMcv9gNqA==",
+  "hash": "bJZ7ap6NGMBRkT6cwF13iuus/o3E3fqmpmhGv74+FYQ="
+ },
+ {
+  "id": "u-stg-8",
+  "email": "astou.diop7@mail.sn",
+  "nom": "Astou Diop",
+  "role": "stagiaire",
+  "orgId": "stg-8",
+  "sel": "vbTKzp5mo12FfufGPOCjow==",
+  "hash": "UKMs7LSI8iLJu2RaC7pD5nrbTlxbB5x69WAM3+i1ZFs="
+ },
+ {
+  "id": "u-stg-9",
+  "email": "serigne.diouf8@mail.sn",
+  "nom": "Serigne Diouf",
+  "role": "stagiaire",
+  "orgId": "stg-9",
+  "sel": "aKPkEramN+j6RRjcKJ4bMg==",
+  "hash": "A5pff/l0C65U33xjGts+20NYlOY7iNuCMVPIQI7y1hk="
+ },
+ {
+  "id": "u-stg-10",
+  "email": "aissatou.cisse9@mail.sn",
+  "nom": "Aïssatou Cissé",
+  "role": "stagiaire",
+  "orgId": "stg-10",
+  "sel": "xPbBXQNwsodvHlKKxFtixg==",
+  "hash": "ugweOHBVBo7rKrSdMnZAHnQuAdk/oJ8673S1gWanWzA="
+ },
+ {
+  "id": "u-stg-11",
+  "email": "khady.mane10@mail.sn",
+  "nom": "Khady Mané",
+  "role": "stagiaire",
+  "orgId": "stg-11",
+  "sel": "VlcCUrD0bPuoJ6QL4UeKhA==",
+  "hash": "orihBKuOMOk3TkUvHVfJl7uH3P3GeiwXF1ELBCTxwo0="
+ },
+ {
+  "id": "u-stg-12",
+  "email": "rokhaya.sarr11@mail.sn",
+  "nom": "Rokhaya Sarr",
+  "role": "stagiaire",
+  "orgId": "stg-12",
+  "sel": "JZB+KQgebQ7Ry0kFGcn/Eg==",
+  "hash": "DE3A9ajbIaocy/kE3avyWpohVJ42GezMnt9e1xa9hCA="
+ },
+ {
+  "id": "u-stg-13",
+  "email": "modou.seck12@mail.sn",
+  "nom": "Modou Seck",
+  "role": "stagiaire",
+  "orgId": "stg-13",
+  "sel": "lMMEYC5zy7SPCK+trMKfLQ==",
+  "hash": "iK/MXA+Lh8RtYRD6GcDrwAsZq47U/rUdN66P/55Tu3g="
+ },
+ {
+  "id": "u-stg-14",
+  "email": "ousmane.mane13@mail.sn",
+  "nom": "Ousmane Mané",
+  "role": "stagiaire",
+  "orgId": "stg-14",
+  "sel": "7cqMD32qb2bI2S9k0obicA==",
+  "hash": "UfHs2VlJVdSl2wOWqy2bYqhLu67YiqFK4Exr4WP5d+I="
+ },
+ {
+  "id": "u-stg-15",
+  "email": "pape.mane14@mail.sn",
+  "nom": "Pape Mané",
+  "role": "stagiaire",
+  "orgId": "stg-15",
+  "sel": "OAJ1hRsIZYcYCWdiuK9ISQ==",
+  "hash": "BygsTgRJTSu/s/UhxhrATdUpDq4vmv/I1Y8MSxdJHmw="
+ },
+ {
+  "id": "u-stg-16",
+  "email": "ousmane.ba15@mail.sn",
+  "nom": "Ousmane Ba",
+  "role": "stagiaire",
+  "orgId": "stg-16",
+  "sel": "ibFWbboR9mEM/IkFuAWRXQ==",
+  "hash": "RX5H30JTEvWpDVoKo+Nwsdrb+HLx85matweOZ38yRJU="
+ },
+ {
+  "id": "u-stg-17",
+  "email": "abdoulaye.sow16@mail.sn",
+  "nom": "Abdoulaye Sow",
+  "role": "stagiaire",
+  "orgId": "stg-17",
+  "sel": "Mh68ERcY+e2pXXVlCMK3sg==",
+  "hash": "XULxXSkB+DLutGpfr28B0RXAIYxLab31FJC0J5xEiKk="
+ },
+ {
+  "id": "u-stg-18",
+  "email": "aminata.diallo17@mail.sn",
+  "nom": "Aminata Diallo",
+  "role": "stagiaire",
+  "orgId": "stg-18",
+  "sel": "Z9bOM6GWiXKDQnE+bszfDQ==",
+  "hash": "JPcArCnTcq0GuFwfMoOARpBEIRjHNz6n4gLpG5DfVl4="
+ },
+ {
+  "id": "u-stg-19",
+  "email": "aissatou.thiam18@mail.sn",
+  "nom": "Aïssatou Thiam",
+  "role": "stagiaire",
+  "orgId": "stg-19",
+  "sel": "lv9GPHDr+jFkmh12gu6cmA==",
+  "hash": "s/Sgt1m6MOcEy1N1iGKIEhb5HIHIwJ+KIAZZqRbhuAk="
+ },
+ {
+  "id": "u-stg-20",
+  "email": "modou.ba19@mail.sn",
+  "nom": "Modou Ba",
+  "role": "stagiaire",
+  "orgId": "stg-20",
+  "sel": "BHE4O+tVLmeKmv/HEJIuxg==",
+  "hash": "dwJJhBHV5JZJKuwzq5z2sEEQl3gMiKfhCI67UZksJzs="
+ },
+ {
+  "id": "u-stg-21",
+  "email": "ndeye.ndiaye20@mail.sn",
+  "nom": "Ndeye Ndiaye",
+  "role": "stagiaire",
+  "orgId": "stg-21",
+  "sel": "0Ygv81MXYGGXWw2pMNR7Eg==",
+  "hash": "Ey8BYnWKiMDxkkOeEtKJcCTWF6reSrL1uBN5mVMPV5o="
+ },
+ {
+  "id": "u-stg-22",
+  "email": "fatou.seck21@mail.sn",
+  "nom": "Fatou Seck",
+  "role": "stagiaire",
+  "orgId": "stg-22",
+  "sel": "h8jwtaXTzYKB7QYptg1G9g==",
+  "hash": "CUb10lVC32Wn4CLUE6VMHQiFQ2Sl67/G7WGwg3FVqog="
+ },
+ {
+  "id": "u-stg-23",
+  "email": "ousmane.sane22@mail.sn",
+  "nom": "Ousmane Sané",
+  "role": "stagiaire",
+  "orgId": "stg-23",
+  "sel": "ZKIZE+aiS85OiEAsA/raJQ==",
+  "hash": "35xI6cxAr/d76SyYWIqz6kZDiUTNUuUFTbtZODGJlhw="
+ },
+ {
+  "id": "u-stg-24",
+  "email": "serigne.mbaye23@mail.sn",
+  "nom": "Serigne Mbaye",
+  "role": "stagiaire",
+  "orgId": "stg-24",
+  "sel": "sjaCFnQDM1R1AHfSHjyReg==",
+  "hash": "pGD+WNklEF0BVFXWd6N6Z7SK5sN2rnuB2Vb3+SKPrjc="
+ },
+ {
+  "id": "u-stg-25",
+  "email": "fatou.gueye24@mail.sn",
+  "nom": "Fatou Gueye",
+  "role": "stagiaire",
+  "orgId": "stg-25",
+  "sel": "wdUnLE3doyr1jowqKUUVJg==",
+  "hash": "7wEUbGjSDubLni8AGp+0NT+pXE+mhvqwgJAUmkdjtk8="
+ },
+ {
+  "id": "u-stg-26",
+  "email": "lamine.seck25@mail.sn",
+  "nom": "Lamine Seck",
+  "role": "stagiaire",
+  "orgId": "stg-26",
+  "sel": "YRG5xKWh8lgZsjc4Zb3S2Q==",
+  "hash": "e1VZ4aK3a1Y44KSD3DzCDgv/dLVpRpzapDtmeSn7S+4="
+ },
+ {
+  "id": "u-stg-27",
+  "email": "mariama.thiam26@mail.sn",
+  "nom": "Mariama Thiam",
+  "role": "stagiaire",
+  "orgId": "stg-27",
+  "sel": "vWh4ESwRbHrRXcgn/LfvLA==",
+  "hash": "ZYCd9hSVT4qu+XmvLMrre6yO3i2lqLhrDz4vCvmzl/8="
+ },
+ {
+  "id": "u-stg-28",
+  "email": "babacar.gueye27@mail.sn",
+  "nom": "Babacar Gueye",
+  "role": "stagiaire",
+  "orgId": "stg-28",
+  "sel": "b1+6LKLi7O5vGg+tHuGZwA==",
+  "hash": "IVlhSiFQ/cdmnA8Oh2ZBkDce5r99t8KABIyq7qzWqio="
+ },
+ {
+  "id": "u-stg-29",
+  "email": "pape.camara28@mail.sn",
+  "nom": "Pape Camara",
+  "role": "stagiaire",
+  "orgId": "stg-29",
+  "sel": "XrqY2/14CEXcac307R9OFw==",
+  "hash": "nhJwZPvhBeASDSPy5Mm8+3L+89nPLaBtAgfs0zJmmIg="
+ },
+ {
+  "id": "u-stg-30",
+  "email": "aissatou.mbaye29@mail.sn",
+  "nom": "Aïssatou Mbaye",
+  "role": "stagiaire",
+  "orgId": "stg-30",
+  "sel": "HaTYuqx3splDKT1hMRZEbA==",
+  "hash": "GCEUdAQ7b5Ys6CpsETnaJVyohg/dlSbG7cgXsnLrlUU="
+ },
+ {
+  "id": "u-stg-31",
+  "email": "moussa.sow30@mail.sn",
+  "nom": "Moussa Sow",
+  "role": "stagiaire",
+  "orgId": "stg-31",
+  "sel": "P9rwdIukuKyGdC3yPgBC3w==",
+  "hash": "siOKSOskunCUztob6pefexTC02rkNPyi/Eorn3wk7fE="
+ },
+ {
+  "id": "u-stg-32",
+  "email": "fatou.sarr31@mail.sn",
+  "nom": "Fatou Sarr",
+  "role": "stagiaire",
+  "orgId": "stg-32",
+  "sel": "aiY+LcFfB9ozJdI1K/SXdw==",
+  "hash": "bbGyxYYqqdsYzW8XPQUXpBiLkNnJYe97VJIkf7HEeGI="
+ },
+ {
+  "id": "u-stg-33",
+  "email": "moussa.mbaye32@mail.sn",
+  "nom": "Moussa Mbaye",
+  "role": "stagiaire",
+  "orgId": "stg-33",
+  "sel": "fYmcR5tfwD+/pw5SsOPQFQ==",
+  "hash": "9Rmx6R0VQYUHbfXw2cUJIfB3h6q+QQLbmT/yYNfJf7c="
+ },
+ {
+  "id": "u-stg-34",
+  "email": "babacar.fall33@mail.sn",
+  "nom": "Babacar Fall",
+  "role": "stagiaire",
+  "orgId": "stg-34",
+  "sel": "oWcwFC1eRrNVchw9eL5BMA==",
+  "hash": "3yye1QqF+VBObAJENIS2VJ06voNjoYR6rwuqgj1R4OA="
+ },
+ {
+  "id": "u-stg-35",
+  "email": "babacar.mane34@mail.sn",
+  "nom": "Babacar Mané",
+  "role": "stagiaire",
+  "orgId": "stg-35",
+  "sel": "Z7lFPZmW73bMFu13oPn7Ng==",
+  "hash": "SRcDlLYGlGUrUgQDs6RuAOVOHnF3d5xCTcQvnIPylg4="
+ },
+ {
+  "id": "u-stg-36",
+  "email": "coumba.diouf35@mail.sn",
+  "nom": "Coumba Diouf",
+  "role": "stagiaire",
+  "orgId": "stg-36",
+  "sel": "30y0gssAykNnRhQoItX6EA==",
+  "hash": "Vs0HTpN4fGMl36GHO68J2rNS21CWUODrixfPxX/tSIg="
+ },
+ {
+  "id": "u-stg-37",
+  "email": "serigne.diouf36@mail.sn",
+  "nom": "Serigne Diouf",
+  "role": "stagiaire",
+  "orgId": "stg-37",
+  "sel": "aW6BNP2KKx1+1vsW7DJq9g==",
+  "hash": "pupxNhs6jhtM9DgTVlUDzBn3hX3ZjKOZnb2oC7D1gAM="
+ },
+ {
+  "id": "u-stg-38",
+  "email": "aminata.mane37@mail.sn",
+  "nom": "Aminata Mané",
+  "role": "stagiaire",
+  "orgId": "stg-38",
+  "sel": "/zr8jTOhWR1gFN6E8E3dCg==",
+  "hash": "/qznXNPZEz1tAy7ZEsdVbat/9TT5Gn7Ri6U9r0pHsZw="
+ },
+ {
+  "id": "u-stg-39",
+  "email": "awa.faye38@mail.sn",
+  "nom": "Awa Faye",
+  "role": "stagiaire",
+  "orgId": "stg-39",
+  "sel": "1ZCIbOygF9GS94vNTbMA8A==",
+  "hash": "hG72ja/7Ddeth0ZwmBOhGBKzhjgaTMHcpu4QjTnWw6E="
+ },
+ {
+  "id": "u-stg-40",
+  "email": "mariama.sow39@mail.sn",
+  "nom": "Mariama Sow",
+  "role": "stagiaire",
+  "orgId": "stg-40",
+  "sel": "pxQPUipo1wz6gsGp7q1YNA==",
+  "hash": "A19RC+uXsAlguBvK23jiHicoKrFhXTfMVcWRTG7sBrw="
+ },
+ {
+  "id": "u-stg-41",
+  "email": "ibrahima.ba40@mail.sn",
+  "nom": "Ibrahima Ba",
+  "role": "stagiaire",
+  "orgId": "stg-41",
+  "sel": "+AxKcb3CN1wSjArdOuPiZg==",
+  "hash": "URK6aWaLwm2idW53i8MNG0sO5GumdM9deICU1lYCcDc="
+ },
+ {
+  "id": "u-stg-42",
+  "email": "cheikh.camara41@mail.sn",
+  "nom": "Cheikh Camara",
+  "role": "stagiaire",
+  "orgId": "stg-42",
+  "sel": "IrOMI7eBUqlL0WGFPY+B0w==",
+  "hash": "N/8WY8gF3yIeZNIHENKh5t0ALkgDNDlzv848pUHh1DE="
+ },
+ {
+  "id": "u-stg-43",
+  "email": "alioune.ndiaye42@mail.sn",
+  "nom": "Alioune Ndiaye",
+  "role": "stagiaire",
+  "orgId": "stg-43",
+  "sel": "nWQ5QH9+GR2jvb9bkneVyg==",
+  "hash": "XwI80+Sfq80bM44kItD0HYFIoQRIYj0mFdz0P4VM8t0="
+ },
+ {
+  "id": "u-stg-44",
+  "email": "serigne.faye43@mail.sn",
+  "nom": "Serigne Faye",
+  "role": "stagiaire",
+  "orgId": "stg-44",
+  "sel": "9xG+18bvIQs9gF7mrKdmIg==",
+  "hash": "seGBuDJbNu0OqtqtmJbYtiTJp78OCl1M2o31zrYfdD8="
+ },
+ {
+  "id": "u-stg-45",
+  "email": "bineta.diop44@mail.sn",
+  "nom": "Bineta Diop",
+  "role": "stagiaire",
+  "orgId": "stg-45",
+  "sel": "dpixa7UUmSNqIR5Jd3jl2g==",
+  "hash": "I7cjPgAs5Th0Gh/Ef/yTQlsW9+Oav+Qx+VskzS/7EWQ="
+ },
+ {
+  "id": "u-stg-46",
+  "email": "awa.faye45@mail.sn",
+  "nom": "Awa Faye",
+  "role": "stagiaire",
+  "orgId": "stg-46",
+  "sel": "Rz/eH5MqEXDNxzlJavz9jg==",
+  "hash": "lKN41whJo+BH94OSEQs1B0JsC7YtpmzE2LOr1uyhCA8="
+ },
+ {
+  "id": "u-stg-47",
+  "email": "pape.diallo46@mail.sn",
+  "nom": "Pape Diallo",
+  "role": "stagiaire",
+  "orgId": "stg-47",
+  "sel": "Yk9UrsEZ1wuJGLidF6dy9w==",
+  "hash": "WPzPA/52/Q3rqm6Kqe6V8OPp+6RrF8eJH9aQ58/JZQ0="
+ },
+ {
+  "id": "u-stg-48",
+  "email": "seynabou.mane47@mail.sn",
+  "nom": "Seynabou Mané",
+  "role": "stagiaire",
+  "orgId": "stg-48",
+  "sel": "Blm9yhjqg92IFc19Ml3Klg==",
+  "hash": "zYBpi7lKpBhOQDhp9Ou1zOtMtc12ZKlWH7UWIvCs9ro="
+ },
+ {
+  "id": "u-stg-49",
+  "email": "awa.thiam48@mail.sn",
+  "nom": "Awa Thiam",
+  "role": "stagiaire",
+  "orgId": "stg-49",
+  "sel": "aVvZabQqLIcxvm//3Cj+jw==",
+  "hash": "3JU9IctLgkQR7OLFP+6pe0svD9rxSYrzaJMkZ76Zmpg="
+ },
+ {
+  "id": "u-stg-50",
+  "email": "seynabou.ndiaye49@mail.sn",
+  "nom": "Seynabou Ndiaye",
+  "role": "stagiaire",
+  "orgId": "stg-50",
+  "sel": "LAjoSM0Fk29WKAjD7HTkxA==",
+  "hash": "dvdYEvdWklJGBmQ/cykn/6CeisqfNhTqrIAckqL86ec="
+ },
+ {
+  "id": "u-stg-51",
+  "email": "seynabou.diop50@mail.sn",
+  "nom": "Seynabou Diop",
+  "role": "stagiaire",
+  "orgId": "stg-51",
+  "sel": "XusxKHDjGu0A9UmG9lwdkQ==",
+  "hash": "29a6+mWw+unBqZuyOogv8tbz2dzNx/eUyzfYbYr2SlY="
+ },
+ {
+  "id": "u-stg-52",
+  "email": "aminata.diouf51@mail.sn",
+  "nom": "Aminata Diouf",
+  "role": "stagiaire",
+  "orgId": "stg-52",
+  "sel": "mLZ/XWxIpLZrpTbRCnphyg==",
+  "hash": "TEzY9p0DKYLKdUunJY8GITF74W1yRLgmSyYD7SoSv6w="
+ },
+ {
+  "id": "u-stg-53",
+  "email": "aissatou.gueye52@mail.sn",
+  "nom": "Aïssatou Gueye",
+  "role": "stagiaire",
+  "orgId": "stg-53",
+  "sel": "zI4jhpKmSBdmJ6/UlDErZw==",
+  "hash": "FGpB6gn79Tz28taQVP5WSv26tcYxm0Gjp2CbvwL+pDs="
+ },
+ {
+  "id": "u-stg-54",
+  "email": "aminata.camara53@mail.sn",
+  "nom": "Aminata Camara",
+  "role": "stagiaire",
+  "orgId": "stg-54",
+  "sel": "uCsgJiftCV6wbljvoZxi2g==",
+  "hash": "geFKeDRXFrkaIKreExzs5v0NwO5iZsyDQR1lFQo71ho="
+ },
+ {
+  "id": "u-stg-55",
+  "email": "ousmane.diallo54@mail.sn",
+  "nom": "Ousmane Diallo",
+  "role": "stagiaire",
+  "orgId": "stg-55",
+  "sel": "hLcTi5pZ7FhhLoFCKlC6/Q==",
+  "hash": "lkyoz4WAbJXWVBvmaTsX55ZqsFaczCPAttpJHn4XJvE="
+ },
+ {
+  "id": "u-stg-56",
+  "email": "fatou.ndiaye55@mail.sn",
+  "nom": "Fatou Ndiaye",
+  "role": "stagiaire",
+  "orgId": "stg-56",
+  "sel": "agFXi0KufQ4jyriNPIWeIg==",
+  "hash": "v9PfYPYRF5iTS64A1idS3+z28j21Boit2BNZ0R7xtuw="
+ },
+ {
+  "id": "u-stg-57",
+  "email": "khady.diop56@mail.sn",
+  "nom": "Khady Diop",
+  "role": "stagiaire",
+  "orgId": "stg-57",
+  "sel": "Y+5lqHguyLqnLttBQbM6HQ==",
+  "hash": "UFQzo+4w/Zz7PqWwXMUq6AWC6pcA3LpEO2Ml+RoP8LM="
+ },
+ {
+  "id": "u-stg-58",
+  "email": "pape.fall57@mail.sn",
+  "nom": "Pape Fall",
+  "role": "stagiaire",
+  "orgId": "stg-58",
+  "sel": "lYW8z82zwjUTzh4pU4xQsQ==",
+  "hash": "gh/AU58Z8omAcnge7Ar1vZrS0/9bzf4Q92eXCLfTzC4="
+ },
+ {
+  "id": "u-stg-59",
+  "email": "mamadou.thiam58@mail.sn",
+  "nom": "Mamadou Thiam",
+  "role": "stagiaire",
+  "orgId": "stg-59",
+  "sel": "IlmzFXDamFXzK0Bnv2bw0g==",
+  "hash": "nFOq7RNmdp6ru0n50nFvREqvvB2nMlx0tAV6W6nWlbA="
+ },
+ {
+  "id": "u-stg-60",
+  "email": "babacar.gueye59@mail.sn",
+  "nom": "Babacar Gueye",
+  "role": "stagiaire",
+  "orgId": "stg-60",
+  "sel": "6VJYRFKYeWbA/lXP1dxy8w==",
+  "hash": "FQ12KWbiVMBO0mihW19J9gsEnJhLzaRpNrDx+ZG//64="
+ },
+ {
+  "id": "u-stg-61",
+  "email": "pape.kane60@mail.sn",
+  "nom": "Pape Kane",
+  "role": "stagiaire",
+  "orgId": "stg-61",
+  "sel": "rZHCu+fTlZ7ZDFxDNAyT9g==",
+  "hash": "qTcKI1xYaqlXKsc4MfDdO35GYwtfNnalq/rHQ3qMUjo="
+ },
+ {
+  "id": "u-stg-62",
+  "email": "mariama.ba61@mail.sn",
+  "nom": "Mariama Ba",
+  "role": "stagiaire",
+  "orgId": "stg-62",
+  "sel": "LbO4XTacX+kSKXB9LFc+lg==",
+  "hash": "iOf6x2edXU6gaIrcgi9vfl9wotj2m1bwQY83Oz/R+hI="
+ },
+ {
+  "id": "u-stg-63",
+  "email": "ousmane.ba62@mail.sn",
+  "nom": "Ousmane Ba",
+  "role": "stagiaire",
+  "orgId": "stg-63",
+  "sel": "giC/BZB8z8MUuch8YWyAPg==",
+  "hash": "2wNQeo8+ERvg2efKtoEz+qbPsLZgUIImdDTwvY7/HJQ="
+ },
+ {
+  "id": "u-stg-64",
+  "email": "fatou.fall63@mail.sn",
+  "nom": "Fatou Fall",
+  "role": "stagiaire",
+  "orgId": "stg-64",
+  "sel": "ra3UQ1Mcx4ONH33fioT6/w==",
+  "hash": "LMRN6rp3LJa7mhlmrLRQ4PKu40M2lDcNNEgjQgAqVf4="
+ },
+ {
+  "id": "u-stg-65",
+  "email": "bineta.cisse64@mail.sn",
+  "nom": "Bineta Cissé",
+  "role": "stagiaire",
+  "orgId": "stg-65",
+  "sel": "Y2LJNb04JZRjoxdt7YV6fw==",
+  "hash": "Ssyx0okZpSTmCPDlwR8Srk71C5CliVWI2XI5m0k68to="
+ },
+ {
+  "id": "u-stg-66",
+  "email": "ibrahima.sane65@mail.sn",
+  "nom": "Ibrahima Sané",
+  "role": "stagiaire",
+  "orgId": "stg-66",
+  "sel": "U8XwmwajGUBOFvNBISCkww==",
+  "hash": "Z7YwrumGMo93iNGWDh4j0HG73YIiIDOJmKBSR2JGD/Y="
+ },
+ {
+  "id": "u-stg-67",
+  "email": "khady.thiam66@mail.sn",
+  "nom": "Khady Thiam",
+  "role": "stagiaire",
+  "orgId": "stg-67",
+  "sel": "tz6fnJyK+YzSfy0eVg9slg==",
+  "hash": "OFuptzrfl++RRdNd7FSq1wi3Q2lYj19TFdaujAnSjYA="
+ },
+ {
+  "id": "u-stg-68",
+  "email": "aminata.ndiaye67@mail.sn",
+  "nom": "Aminata Ndiaye",
+  "role": "stagiaire",
+  "orgId": "stg-68",
+  "sel": "q7uJkmo4Ci5v2nOh4odpaA==",
+  "hash": "+TiL1Xz5rUV5qThnYgdnBALHGkIHBV9stg996oIzgxY="
+ },
+ {
+  "id": "u-stg-69",
+  "email": "babacar.camara68@mail.sn",
+  "nom": "Babacar Camara",
+  "role": "stagiaire",
+  "orgId": "stg-69",
+  "sel": "lcsVSuIVT0TmfddKO33pRw==",
+  "hash": "9Pa4wgYq0lgsS9H1zO8319g/eSjwYJ45XGF7Qenb65I="
+ },
+ {
+  "id": "u-stg-70",
+  "email": "ibrahima.diouf69@mail.sn",
+  "nom": "Ibrahima Diouf",
+  "role": "stagiaire",
+  "orgId": "stg-70",
+  "sel": "S0jmG/e09Jqoef9tgCbkuw==",
+  "hash": "vQnRVd0pyQtqUW1TFmVSbFPlqYno1rGCgcAWJ3gwmDI="
+ }
+]

@@ -2,6 +2,7 @@
 // Activé seulement si la variable d'environnement ANTHROPIC_API_KEY est définie sur Netlify ;
 // sinon le front-end utilise le moteur local (public/js/ia.js).
 import Anthropic from '@anthropic-ai/sdk';
+import { lireSession, origineValide, env } from '../lib/auth.mts';
 
 const SCHEMA = {
   type: 'object',
@@ -37,8 +38,11 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 export default async (req: Request) => {
-  const enabled = Boolean(process.env.ANTHROPIC_API_KEY);
+  const enabled = Boolean(env('ANTHROPIC_API_KEY'));
   if (req.method === 'GET') return json({ enabled });
+  // Réservé aux recruteurs connectés (évite l'usage abusif de la clé API)
+  const session = lireSession(req);
+  if (!origineValide(req) || !session || !['entreprise', 'admin'].includes(session.role)) return json({ error: 'Non autorisé' }, 401);
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée' }, 405);
   if (!enabled) return json({ error: 'Moteur distant non configuré' }, 503);
 
@@ -50,7 +54,7 @@ export default async (req: Request) => {
   const client = new Anthropic();
   try {
     const response = await client.messages.create({
-      model: process.env.PNEC_MODEL || 'claude-opus-5-5',
+      model: env('PNEC_MODEL') || 'claude-opus-5-5',
       max_tokens: 16000,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
       system: SYSTEM,

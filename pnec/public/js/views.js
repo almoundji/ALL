@@ -1,6 +1,6 @@
 // Écrans métier du PNEC.
 import {
-  db, save, log, uid, session, ROLES, STATUTS_CAND, TYPES_CONV, PARTIES, REGIONS, SECTEURS, NIVEAUX,
+  db, save, log, uid, session, api, ROLES, STATUTS_CAND, TYPES_CONV, PARTIES, REGIONS, SECTEURS, NIVEAUX, VOLETS,
   convComplete, coutConvention, nextReference, reset,
 } from './store.js';
 import {
@@ -20,7 +20,9 @@ export const me = () => session();
 const qui = () => me()?.nom || 'Anonyme';
 const commit = (action) => { log(qui(), action); save(); };
 const go = (h) => { location.hash = h; };
-const rerender = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+export const rerender = () => window.dispatchEvent(new HashChangeEvent('hashchange'));
+// Historique d'une candidature (affiché dans la fiche candidat de l'espace recruteur)
+export function trace(c, texte) { (c.historique ??= []).push({ date: new Date().toISOString(), auteur: qui(), texte }); }
 
 export const cadreDe = (entId) => D().conventions.find((c) => c.type === 'CADRE' && c.entrepriseId === entId);
 export const peutPublier = (entId) => { const c = cadreDe(entId); return Boolean(c && convComplete(c)); };
@@ -141,7 +143,7 @@ function listeOffres(offres, { candidat } = {}) {
     const expiree = new Date(o.dateLimite) < new Date();
     const adeq = candidat ? scoreLocal(o, candidat).score : null;
     return `<a class="offre" href="#/offre/${o.id}">
-      <div class="offre-h"><span class="offre-ent">${esc(e.raisonSociale)}</span>${adeq != null ? scorePill(adeq, D().params.seuilIA) : ''}</div>
+      <div class="offre-h"><span class="offre-ent">${esc(e.raisonSociale)}</span><span class="volet">${esc((o.volet || 'Stage citoyen professionnalisant').split(' ')[0] === 'Service' ? 'Service civique' : (o.volet || '').startsWith('Saison') ? 'Saison citoyenne' : 'Stage citoyen')}</span>${adeq != null ? scorePill(adeq, D().params.seuilIA) : ''}</div>
       <h3>${esc(o.titre)}</h3>
       <p class="offre-meta">${icon('map')} ${esc(o.region)} · ${icon('clock')} ${o.duree} mois · ${icon('graduation')} ${esc(o.niveau)}</p>
       <div class="tags">${o.competences.map((c) => `<span class="tag">${esc(c)}</span>`).join('')}</div>
@@ -191,10 +193,13 @@ export function vueOffreNouvelle() {
   const e = ent(u.orgId); const P = D().params;
   const html = `${pageHead('Publier une offre de stage', `${esc(e.raisonSociale)} — l'État prend en charge ${P.tauxEtat} % de l'indemnité mensuelle`, '', '#/offres')}
     <form class="carte form" id="f-offre">
-      <div class="grille-2">
+      <div class="grille-3">
         <label>Intitulé du poste<input name="titre" required placeholder="Ex. Technicien·ne de maintenance"></label>
         <label>Domaine<select name="domaine">${opts(SECTEURS, e.secteur)}</select></label>
+        <label>Volet du programme<select name="volet">${opts(VOLETS, VOLETS[0])}</select></label>
       </div>
+      <div class="assistant-ia">${icon('sparkles')}<div><strong>Fiche de poste assistée par IA</strong><p class="muted petit">Saisissez l'intitulé, le domaine et le niveau : l'assistant rédige la description, les missions et les compétences, que vous pouvez modifier.</p></div>
+        <button type="button" class="btn" data-fiche-ia>${icon('sparkles')} Rédiger avec l'IA</button></div>
       <label>Description<textarea name="description" rows="3" required>Au sein de ${esc(e.raisonSociale)}, vous serez accompagné·e par un tuteur…</textarea></label>
       <label>Missions (une par ligne)<textarea name="missions" rows="3" required></textarea></label>
       <label>Compétences recherchées (séparées par des virgules)<input name="competences" required placeholder="Excel, Relation client, Anglais"></label>
@@ -219,6 +224,16 @@ export function vueOffreNouvelle() {
         <div><span>Coût total pour ${n} stagiaire(s) sur ${d} mois</span><strong>${fcfa(s * d * n)}</strong></div>`;
     };
     f.addEventListener('input', maj); maj();
+    root.querySelector('[data-fiche-ia]').onclick = async (ev) => {
+      const b = ev.currentTarget;
+      if (!f.titre.value.trim()) { f.titre.focus(); return toast("Saisissez d'abord l'intitulé du poste", 'info'); }
+      b.disabled = true; b.innerHTML = `${icon('sparkles')} Rédaction…`;
+      const { genererFiche } = await import('./recrutement.js');
+      const r = await genererFiche({ titre: f.titre.value, domaine: f.domaine.value, niveau: f.niveau.value, entreprise: e.raisonSociale, region: f.region.value });
+      f.description.value = r.description; f.missions.value = r.missions.join('\n'); f.competences.value = r.competences.join(', ');
+      b.disabled = false; b.innerHTML = `${icon('sparkles')} Rédiger à nouveau`;
+      toast(r.moteur === 'claude' ? 'Fiche rédigée par Claude' : 'Fiche proposée par l\'assistant local');
+    };
     f.onsubmit = (ev) => {
       ev.preventDefault();
       const v = Object.fromEntries(new FormData(f));
@@ -226,7 +241,7 @@ export function vueOffreNouvelle() {
         id: uid('off'), entrepriseId: u.orgId, titre: v.titre.trim(), description: v.description.trim(),
         missions: v.missions.split('\n').map((x) => x.trim()).filter(Boolean),
         competences: v.competences.split(',').map((x) => x.trim()).filter(Boolean),
-        niveau: v.niveau, domaine: v.domaine, region: v.region, duree: +v.duree, places: +v.places, salaire: +v.salaire,
+        niveau: v.niveau, domaine: v.domaine, region: v.region, volet: v.volet, duree: +v.duree, places: +v.places, salaire: +v.salaire,
         dateLimite: new Date(v.dateLimite + 'T23:59:00').toISOString(), datePublication: new Date().toISOString(), statut: 'publiee',
       };
       D().offres.push(o); commit(`Publication de l'offre « ${o.titre} »`);
@@ -247,14 +262,14 @@ export function vueOffre([id]) {
   const P = D().params;
   let actions = '';
   if (u.role === 'stagiaire') actions = dejaPostule ? `<a class="btn" href="#/candidatures">Candidature envoyée — suivre</a>` : ouverte ? `<button class="btn btn--primaire" data-postuler>${icon('pen')} Postuler</button>` : badge('Candidatures closes', 'gris');
-  if (proprio || ['admin', 'mfp'].includes(u.role)) actions = `<a class="btn btn--primaire" href="#/offre/${id}/candidats">${icon('users')} Candidatures (${cands.length})</a>${proprio && o.statut === 'publiee' ? '<button class="btn" data-cloturer>Clôturer</button>' : ''}`;
-  const html = `${pageHead(o.titre, `${esc(e.raisonSociale)} · ${esc(o.region)}`, actions, u.role === 'entreprise' || u.role === 'stagiaire' ? '#/offres' : `#/entreprise/${e.id}`)}
+  if (proprio || ['admin', 'mfp'].includes(u.role)) actions = `${proprio || u.role === 'admin' ? `<a class="btn" href="#/recrutement/${id}">${icon('grid')} Pipeline</a>` : ''}<a class="btn btn--primaire" href="#/offre/${id}/candidats">${icon('users')} Candidatures (${cands.length})</a>${proprio && o.statut === 'publiee' ? '<button class="btn" data-cloturer>Clôturer</button>' : ''}`;
+  const html = `${pageHead(o.titre, `<a href="#/carriere/${e.id}">${esc(e.raisonSociale)}</a> · ${esc(o.region)}`, actions, u.role === 'entreprise' || u.role === 'stagiaire' ? '#/offres' : `#/entreprise/${e.id}`)}
     <div class="grille-2-1">
       <section class="carte"><h2>Le stage</h2><p>${esc(o.description)}</p>
         <h3>Missions</h3><ul class="puces">${o.missions.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>
         <h3>Compétences recherchées</h3><div class="tags">${o.competences.map((c) => `<span class="tag">${esc(c)}</span>`).join('')}</div></section>
       <aside class="carte"><dl class="dl">
-        <dt>Domaine</dt><dd>${esc(o.domaine)}</dd><dt>Niveau</dt><dd>${esc(o.niveau)}</dd><dt>Durée</dt><dd>${o.duree} mois</dd>
+        <dt>Volet</dt><dd>${esc(o.volet || 'Stage citoyen professionnalisant')}</dd><dt>Domaine</dt><dd>${esc(o.domaine)}</dd><dt>Niveau</dt><dd>${esc(o.niveau)}</dd><dt>Durée</dt><dd>${o.duree} mois</dd>
         <dt>Places</dt><dd>${o.places}</dd><dt>Indemnité</dt><dd>${fcfa(o.salaire)} / mois<br><small class="muted">dont ${fcfa(o.salaire * P.tauxEtat / 100)} pris en charge par l'État</small></dd>
         <dt>Publication</dt><dd>${date(o.datePublication)}</dd><dt>Date limite</dt><dd>${date(o.dateLimite)}</dd><dt>Statut</dt><dd>${ouverte ? badge('Ouverte', 'ok') : badge('Clôturée', 'gris')}</dd></dl>
         ${adeq ? `<div class="adeq"><h3>Votre adéquation estimée ${scorePill(adeq.score, P.seuilIA)}</h3>
@@ -270,7 +285,8 @@ export function vueOffre([id]) {
         <label>Lettre de motivation<textarea name="lettre" rows="6" required minlength="40" placeholder="Présentez votre motivation…"></textarea></label>
         <label class="check"><input type="checkbox" required> J'accepte le traitement de mes données dans le cadre du PNEC (loi n° 2008-12 sur la protection des données personnelles).</label>`, {
         valider: 'Envoyer ma candidature', onValider: ({ lettre }) => {
-          D().candidatures.push({ id: uid('cand'), offreId: o.id, stagiaireId: s.id, date: new Date().toISOString(), lettre, statut: 'soumise' });
+          const nc = { id: uid('cand'), offreId: o.id, stagiaireId: s.id, date: new Date().toISOString(), lettre, statut: 'soumise', source: 'Candidature spontanée' };
+          trace(nc, 'Candidature reçue'); D().candidatures.push(nc);
           commit(`Candidature de ${s.prenom} ${s.nom} à l'offre « ${o.titre} »`); toast('Candidature envoyée'); go('#/candidatures');
         },
       });
@@ -318,6 +334,7 @@ export function vueCandidats([id], q) {
         const r = resultats.get(c.id);
         c.scoreIA = r.score; c.detailIA = r; c.moteurIA = moteur; c.dateTri = new Date().toISOString();
         c.statut = r.score >= P.seuilIA ? 'preselectionnee' : 'non_retenue_ia';
+        trace(c, `Tri IA (${moteur === 'claude' ? 'Claude' : 'moteur local'}) : ${r.score}/100 — ${c.statut === 'preselectionnee' ? 'présélection' : 'sous le seuil'}`);
         if (c.statut === 'preselectionnee') presel++;
       });
       commit(`Tri IA (${moteur === 'claude' ? 'Claude' : 'moteur local'}) de ${cibles.length} candidature(s) pour « ${o.titre} » : ${presel} présélectionnée(s)`);
@@ -353,11 +370,11 @@ function carteCandidat(c, o, gestion) {
     <div class="cand-act">${actions.join('')}</div></article>`;
 }
 
-function actionCandidat(act, id) {
+export function actionCandidat(act, id, apres) {
   const c = cand(id); const o = off(c.offreId); const s = stg(c.stagiaireId); const e = ent(o.entrepriseId);
   if (act === 'repecher') {
-    c.statut = 'preselectionnee'; c.repeche = true;
-    commit(`Repêchage manuel d'une candidature pour « ${o.titre} »`); toast('Candidature repêchée'); return rerender();
+    c.statut = 'preselectionnee'; c.repeche = true; trace(c, 'Repêchage manuel en présélection');
+    commit(`Repêchage manuel d'une candidature pour « ${o.titre} »`); toast('Candidature repêchée'); return (apres || rerender)();
   }
   if (act === 'planifier') {
     const demain = new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10);
@@ -369,7 +386,7 @@ function actionCandidat(act, id) {
       <p class="note">${icon('video')} Une salle de visioconférence sécurisée est générée automatiquement ; le lien est transmis au candidat dans son espace.</p>`, {
       valider: 'Planifier', onValider: (v) => {
         c.entretien = { ...v, duree: +v.duree, salle: `PNEC-${Math.random().toString(36).slice(2, 10)}-${c.id}`.replace(/[^A-Za-z0-9-]/g, '') };
-        c.statut = 'entretien_planifie';
+        c.statut = 'entretien_planifie'; trace(c, `Entretien planifié le ${v.date} à ${v.heure} (${v.evaluateur})`);
         commit(`Entretien planifié le ${v.date} à ${v.heure} avec ${s.prenom} ${s.nom} (« ${o.titre} »)`); toast('Entretien planifié'); rerender();
       },
     });
@@ -384,7 +401,7 @@ function actionCandidat(act, id) {
       <label>Tuteur·rice<input name="tuteur" required value="${esc(e.contact)}"></label></div>
       <div class="repartition"><div><span>Indemnité</span><strong>${fcfa(o.salaire)} / mois</strong></div><div><span>Part État</span><strong>${fcfa(o.salaire * P.tauxEtat / 100)} / mois</strong></div><div><span>Durée</span><strong>${o.duree} mois</strong></div></div>`, {
       valider: 'Retenir et générer la convention', onValider: (v) => {
-        c.statut = 'retenue'; c.dateDecision = new Date().toISOString();
+        c.statut = 'retenue'; c.dateDecision = new Date().toISOString(); trace(c, 'Retenu·e — convention de prise en charge générée');
         D().conventions.push({
           id: uid('cv'), reference: nextReference('PRISE_EN_CHARGE'), type: 'PRISE_EN_CHARGE', entrepriseId: e.id, stagiaireId: s.id, candidatureId: c.id, offreId: o.id,
           salaire: o.salaire, duree: o.duree, tauxEtat: P.tauxEtat, dateDebut: v.dateDebut, tuteur: v.tuteur, dateCreation: new Date().toISOString(),
@@ -395,7 +412,7 @@ function actionCandidat(act, id) {
     });
   }
   if (act === 'refuser') {
-    c.statut = 'refusee'; c.dateDecision = new Date().toISOString();
+    c.statut = 'refusee'; c.dateDecision = new Date().toISOString(); trace(c, 'Non retenu·e après entretien');
     commit(`Candidature de ${s.prenom} ${s.nom} non retenue (« ${o.titre} »)`); toast('Décision enregistrée', 'info'); rerender();
   }
 }
@@ -506,6 +523,7 @@ export function vueEntretien([id]) {
       const total = Object.values(notes).reduce((a, b) => a + b, 0);
       c.entretien.notes = notes; c.entretien.note = Math.round((total / 20) * 20 * 10) / 10; c.entretien.commentaire = v.commentaire;
       if (c.statut === 'entretien_planifie') c.statut = 'entretien_realise';
+      trace(c, `Entretien évalué : ${c.entretien.note}/20`);
       commit(`Évaluation de l'entretien de ${s.prenom} ${s.nom} : ${c.entretien.note}/20`);
       toast(`Évaluation enregistrée : ${c.entretien.note}/20`); go('#/selection');
     };
@@ -575,7 +593,7 @@ export function vueConvention([id]) {
   if (!conventionsVisibles().includes(c)) return empty('Accès non autorisé à cette convention.');
   const moi = partiePourMoi(c);
   const html = `${pageHead(TYPES_CONV[c.type].label, `Référence ${esc(c.reference)} · ${statutConv(c)}`,
-    `${moi ? `<button class="btn btn--primaire" data-signer>${icon('pen')} Signer électroniquement</button>` : ''}<button class="btn" onclick="window.print()">${icon('print')} Imprimer</button>`, '#/conventions')}
+    `${moi ? `<button class="btn btn--primaire" data-signer>${icon('pen')} Signer électroniquement</button>` : ''}<button class="btn" data-print>${icon('print')} Imprimer</button>`, '#/conventions')}
     <article class="doc">
       <header class="doc-h"><div class="doc-rep"><strong>RÉPUBLIQUE DU SÉNÉGAL</strong><span>Un Peuple — Un But — Une Foi</span></div>
         <div class="drapeau"><i></i><i></i><i></i></div><p class="doc-prog">Programme national d'Engagement citoyen</p>
@@ -608,7 +626,7 @@ export function vueConvention([id]) {
               });
               msg = 'Convention signée — la convention de stage a été générée';
             }
-            if (c.type === 'STAGE') { const k = cand(c.candidatureId); if (k) k.statut = 'en_stage'; msg = 'Convention de stage signée — le stage peut démarrer'; }
+            if (c.type === 'STAGE') { const k = cand(c.candidatureId); if (k) { k.statut = 'en_stage'; trace(k, 'Convention de stage signée — stage démarré'); } msg = 'Convention de stage signée — le stage peut démarrer'; }
           }
           commit(`Signature de la convention ${c.reference} (${PARTIES[moi.role]})`); toast(msg); rerender();
         },
@@ -694,7 +712,7 @@ export function vuePilotage() {
     label: s, value: d.conventions.filter((c) => c.type === 'PRISE_EN_CHARGE' && convComplete(c) && ent(c.entrepriseId).secteur === s).reduce((a, c) => a + coutConvention(c).etat, 0),
   })).filter((r) => r.value).sort((a, b) => b.value - a.value);
   const kpi = (v, l, s = '') => `<div class="kpi"><strong>${v}</strong><span>${l}</span>${s ? `<small>${s}</small>` : ''}</div>`;
-  const html = `${pageHead('Tableau de bord national', `Suivi du Programme national d'Engagement citoyen — données au ${date(new Date())}`, `<button class="btn" onclick="window.print()">${icon('print')} Exporter</button>`)}
+  const html = `${pageHead('Tableau de bord national', `Suivi du Programme national d'Engagement citoyen — données au ${date(new Date())}`, `<button class="btn" data-print>${icon('print')} Exporter</button>`)}
     <div class="kpis-band">
       ${kpi(num(S.entreprises), 'entreprises engagées', `${S.entAttente} en attente de validation`)}
       ${kpi(num(S.places), 'places de stage offertes', `${S.offres} offres publiées`)}
@@ -747,10 +765,19 @@ export function vueUtilisateurs(_, q) {
       commit(`${u.actif ? 'Réactivation' : 'Suspension'} du compte ${u.nom}`); rerender();
     });
     root.querySelector('[data-ajout]').onclick = () => modal('Nouveau compte institutionnel', `
-      <label>Nom / service<input name="nom" required></label><label>E-mail<input type="email" name="email" required></label>
+      <label>Nom / service<input name="nom" required maxlength="120"></label><label>E-mail professionnel<input type="email" name="email" required></label>
       <label>Rôle<select name="role">${['admin', 'mfp', 'de', 'primature'].map((k) => `<option value="${k}">${esc(ROLES[k].label)}</option>`).join('')}</select></label>
-      <p class="note">Les comptes entreprise et stagiaire sont créés par l'inscription en ligne.</p>`, {
-      valider: 'Créer', onValider: (v) => { D().users.push({ id: uid('u'), ...v, actif: true }); commit(`Création du compte ${v.nom} (${ROLES[v.role].court})`); toast('Compte créé'); rerender(); },
+      <p class="note">Un mot de passe provisoire est généré et affiché une seule fois. Il se connecte par le portail des agents. Les comptes entreprise et jeune sont créés par l'inscription en ligne.</p>`, {
+      valider: 'Créer', onValider: async (v) => {
+        const lettres = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+        const r8 = crypto.getRandomValues(new Uint8Array(12));
+        const mdp = `Pnec-${Array.from(r8.slice(0, 8), (b) => lettres[b % lettres.length]).join('')}-${Array.from(r8.slice(8), (b) => b % 10).join('')}`;
+        const { ok, data } = await api('auth/inscription', { ...v, motDePasse: mdp });
+        if (!ok) { toast(data.error || 'Création impossible', 'erreur'); return false; }
+        D().users.push({ id: data.utilisateur.id, nom: v.nom, email: v.email.toLowerCase(), role: v.role, actif: true });
+        commit(`Création du compte ${v.nom} (${ROLES[v.role].court})`); rerender();
+        setTimeout(() => modal('Compte créé', `<p>Transmettez ce mot de passe provisoire par un canal sûr à <strong>${esc(v.email)}</strong> :</p><p class="mdp">${esc(mdp)}</p><p class="note">Il ne sera plus affiché.</p>`, { valider: 'J\'ai noté le mot de passe', annuler: '' }), 50);
+      },
     });
   }];
 }

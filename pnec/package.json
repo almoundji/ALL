@@ -8,6 +8,7 @@
     "serve": "npx --yes http-server public -p 8080 -c-1"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.5.0"
+    "@anthropic-ai/sdk": "^1.5.0",
+    "@netlify/blobs": "^11.1.7"
   }
 }

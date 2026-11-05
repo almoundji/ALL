@@ -1,8 +1,9 @@
 // Point d'entrée : routeur, en-tête, page publique, connexion, accueil à tuiles.
-import { load, save, db, session, setSession, finishSeed, log, uid, ROLES, REGIONS, SECTEURS, NIVEAUX, convComplete } from './store.js';
+import { load, save, db, session, setSession, chargerSession, api, finishSeed, log, uid, ROLES, REGIONS, SECTEURS, NIVEAUX, convComplete } from './store.js';
 import { esc, num, fcfa, dateLongue, date, icon, tile, tileCreer, toast, initTooltips, empty, badge } from './ui.js';
 import { scoreLocal } from './ia.js';
 import * as V from './views.js';
+import * as R from './recrutement.js';
 
 load();
 finishSeed(db(), scoreLocal);
@@ -15,6 +16,15 @@ const app = document.getElementById('app');
 const ROUTES = [
   ['', vueAccueilPublic, null],
   ['connexion', vueConnexion, null],
+  ['portail-agents', vuePortailAgents, null],
+  ['carriere/:id', R.vueCarriere, null],
+  ['recrutement', R.vueRecrutement, ['entreprise', 'admin']],
+  ['recrutement/modeles', R.vueModeles, ['entreprise']],
+  ['recrutement/equipe', R.vueEquipe, ['entreprise']],
+  ['recrutement/:id/rapport', R.vueRapport, ['entreprise', 'admin', 'mfp', 'primature']],
+  ['recrutement/:id', R.vuePipeline, ['entreprise', 'admin']],
+  ['cvtheque', R.vueCVtheque, ['entreprise', 'admin']],
+  ['messages', R.vueMessages, ['stagiaire']],
   ['inscription/entreprise', vueInscriptionEntreprise, null],
   ['inscription/stagiaire', vueInscriptionStagiaire, null],
   ['accueil', vueAccueil, '*'],
@@ -57,6 +67,7 @@ function render() {
   let html, bind;
   if (!m) html = `<main class="page">${empty('Page introuvable.')}</main>`;
   else if (m.roles && !u) { location.hash = '#/connexion'; return; }
+  else if (!m.roles && u && ['connexion', 'portail-agents'].includes(path)) { location.hash = '#/accueil'; return; }
   else if (m.roles && m.roles !== '*' && !m.roles.includes(u.role)) html = `<main class="page">${empty('Cette page n\'est pas accessible avec votre profil.')}</main>`;
   else {
     const out = m.view(m.params, q);
@@ -66,19 +77,23 @@ function render() {
   app.innerHTML = header(u, path) + html + footer();
   bind?.(app);
   bindHeader();
-  window.scrollTo(0, 0);
+  if (path !== dernierChemin) window.scrollTo(0, 0);
+  dernierChemin = path;
   document.title = `${document.querySelector('h1')?.textContent || 'Accueil'} — PNEC`;
 }
+let dernierChemin = null;
 window.addEventListener('hashchange', render);
+// Impression (sans gestionnaire inline, compatible avec la politique de sécurité du contenu)
+document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });
 
 // ---------- En-tête & pied ----------
 const NAV = {
-  entreprise: [['accueil', 'Accueil'], ['offres', 'Mes offres'], ['entretiens', 'Entretiens'], ['selection', 'Sélection'], ['conventions', 'Conventions']],
-  stagiaire: [['accueil', 'Accueil'], ['offres', 'Offres'], ['candidatures', 'Candidatures'], ['conventions', 'Conventions'], ['profil', 'Mon profil']],
+  entreprise: [['accueil', 'Accueil'], ['recrutement', 'Recrutement'], ['cvtheque', 'CVthèque'], ['offres', 'Offres'], ['conventions', 'Conventions']],
+  stagiaire: [['accueil', 'Accueil'], ['offres', 'Offres'], ['candidatures', 'Candidatures'], ['messages', 'Messages'], ['conventions', 'Conventions'], ['profil', 'Mon profil']],
   mfp: [['accueil', 'Accueil'], ['entreprises', 'Entreprises'], ['conventions', 'Conventions'], ['offres', 'Offres'], ['pilotage', 'Pilotage']],
   de: [['accueil', 'Accueil'], ['conventions', 'Prises en charge'], ['entreprises', 'Entreprises'], ['pilotage', 'Pilotage']],
   primature: [['accueil', 'Accueil'], ['pilotage', 'Tableau de bord'], ['entreprises', 'Entreprises'], ['conventions', 'Conventions']],
-  admin: [['accueil', 'Accueil'], ['entreprises', 'Entreprises'], ['offres', 'Offres'], ['conventions', 'Conventions'], ['pilotage', 'Pilotage'], ['admin/utilisateurs', 'Administration']],
+  admin: [['accueil', 'Accueil'], ['entreprises', 'Entreprises'], ['recrutement', 'Recrutement'], ['conventions', 'Conventions'], ['pilotage', 'Pilotage'], ['admin/utilisateurs', 'Administration']],
 };
 
 function header(u, path) {
@@ -90,7 +105,7 @@ function header(u, path) {
       <span class="logo-embleme" aria-hidden="true"><svg viewBox="0 0 40 40"><rect width="13.3" height="40" fill="#008f36"/><rect x="13.3" width="13.4" height="40" fill="#ffeb00"/><rect x="26.7" width="13.3" height="40" fill="#e1001a"/><path d="M20 13l2 5.6h5.9l-4.8 3.5 1.8 5.7L20 24.3l-4.9 3.5 1.8-5.7-4.8-3.5H18z" fill="#008f36"/></svg></span>
       <span class="logo-t"><strong>PNEC</strong><small>Programme national<br>d'Engagement citoyen</small></span></a>
     <button class="btn-ico burger" aria-label="Menu" data-burger>${icon('menu')}</button>
-    <nav class="nav" id="nav"><ul>${nav.map(([h, l]) => `<li><a href="#/${h}" class="${path === h || (h && path.startsWith(h.split('/')[0] + '/') && h !== 'accueil') ? 'on' : ''}">${l}</a></li>`).join('')}</ul></nav>
+    <nav class="nav" id="nav"><ul>${nav.map(([h, l]) => `<li><a href="#/${h}" ${h === 'messages' && nonLus(u) ? `data-badge="${nonLus(u)}"` : ''} class="${path === h || (h && path.startsWith(h.split('/')[0] + '/') && h !== 'accueil') ? 'on' : ''}">${l}</a></li>`).join('')}</ul></nav>
     <div class="outils">
       ${u ? `<button class="pill" data-recherche>${icon('search')}<span>Rechercher</span><kbd>Ctrl K</kbd></button>
         <span class="avatar" title="${esc(u.nom)} — ${esc(ROLES[u.role].label)}">${esc(initiales)}</span>
@@ -99,11 +114,13 @@ function header(u, path) {
     </div></div></header>`;
 }
 
+const nonLus = (u) => (u?.role === 'stagiaire' ? R.messagesDe(u.orgId).filter((m) => !m.lu).length : 0);
+
 function footer() {
   return `<footer class="footer"><div class="footer-c">
     <div class="footer-cols">
       <div><strong>PNEC</strong><p>Le Programme national d'Engagement citoyen fédère la mobilisation de la jeunesse au service de l'Agenda national de transformation.</p></div>
-      <div><strong>Parcours</strong><ul><li><a href="#/inscription/entreprise">Engager mon entreprise</a></li><li><a href="#/inscription/stagiaire">Je cherche un stage</a></li><li><a href="#/connexion">Espace partenaires</a></li></ul></div>
+      <div><strong>Parcours</strong><ul><li><a href="#/inscription/entreprise">Engager mon entreprise</a></li><li><a href="#/inscription/stagiaire">Je cherche un stage</a></li><li><a href="#/connexion">Connexion</a></li></ul></div>
       <div><strong>Partenaires institutionnels</strong><ul><li>Primature</li><li>Ministère de la Formation professionnelle</li><li>Direction de l'Emploi</li></ul></div>
     </div>
     <div class="footer-b"><span>République du Sénégal — Un Peuple, Un But, Une Foi</span><span>Prototype de démonstration · données fictives</span></div>
@@ -111,7 +128,10 @@ function footer() {
 }
 
 function bindHeader() {
-  app.querySelector('[data-deco]')?.addEventListener('click', () => { setSession(null); location.hash = '#/'; });
+  app.querySelector('[data-deco]')?.addEventListener('click', async () => {
+    await api('auth/deconnexion', {}).catch(() => {});
+    setSession(null); location.hash = '#/'; render();
+  });
   app.querySelector('[data-burger]')?.addEventListener('click', () => app.querySelector('#nav').classList.toggle('ouvert'));
   app.querySelector('[data-recherche]')?.addEventListener('click', ouvrirRecherche);
 }
@@ -164,11 +184,31 @@ function vueAccueilPublic() {
     ['file', 'Convention de stage', 'Le stagiaire et l\'entreprise signent électroniquement.'],
   ];
   return `<section class="hero"><div class="hero-c">
-      <p class="sur-titre">République du Sénégal · Primature</p>
+      <p class="sur-titre">République du Sénégal · Primature · Agenda national de Transformation</p>
       <h1>Programme national d'Engagement citoyen</h1>
-      <p class="hero-p">Le cadre fédérateur de la mobilisation de la jeunesse au service de l'Agenda national de transformation : des entreprises volontaires ouvrent leurs portes, l'État prend en charge la moitié de l'indemnité de stage.</p>
-      <div class="hero-cta"><a class="cta cta--jaune" href="#/inscription/stagiaire">Je cherche un stage ${icon('arrow')}</a><a class="cta cta--blanc" href="#/inscription/entreprise">J'engage mon entreprise ${icon('arrow')}</a></div>
+      <p class="hero-p">Un pilier de l'Agenda national de Transformation « Sénégal 2050 » pour mobiliser la jeunesse et faire du Masterplan 2025–2034 une véritable école de responsabilité et de compétences.</p>
+      <div class="hero-cta"><a class="cta cta--jaune" href="#/inscription/stagiaire">Je m'engage ${icon('arrow')}</a><a class="cta cta--blanc" href="#/inscription/entreprise">J'engage mon entreprise ${icon('arrow')}</a></div>
     </div></section>
+    <section class="section"><div class="section-c programme">
+      <div><h2 class="titre-section">Le programme</h2>
+        <p class="lead">Le Programme national d'Engagement citoyen est intégré à l'Agenda national de Transformation (Sénégal 2050). Il est coordonné par la Primature et mis en œuvre par un groupe de travail interministériel chargé de l'architecture du dispositif, de la plateforme numérique, de la certification des compétences et du financement.</p>
+        <p>Il s'inscrit dans le référentiel national pour un Sénégal souverain, juste et prospère à l'horizon 2050.</p>
+        <p class="petit muted">Source : <a href="https://primature.sn/publications/actualites/sante-et-engagement-citoyen-les-orientations-du-premier-ministre-ahmadou-al" target="_blank" rel="noopener">Primature du Sénégal</a> · <a href="https://www.presidence.sn/fr/assets/documents/Vision_Senegal-2050_Brochure.pdf" target="_blank" rel="noopener">Vision Sénégal 2050</a></p></div>
+      <div class="chiffre-cle"><strong>+ 1 million</strong><span>d'emplois attendus de l'Agenda national de Transformation d'ici 2029</span></div>
+    </div></section>
+    <section class="section section--gris"><div class="section-c"><h2 class="titre-section">Objectifs</h2>
+      <div class="cartes-3">
+        <article class="carte-obj">${icon('graduation')}<h3>Un continuum école – citoyenneté – emploi</h3><p>Relier l'école, la citoyenneté active et le monde socio-professionnel.</p></article>
+        <article class="carte-obj">${icon('briefcase')}<h3>L'employabilité des jeunes</h3><p>S'appuyer sur le potentiel d'emplois généré par l'Agenda national de Transformation.</p></article>
+        <article class="carte-obj">${icon('handshake')}<h3>La jeunesse au cœur du développement</h3><p>Impliquer les jeunes dans les grandes missions de développement national.</p></article>
+      </div></div></section>
+    <section class="section"><div class="section-c"><h2 class="titre-section">Trois volets</h2>
+      <div class="volets">
+        <article><span class="volet-n">1</span><h3>Saison d'Engagement citoyen</h3><p>Des actions collectives et communautaires au service des territoires.</p></article>
+        <article><span class="volet-n">2</span><h3>Stage citoyen professionnalisant</h3><p>Des stages en entreprise, avec une indemnité financée à 50 % par l'État via la Direction de l'Emploi.</p></article>
+        <article><span class="volet-n">3</span><h3>Service civique professionnalisant</h3><p>Des missions d'intérêt général qui développent des compétences certifiées.</p></article>
+      </div></div></section>
+    <section class="bandeau-photo" aria-label="Mobilisation de la jeunesse"><div class="section-c"><p>« Faire de chaque jeune un acteur de la transformation du pays »</p></div></section>
     <section class="chiffres"><div class="chiffres-c">
       <div><strong>${num(S.entreprises)}</strong><span>entreprises engagées</span></div>
       <div><strong>${num(S.places)}</strong><span>places de stage</span></div>
@@ -186,38 +226,76 @@ function vueAccueilPublic() {
 }
 
 // =====================================================================
-// Connexion (démonstration : choix du profil)
+// Connexion — portail public (jeunes, entreprises) et portail privé (agents de l'État)
 // =====================================================================
-function vueConnexion() {
-  const ents = D().users.filter((u) => u.role === 'entreprise' && u.actif).reverse();
-  const stgs = D().users.filter((u) => u.role === 'stagiaire' && u.actif).reverse();
-  const inst = D().users.filter((u) => ['admin', 'mfp', 'de', 'primature'].includes(u.role) && u.actif);
-  const carte = (role, ico, sel) => `<form class="profil-carte" data-role="${role}">
-      <span class="profil-ico">${icon(ico)}</span><h3>${esc(ROLES[role].label)}</h3>
-      ${sel ? `<select name="u" aria-label="Compte">${sel.map((u) => `<option value="${u.id}">${esc(u.nom)}</option>`).join('')}</select>` : `<input type="hidden" name="u" value="${inst.find((u) => u.role === role)?.id || ''}">`}
-      <button class="btn btn--primaire">Entrer</button></form>`;
-  return [`<section class="connexion"><div class="connexion-c">
-    <h1>Espace PNEC</h1>
-    <p class="muted">Prototype de démonstration : choisissez un profil pour découvrir la plateforme. En production, l'accès se fait par identifiant, mot de passe et code SMS.</p>
-    <div class="profils">
-      ${carte('stagiaire', 'graduation', stgs)}
-      ${carte('entreprise', 'building', ents)}
-      ${carte('mfp', 'handshake')}
-      ${carte('de', 'coins')}
-      ${carte('primature', 'chart')}
-      ${carte('admin', 'settings')}
-    </div>
-    <p class="centre">Pas encore inscrit·e ? <a href="#/inscription/stagiaire">Créer un profil jeune</a> · <a href="#/inscription/entreprise">Inscrire mon entreprise</a></p>
-  </div></section>`, bindConnexion];
+// Garantit que le compte connecté dispose de sa fiche dans les données locales du prototype.
+function rattacher(u) {
+  if (!D().users.some((x) => x.id === u.id)) D().users.push({ ...u, actif: true });
+  if (u.role === 'entreprise' && !V.ent(u.orgId)) {
+    u.orgId ||= uid('ent');
+    D().entreprises.push({ id: u.orgId, raisonSociale: u.nom, secteur: SECTEURS[0], region: 'Dakar', effectif: 1, ninea: '—', rccm: '—', contact: u.nom, fonction: '—', email: u.email, tel: '—', adresse: '—', statut: 'en_attente', dateInscription: new Date().toISOString() });
+  }
+  if (u.role === 'stagiaire' && !V.stg(u.orgId)) {
+    u.orgId ||= uid('stg');
+    const [prenom, ...nom] = u.nom.split(' ');
+    D().stagiaires.push({ id: u.orgId, prenom, nom: nom.join(' '), sexe: '', email: u.email, tel: '—', dateNaissance: '', region: 'Dakar', niveau: NIVEAUX[1], domaine: SECTEURS[0], diplome: '—', competences: [], experience: 0, cvTexte: '', dateInscription: new Date().toISOString() });
+  }
+  save();
 }
-function bindConnexion() {
-  app.querySelectorAll('.profil-carte').forEach((f) => f.addEventListener('submit', (e) => {
+
+function formulaireConnexion(portail, titre, aide) {
+  return `<form class="carte form connexion-f" id="f-connexion" data-portail="${portail}" novalidate>
+    <h2>${titre}</h2><p class="muted petit">${aide}</p>
+    <label>Adresse e-mail<input type="email" name="email" autocomplete="username" required autofocus></label>
+    <label>Mot de passe<span class="mdp-champ"><input type="password" name="motDePasse" autocomplete="current-password" required minlength="8"><button type="button" class="btn-ico" data-voir aria-label="Afficher le mot de passe">${icon('eye')}</button></span></label>
+    <p class="erreur" id="erreur" role="alert"></p>
+    <button class="btn btn--primaire btn--large">Se connecter</button>
+    <p class="petit muted centre-t">Mot de passe oublié ? ${portail === 'agents' ? 'Contactez l\'administrateur de la plateforme.' : 'Écrivez à <a href="mailto:assistance@pnec.sn">assistance@pnec.sn</a>.'}</p>
+  </form>`;
+}
+
+function bindFormulaireConnexion(root) {
+  const f = root.querySelector('#f-connexion');
+  root.querySelector('[data-voir]').onclick = () => { f.motDePasse.type = f.motDePasse.type === 'password' ? 'text' : 'password'; };
+  f.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const u = D().users.find((x) => x.id === f.u.value);
-    if (!u) return toast('Compte introuvable', 'erreur');
-    setSession(u); log(u.nom, 'Connexion'); save();
+    const err = root.querySelector('#erreur'); err.textContent = '';
+    if (!f.email.value || !f.motDePasse.value) { err.textContent = 'Saisissez votre e-mail et votre mot de passe.'; return; }
+    const b = f.querySelector('button.btn--primaire'); b.disabled = true; b.textContent = 'Vérification…';
+    const { ok, data, status } = await api('auth/connexion', { email: f.email.value.trim(), motDePasse: f.motDePasse.value, portail: f.dataset.portail })
+      .catch(() => ({ ok: false, data: { error: 'Service de connexion injoignable.' } }));
+    b.disabled = false; b.textContent = 'Se connecter';
+    if (!ok) { err.textContent = data.error || (status === 429 ? 'Trop de tentatives.' : 'Connexion impossible.'); f.motDePasse.value = ''; return; }
+    setSession(data.utilisateur); rattacher(data.utilisateur);
+    log(data.utilisateur.nom, `Connexion (portail ${f.dataset.portail === 'agents' ? 'des agents' : 'public'})`); save();
     location.hash = '#/accueil';
-  }));
+  });
+}
+
+function vueConnexion(_, q) {
+  const profil = q.get('profil') === 'entreprise' ? 'entreprise' : 'stagiaire';
+  return [`<section class="connexion"><div class="connexion-c connexion-c--2">
+    <div class="connexion-intro"><p class="sur-titre vert">Espace public</p><h1>Connexion</h1>
+      <p class="muted">Jeunes et entreprises partenaires du Programme national d'Engagement citoyen.</p>
+      <nav class="bascule">
+        <a href="#/connexion?profil=stagiaire" class="${profil === 'stagiaire' ? 'on' : ''}">${icon('graduation')} Je suis un·e jeune</a>
+        <a href="#/connexion?profil=entreprise" class="${profil === 'entreprise' ? 'on' : ''}">${icon('building')} Je suis une entreprise</a></nav>
+      <ul class="puces puces--ok petit">${profil === 'stagiaire'
+        ? '<li>Postulez aux stages et au service civique</li><li>Suivez vos candidatures et vos entretiens</li><li>Signez votre convention en ligne</li>'
+        : '<li>Publiez vos offres et triez les CV avec l\'IA</li><li>Gérez votre pipeline de recrutement</li><li>Bénéficiez de la prise en charge de 50 %</li>'}</ul>
+      <p>Pas encore de compte ? <a href="#/inscription/${profil}">${profil === 'stagiaire' ? 'Créer mon profil' : 'Inscrire mon entreprise'}</a></p></div>
+    ${formulaireConnexion('public', profil === 'stagiaire' ? 'Espace jeune' : 'Espace entreprise', 'Connexion sécurisée — vos identifiants ne sont jamais stockés en clair.')}
+  </div></section>`, bindFormulaireConnexion];
+}
+
+function vuePortailAgents() {
+  return [`<section class="connexion connexion--agents"><div class="connexion-c connexion-c--2">
+    <div class="connexion-intro"><p class="sur-titre">Accès restreint</p><h1>Portail des agents</h1>
+      <p>Réservé aux agents habilités de la Primature, du Ministère de la Formation professionnelle, de la Direction de l'Emploi et à l'administration de la plateforme.</p>
+      <ul class="puces petit"><li>Sessions limitées à 2 heures</li><li>Verrouillage après 5 tentatives échouées</li><li>Toutes les actions sont tracées dans le journal d'audit</li></ul>
+      <p class="petit">Toute tentative d'accès non autorisée est passible de poursuites (loi n° 2008-11 sur la cybercriminalité).</p></div>
+    ${formulaireConnexion('agents', 'Identification agent', 'Utilisez l\'adresse professionnelle fournie par l\'administrateur.')}
+  </div></section>`, bindFormulaireConnexion];
 }
 
 // =====================================================================
@@ -241,16 +319,25 @@ function vueInscriptionEntreprise() {
         <label>Téléphone<input name="tel" required placeholder="+221 33 …"></label>
       </div>
       <label>Adresse<input name="adresse" required></label>
+      <div class="grille-2">
+        <label>Mot de passe<input type="password" name="motDePasse" required minlength="10" autocomplete="new-password" placeholder="10 caractères min., lettres et chiffres"></label>
+        <label>Confirmation<input type="password" name="confirmation" required minlength="10" autocomplete="new-password"></label>
+      </div>
+      <p class="erreur" id="erreur" role="alert"></p>
       <label class="check"><input type="checkbox" required> Je certifie l'exactitude des informations et m'engage à respecter la charte du PNEC.</label>
       <div class="form-f"><button class="btn btn--primaire">Envoyer l'inscription</button></div></form></main>`,
-  (root) => root.querySelector('#f-insc').addEventListener('submit', (e) => {
+  (root) => root.querySelector('#f-insc').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const v = Object.fromEntries(new FormData(e.target));
-    const ent = { id: uid('ent'), ...v, effectif: +v.effectif, statut: 'en_attente', dateInscription: new Date().toISOString() };
-    D().entreprises.push(ent);
-    const u = { id: uid('u'), nom: ent.raisonSociale, email: ent.email, role: 'entreprise', orgId: ent.id, actif: true };
-    D().users.push(u); setSession(u);
-    log(u.nom, 'Inscription de l\'entreprise sur la plateforme'); save();
+    const { motDePasse, confirmation, ...v } = Object.fromEntries(new FormData(e.target));
+    const err = root.querySelector('#erreur');
+    if (motDePasse !== confirmation) { err.textContent = 'Les deux mots de passe ne correspondent pas.'; return; }
+    const entId = uid('ent');
+    const { ok, data } = await api('auth/inscription', { email: v.email, motDePasse, nom: v.raisonSociale, role: 'entreprise', orgId: entId })
+      .catch(() => ({ ok: false, data: { error: 'Service injoignable.' } }));
+    if (!ok) { err.textContent = data.error || 'Inscription impossible.'; return; }
+    D().entreprises.push({ id: entId, ...v, effectif: +v.effectif, statut: 'en_attente', dateInscription: new Date().toISOString() });
+    setSession(data.utilisateur); rattacher(data.utilisateur);
+    log(v.raisonSociale, 'Inscription de l\'entreprise sur la plateforme'); save();
     toast('Inscription envoyée au Ministère'); location.hash = '#/accueil';
   })];
 }
@@ -273,17 +360,27 @@ function vueInscriptionStagiaire() {
       <label>Diplôme<input name="diplome" required placeholder="BTS Électrotechnique"></label>
       <label>Compétences (séparées par des virgules)<input name="competences" required placeholder="Excel, Maintenance, Anglais"></label>
       <label>Présentation / CV<textarea name="cvTexte" rows="4" placeholder="Parcours, stages, projets…"></textarea></label>
+      <div class="grille-2">
+        <label>Mot de passe<input type="password" name="motDePasse" required minlength="10" autocomplete="new-password" placeholder="10 caractères min., lettres et chiffres"></label>
+        <label>Confirmation<input type="password" name="confirmation" required minlength="10" autocomplete="new-password"></label>
+      </div>
       <p class="note">Le sexe et la date de naissance servent uniquement aux statistiques du programme ; ils ne sont jamais utilisés par le moteur de tri.</p>
+      <label class="check"><input type="checkbox" name="cvtheque" checked> Rendre mon profil visible (de façon anonyme) dans la CVthèque des entreprises partenaires</label>
       <label class="check"><input type="checkbox" required> J'accepte le traitement de mes données dans le cadre du PNEC (loi n° 2008-12).</label>
+      <p class="erreur" id="erreur" role="alert"></p>
       <div class="form-f"><button class="btn btn--primaire">Créer mon profil</button></div></form></main>`,
-  (root) => root.querySelector('#f-insc').addEventListener('submit', (e) => {
+  (root) => root.querySelector('#f-insc').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const v = Object.fromEntries(new FormData(e.target));
-    const s = { id: uid('stg'), ...v, experience: +v.experience, competences: v.competences.split(',').map((x) => x.trim()).filter(Boolean), dateInscription: new Date().toISOString() };
-    D().stagiaires.push(s);
-    const u = { id: uid('u'), nom: `${s.prenom} ${s.nom}`, email: s.email, role: 'stagiaire', orgId: s.id, actif: true };
-    D().users.push(u); setSession(u);
-    log(u.nom, 'Création du profil stagiaire'); save();
+    const { motDePasse, confirmation, cvtheque, ...v } = Object.fromEntries(new FormData(e.target));
+    const err = root.querySelector('#erreur');
+    if (motDePasse !== confirmation) { err.textContent = 'Les deux mots de passe ne correspondent pas.'; return; }
+    const stgId = uid('stg');
+    const { ok, data } = await api('auth/inscription', { email: v.email, motDePasse, nom: `${v.prenom} ${v.nom}`, role: 'stagiaire', orgId: stgId })
+      .catch(() => ({ ok: false, data: { error: 'Service injoignable.' } }));
+    if (!ok) { err.textContent = data.error || 'Inscription impossible.'; return; }
+    D().stagiaires.push({ id: stgId, ...v, experience: +v.experience, visibleCVtheque: Boolean(cvtheque), competences: v.competences.split(',').map((x) => x.trim()).filter(Boolean), dateInscription: new Date().toISOString() });
+    setSession(data.utilisateur); rattacher(data.utilisateur);
+    log(`${v.prenom} ${v.nom}`, 'Création du profil stagiaire'); save();
     toast('Profil créé — bienvenue !'); location.hash = '#/offres';
   })];
 }
@@ -312,11 +409,14 @@ function sections(u) {
         tile({ titre: 'Stagiaires en poste', sous: 'Indemnité cofinancée à 50 %', ico: 'users', valeur: cs.filter((c) => c.statut === 'en_stage').length, legende: 'stagiaires', href: '#/conventions?type=STAGE&etat=signee' }),
       ]],
       ['Recrutement', [
+        tile({ titre: 'Espace recruteur', sous: 'Pipeline Kanban par offre', ico: 'grid', valeur: cs.filter((c) => !['refusee', 'non_retenue_ia', 'en_stage'].includes(c.statut)).length, legende: 'candidats en cours', href: '#/recrutement' }),
+        tile({ titre: 'CVthèque', sous: 'Sourcing de profils', ico: 'search', valeur: d.stagiaires.filter((s) => s.visibleCVtheque !== false).length, legende: 'profils disponibles', href: '#/cvtheque' }),
         tile({ titre: 'Mes offres', sous: 'Offres publiées', ico: 'briefcase', valeur: offres.filter((o) => o.statut === 'publiee').length, legende: `${offres.reduce((a, o) => a + o.places, 0)} places`, href: '#/offres' }),
         tile({ titre: 'Trier les candidatures', sous: 'Pré-tri par le moteur IA', ico: 'sparkles', valeur: atrier.length, legende: 'à trier', href: offreTri ? `#/offre/${offreTri.id}/candidats?f=atrier` : '#/offres', alerte: atrier.length > 0 }),
         tile({ titre: 'Entretiens en ligne', sous: enRetard ? `${enRetard} entretien(s) à évaluer` : 'Visioconférence intégrée', ico: 'video', valeur: entAvenir.length, legende: 'planifiés', href: '#/entretiens', alerte: enRetard > 0 }),
         tile({ titre: 'Sélection finale', sous: 'Après entretien', ico: 'check', valeur: cs.filter((c) => c.statut === 'entretien_realise').length, legende: 'décisions à prendre', href: '#/selection' }),
-        tileCreer({ titre: 'Publier une offre', sous: 'Saisie guidée', href: '#/offre-nouvelle' }),
+        tile({ titre: 'Rapports', sous: 'Fin de recrutement, rédigés par l\'IA', ico: 'file', valeur: offres.length, legende: 'recrutements', href: '#/recrutement' }),
+        tileCreer({ titre: 'Publier une offre', sous: 'Fiche de poste assistée par IA', href: '#/offre-nouvelle' }),
       ]],
     ];
   }
@@ -331,6 +431,7 @@ function sections(u) {
         tile({ titre: 'Offres pour moi', sous: 'Classées selon mon profil', ico: 'sparkles', valeur: adaptees, legende: `sur ${ouvertes.length} offres ouvertes`, href: '#/offres' }),
         tile({ titre: 'Mes candidatures', sous: 'Suivi étape par étape', ico: 'inbox', valeur: cs.length, legende: 'envoyées', href: '#/candidatures' }),
         tile({ titre: 'Mes entretiens', sous: prochain ? `Prochain : ${date(prochain.entretien.date)} à ${prochain.entretien.heure}` : 'En ligne, depuis mon téléphone', ico: 'video', valeur: cs.filter((c) => c.statut === 'entretien_planifie').length, legende: 'à venir', href: '#/candidatures', alerte: Boolean(prochain) }),
+        tile({ titre: 'Messagerie', sous: 'Messages des recruteurs', ico: 'inbox', valeur: R.messagesDe(u.orgId).filter((m) => !m.lu).length, legende: 'non lu(s)', href: '#/messages', alerte: R.messagesDe(u.orgId).some((m) => !m.lu) }),
         tile({ titre: 'Mon profil & CV', sous: 'Améliorer mon adéquation', ico: 'user', valeur: s.competences.length, legende: 'compétences déclarées', href: '#/profil' }),
       ]],
       ['Mon stage', [
@@ -412,4 +513,4 @@ function vueAccueil(_, q) {
 }
 
 initTooltips();
-render();
+chargerSession().then((u) => { if (u) rattacher(u); render(); });

@@ -11,6 +11,23 @@ export const SECTEURS = ['Numérique & télécoms', 'Agriculture & agro-industri
   'Banque & assurance', 'Énergie', 'Logistique & transport', 'Santé', 'Tourisme & hôtellerie',
   'Commerce & distribution', 'Pêche & économie bleue', 'Industrie', 'Mines'];
 
+export const VOLETS = ['Stage citoyen professionnalisant', 'Service civique professionnalisant', "Saison d'Engagement citoyen"];
+
+export const COMPETENCES = {
+  'Numérique & télécoms': ['JavaScript', 'Python', 'Réseaux', 'SQL', 'Cybersécurité', 'Support utilisateur', 'Cloud'],
+  'Agriculture & agro-industrie': ['Agronomie', 'Irrigation', 'Contrôle qualité', 'HACCP', 'Gestion de stock', 'Mécanisation'],
+  'BTP & infrastructures': ['AutoCAD', 'Topographie', 'Métré', 'Conduite de chantier', 'Sécurité chantier', 'Électricité bâtiment'],
+  'Banque & assurance': ['Comptabilité', 'Analyse financière', 'Relation client', 'Excel', 'Conformité', 'Crédit'],
+  'Énergie': ['Électricité', 'Photovoltaïque', 'Maintenance', 'Habilitation électrique', 'Dimensionnement'],
+  'Logistique & transport': ['Gestion de stock', 'Transit', 'Douane', 'Excel', 'Supply chain', 'Permis C'],
+  'Santé': ['Soins infirmiers', 'Accueil patient', 'Hygiène', 'Pharmacie', 'Secrétariat médical'],
+  'Tourisme & hôtellerie': ['Accueil', 'Anglais', 'Cuisine', 'Service en salle', 'Réservation', 'Housekeeping'],
+  'Commerce & distribution': ['Vente', 'Merchandising', 'Caisse', 'Relation client', 'Gestion de stock', 'Marketing digital'],
+  'Pêche & économie bleue': ['Transformation halieutique', 'Froid industriel', 'Hygiène', 'Contrôle qualité', 'Navigation'],
+  'Industrie': ['Maintenance industrielle', 'Électromécanique', 'Production', 'Sécurité industrielle', 'Contrôle qualité'],
+  'Mines': ['Géologie', 'Sécurité minière', 'Maintenance engins', 'Topographie', 'Environnement'],
+};
+
 export const NIVEAUX = ['CAP / BEP', 'BT / BTS', 'Licence', 'Master', 'Ingénieur', 'Doctorat'];
 
 export const ROLES = {
@@ -99,20 +116,7 @@ function seed() {
     dateInscription: ago(between(20, 160)),
   }));
 
-  const competencesParSecteur = {
-    'Numérique & télécoms': ['JavaScript', 'Python', 'Réseaux', 'SQL', 'Cybersécurité', 'Support utilisateur', 'Cloud'],
-    'Agriculture & agro-industrie': ['Agronomie', 'Irrigation', 'Contrôle qualité', 'HACCP', 'Gestion de stock', 'Mécanisation'],
-    'BTP & infrastructures': ['AutoCAD', 'Topographie', 'Métré', 'Conduite de chantier', 'Sécurité chantier', 'Électricité bâtiment'],
-    'Banque & assurance': ['Comptabilité', 'Analyse financière', 'Relation client', 'Excel', 'Conformité', 'Crédit'],
-    'Énergie': ['Électricité', 'Photovoltaïque', 'Maintenance', 'Habilitation électrique', 'Dimensionnement'],
-    'Logistique & transport': ['Gestion de stock', 'Transit', 'Douane', 'Excel', 'Supply chain', 'Permis C'],
-    'Santé': ['Soins infirmiers', 'Accueil patient', 'Hygiène', 'Pharmacie', 'Secrétariat médical'],
-    'Tourisme & hôtellerie': ['Accueil', 'Anglais', 'Cuisine', 'Service en salle', 'Réservation', 'Housekeeping'],
-    'Commerce & distribution': ['Vente', 'Merchandising', 'Caisse', 'Relation client', 'Gestion de stock', 'Marketing digital'],
-    'Pêche & économie bleue': ['Transformation halieutique', 'Froid industriel', 'Hygiène', 'Contrôle qualité', 'Navigation'],
-    'Industrie': ['Maintenance industrielle', 'Électromécanique', 'Production', 'Sécurité industrielle', 'Contrôle qualité'],
-    'Mines': ['Géologie', 'Sécurité minière', 'Maintenance engins', 'Topographie', 'Environnement'],
-  };
+  const competencesParSecteur = COMPETENCES;
   const domaines = Object.keys(competencesParSecteur);
 
   const titres = {
@@ -153,6 +157,7 @@ function seed() {
         dateLimite: iso(addDays(now, between(-5, 40))),
         datePublication: ago(between(5, 90)),
         statut: 'publiee',
+        volet: k === 2 ? 'Service civique professionnalisant' : 'Stage citoyen professionnalisant',
       });
     }
   });
@@ -353,11 +358,29 @@ export function log(user, action) {
   if (state.audit.length > 500) state.audit.length = 500;
 }
 
-export function session() {
-  try { return JSON.parse(sessionStorage.getItem('pnec.session') || 'null'); } catch { return null; }
+// Session : fournie par le serveur (/api/auth/session, cookie HttpOnly signé). Rien n'est stocké côté navigateur.
+let _session = null;
+export const session = () => _session;
+export const setSession = (s) => { _session = s; };
+
+export async function api(chemin, corps) {
+  const r = await fetch(`/api/${chemin}`, {
+    method: corps === undefined ? 'GET' : 'POST',
+    headers: corps === undefined ? {} : { 'Content-Type': 'application/json' },
+    body: corps === undefined ? undefined : JSON.stringify(corps),
+    credentials: 'same-origin',
+  });
+  let data = {};
+  try { data = await r.json(); } catch { /* réponse vide */ }
+  return { ok: r.ok, status: r.status, data };
 }
-export function setSession(s) {
-  try { s ? sessionStorage.setItem('pnec.session', JSON.stringify(s)) : sessionStorage.removeItem('pnec.session'); } catch { /* ignore */ }
+
+export async function chargerSession() {
+  try {
+    const { ok, data } = await api('auth/session');
+    _session = ok && data.utilisateur ? data.utilisateur : null;
+  } catch { _session = null; }
+  return _session;
 }
 
 export function nextReference(type) {
