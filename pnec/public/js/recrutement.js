@@ -163,7 +163,7 @@ export function vuePipeline([id], q) {
       <input type="search" name="q" placeholder="Nom, compétence, diplôme, étiquette…" value="${esc(q.get('q') || '')}">
       <select name="min"><option value="">Toutes les notes IA</option>${[3, 3.5, 4, 4.5].map((v) => `<option value="${v}" ${min === v ? 'selected' : ''}>★ ${v.toLocaleString('fr-FR')} et plus</option>`).join('')}</select>
       <button class="btn">Filtrer</button>
-      <span class="aide-dnd muted petit">${icon('grid')} Glissez-déposez les cartes d'une colonne à l'autre</span>
+      <span class="aide-dnd muted petit">${icon('grid')} <span class="bureau">Glissez-déposez les cartes d'une colonne à l'autre</span><span class="tactile" hidden>Faites défiler les colonnes ; touchez une carte pour la faire avancer</span></span>
     </form>
     <div class="masse" id="masse" hidden><strong id="masse-n"></strong>
       <button class="btn btn--petit" data-masse="presel">Présélectionner</button>

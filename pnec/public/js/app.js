@@ -82,12 +82,34 @@ function render() {
   }
   app.innerHTML = header(u, path) + html + footer();
   bind?.(app);
+  cartesMobiles(app);
   bindHeader();
   if (path !== dernierChemin) window.scrollTo(0, 0);
   dernierChemin = path;
   document.title = `${document.querySelector('h1')?.textContent || 'Accueil'} — PNEC`;
 }
 let dernierChemin = null;
+
+// Sur téléphone, chaque ligne de tableau devient une carte : on recopie l'en-tête de colonne sur chaque cellule.
+function cartesMobiles(racine) {
+  const traiter = (r) => r.querySelectorAll('.table-wrap').forEach((w) => {
+    const t = w.querySelector('table'); if (!t || t.classList.contains('tab-doc')) return;
+    const entetes = [...t.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+    if (!entetes.length) return;
+    w.classList.add('tab-cartes');
+    t.querySelectorAll('tbody tr').forEach((tr) => [...tr.children].forEach((td, i) => {
+      td.dataset.label = entetes[i] || '';
+      if (i === 0) td.classList.add('td-titre');
+      if (!td.textContent.trim() && !td.querySelector('button, a, select, input, svg')) td.classList.add('td-vide');
+    }));
+  });
+  traiter(racine);
+  // Un seul observateur pour les contenus chargés après coup (agenda, mes entretiens)
+  if (!cartesMobiles.obs) {
+    cartesMobiles.obs = new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) traiter(n.parentElement || n); })));
+    cartesMobiles.obs.observe(racine, { childList: true, subtree: true });
+  }
+}
 window.addEventListener('hashchange', render);
 // Impression (sans gestionnaire inline, compatible avec la politique de sécurité du contenu)
 document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });

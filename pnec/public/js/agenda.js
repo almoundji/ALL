@@ -103,7 +103,12 @@ function grilleSemaine(ref, liste) {
   const jours = [...Array(7)].map((_, i) => { const d = new Date(l); d.setDate(l.getDate() + i); return d; });
   const auj = jourIso(new Date());
   const maintenant = new Date(); const yNow = (maintenant.getHours() + maintenant.getMinutes() / 60 - H0) * PX;
-  return `<div class="semaine" style="--h:${PX}px">
+  const mobile = `<div class="semaine-mobile">${jours.map((d) => {
+    const jour = jourIso(d); const items = liste.filter((e) => e.date === jour);
+    return `<section class="jour-m${jour === auj ? ' auj' : ''}"><h3>${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}${jour === auj ? '<span class="badge badge--ok">Aujourd\'hui</span>' : ''}</h3>
+      ${items.length ? items.map((e) => `<button class="rdv-m rdv-m--${e.statut}" data-ent="${esc(e.salle)}"><strong>${esc(e.heure)}</strong><span>${esc(e.candidatNom)}<small>${esc(e.offreTitre)} · ${e.duree} min</small></span></button>`).join('') : '<p>Aucun entretien</p>'}</section>`;
+  }).join('')}</div>`;
+  return mobile + `<div class="semaine semaine--bureau" style="--h:${PX}px">
     <div class="sem-tete"><span></span>${jours.map((d, i) => `<span class="${jourIso(d) === auj ? 'auj' : ''}">${JOURS[i]} <strong>${d.getDate()}</strong></span>`).join('')}</div>
     <div class="sem-corps"><div class="sem-heures">${[...Array(H1 - H0)].map((_, i) => `<span>${pad(H0 + i)}:00</span>`).join('')}</div>
     ${jours.map((d) => {
@@ -130,7 +135,8 @@ function grilleMois(ref, liste) {
       const items = liste.filter((e) => e.date === jour);
       return `<div class="mois-j${d.getMonth() !== ref.getMonth() ? ' hors' : ''}${jour === auj ? ' auj' : ''}"><span class="mois-n">${d.getDate()}</span>
         ${items.slice(0, 3).map((e) => `<button class="mois-e mois-e--${e.statut}" data-ent="${esc(e.salle)}">${esc(e.heure)} ${esc(e.candidatNom.split(' ')[0])}</button>`).join('')}
-        ${items.length > 3 ? `<a class="mois-plus" href="#/agenda?vue=semaine&d=${jour}">+${items.length - 3}</a>` : ''}</div>`;
+        ${items.length > 3 ? `<a class="mois-plus" href="#/agenda?vue=semaine&d=${jour}">+${items.length - 3}</a>` : ''}
+        ${items.length ? `<a class="mois-c" href="#/agenda?vue=semaine&d=${jour}" aria-label="${items.length} entretien(s)">${items.length}</a>` : ''}</div>`;
     }).join('')}</div></div>`;
 }
 
