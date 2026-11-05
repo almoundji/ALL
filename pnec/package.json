@@ -1,0 +1,13 @@
+{
+  "name": "pnec-plateforme",
+  "private": true,
+  "type": "module",
+  "description": "Plateforme du Programme national d'Engagement citoyen (prototype)",
+  "scripts": {
+    "dev": "netlify dev",
+    "serve": "npx --yes http-server public -p 8080 -c-1"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.5.0"
+  }
+}
