@@ -4,6 +4,8 @@ import { esc, num, fcfa, dateLongue, date, icon, tile, tileCreer, toast, initToo
 import { scoreLocal } from './ia.js';
 import * as V from './views.js';
 import * as R from './recrutement.js';
+import * as A from './agenda.js';
+import { vueVisio } from './visio.js';
 
 load();
 finishSeed(db(), scoreLocal);
@@ -36,7 +38,9 @@ const ROUTES = [
   ['offre/:id', V.vueOffre, '*'],
   ['candidatures', V.vueMesCandidatures, ['stagiaire']],
   ['selection', V.vueSelection, ['entreprise', 'admin']],
-  ['entretiens', V.vueEntretiens, ['entreprise', 'stagiaire', 'admin']],
+  ['entretiens', (p, q) => (session().role === 'stagiaire' ? A.vueMesEntretiens(p, q) : V.vueEntretiens(p, q)), ['entreprise', 'stagiaire', 'admin']],
+  ['agenda', A.vueAgenda, ['entreprise']],
+  ['visio/:salle', vueVisio, ['entreprise', 'stagiaire']],
   ['entretien/:id', V.vueEntretien, ['entreprise', 'admin']],
   ['conventions', V.vueConventions, '*'],
   ['convention/:id', V.vueConvention, '*'],
@@ -64,6 +68,8 @@ function render() {
   const q = new URLSearchParams(qs);
   const u = session();
   const m = match(path);
+  // Libère la caméra, le micro et la connexion en quittant une salle d'entretien
+  if (window.__nettoyage && !path.startsWith('visio/')) { window.__nettoyage(); window.__nettoyage = null; }
   let html, bind;
   if (!m) html = `<main class="page">${empty('Page introuvable.')}</main>`;
   else if (m.roles && !u) { location.hash = '#/connexion'; return; }
@@ -88,8 +94,8 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')
 
 // ---------- En-tête & pied ----------
 const NAV = {
-  entreprise: [['accueil', 'Accueil'], ['recrutement', 'Recrutement'], ['cvtheque', 'CVthèque'], ['offres', 'Offres'], ['conventions', 'Conventions']],
-  stagiaire: [['accueil', 'Accueil'], ['offres', 'Offres'], ['candidatures', 'Candidatures'], ['messages', 'Messages'], ['conventions', 'Conventions'], ['profil', 'Mon profil']],
+  entreprise: [['accueil', 'Accueil'], ['recrutement', 'Recrutement'], ['agenda', 'Agenda'], ['cvtheque', 'CVthèque'], ['offres', 'Offres'], ['conventions', 'Conventions']],
+  stagiaire: [['accueil', 'Accueil'], ['offres', 'Offres'], ['candidatures', 'Candidatures'], ['entretiens', 'Entretiens'], ['messages', 'Messages'], ['profil', 'Profil']],
   mfp: [['accueil', 'Accueil'], ['entreprises', 'Entreprises'], ['conventions', 'Conventions'], ['offres', 'Offres'], ['pilotage', 'Pilotage']],
   de: [['accueil', 'Accueil'], ['conventions', 'Prises en charge'], ['entreprises', 'Entreprises'], ['pilotage', 'Pilotage']],
   primature: [['accueil', 'Accueil'], ['pilotage', 'Tableau de bord'], ['entreprises', 'Entreprises'], ['conventions', 'Conventions']],
@@ -413,7 +419,7 @@ function sections(u) {
         tile({ titre: 'CVthèque', sous: 'Sourcing de profils', ico: 'search', valeur: d.stagiaires.filter((s) => s.visibleCVtheque !== false).length, legende: 'profils disponibles', href: '#/cvtheque' }),
         tile({ titre: 'Mes offres', sous: 'Offres publiées', ico: 'briefcase', valeur: offres.filter((o) => o.statut === 'publiee').length, legende: `${offres.reduce((a, o) => a + o.places, 0)} places`, href: '#/offres' }),
         tile({ titre: 'Trier les candidatures', sous: 'Pré-tri par le moteur IA', ico: 'sparkles', valeur: atrier.length, legende: 'à trier', href: offreTri ? `#/offre/${offreTri.id}/candidats?f=atrier` : '#/offres', alerte: atrier.length > 0 }),
-        tile({ titre: 'Entretiens en ligne', sous: enRetard ? `${enRetard} entretien(s) à évaluer` : 'Visioconférence intégrée', ico: 'video', valeur: entAvenir.length, legende: 'planifiés', href: '#/entretiens', alerte: enRetard > 0 }),
+        tile({ titre: 'Agenda des entretiens', sous: enRetard ? `${enRetard} entretien(s) à évaluer` : 'Entretiens vidéo dans la plateforme', ico: 'calendar', valeur: entAvenir.length, legende: 'planifiés', href: '#/agenda', alerte: enRetard > 0 }),
         tile({ titre: 'Sélection finale', sous: 'Après entretien', ico: 'check', valeur: cs.filter((c) => c.statut === 'entretien_realise').length, legende: 'décisions à prendre', href: '#/selection' }),
         tile({ titre: 'Rapports', sous: 'Fin de recrutement, rédigés par l\'IA', ico: 'file', valeur: offres.length, legende: 'recrutements', href: '#/recrutement' }),
         tileCreer({ titre: 'Publier une offre', sous: 'Fiche de poste assistée par IA', href: '#/offre-nouvelle' }),
@@ -430,7 +436,7 @@ function sections(u) {
       ['Ma recherche', [
         tile({ titre: 'Offres pour moi', sous: 'Classées selon mon profil', ico: 'sparkles', valeur: adaptees, legende: `sur ${ouvertes.length} offres ouvertes`, href: '#/offres' }),
         tile({ titre: 'Mes candidatures', sous: 'Suivi étape par étape', ico: 'inbox', valeur: cs.length, legende: 'envoyées', href: '#/candidatures' }),
-        tile({ titre: 'Mes entretiens', sous: prochain ? `Prochain : ${date(prochain.entretien.date)} à ${prochain.entretien.heure}` : 'En ligne, depuis mon téléphone', ico: 'video', valeur: cs.filter((c) => c.statut === 'entretien_planifie').length, legende: 'à venir', href: '#/candidatures', alerte: Boolean(prochain) }),
+        tile({ titre: 'Mes entretiens', sous: prochain ? `Prochain : ${date(prochain.entretien.date)} à ${prochain.entretien.heure}` : 'En vidéo, depuis la plateforme', ico: 'video', valeur: cs.filter((c) => c.statut === 'entretien_planifie').length, legende: 'à venir', href: '#/entretiens', alerte: Boolean(prochain) }),
         tile({ titre: 'Messagerie', sous: 'Messages des recruteurs', ico: 'inbox', valeur: R.messagesDe(u.orgId).filter((m) => !m.lu).length, legende: 'non lu(s)', href: '#/messages', alerte: R.messagesDe(u.orgId).some((m) => !m.lu) }),
         tile({ titre: 'Mon profil & CV', sous: 'Améliorer mon adéquation', ico: 'user', valeur: s.competences.length, legende: 'compétences déclarées', href: '#/profil' }),
       ]],

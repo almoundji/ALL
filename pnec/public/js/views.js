@@ -377,19 +377,7 @@ export function actionCandidat(act, id, apres) {
     commit(`Repêchage manuel d'une candidature pour « ${o.titre} »`); toast('Candidature repêchée'); return (apres || rerender)();
   }
   if (act === 'planifier') {
-    const demain = new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 10);
-    return modal(`Planifier l'entretien — ${s.prenom} ${s.nom}`, `<div class="grille-2">
-      <label>Date<input type="date" name="date" required value="${demain}" min="${new Date().toISOString().slice(0, 10)}"></label>
-      <label>Heure<input type="time" name="heure" required value="10:00"></label>
-      <label>Durée (min)<select name="duree"><option>20</option><option selected>30</option><option>45</option><option>60</option></select></label>
-      <label>Évaluateur<input name="evaluateur" required value="${esc(e.contact)}"></label></div>
-      <p class="note">${icon('video')} Une salle de visioconférence sécurisée est générée automatiquement ; le lien est transmis au candidat dans son espace.</p>`, {
-      valider: 'Planifier', onValider: (v) => {
-        c.entretien = { ...v, duree: +v.duree, salle: `PNEC-${Math.random().toString(36).slice(2, 10)}-${c.id}`.replace(/[^A-Za-z0-9-]/g, '') };
-        c.statut = 'entretien_planifie'; trace(c, `Entretien planifié le ${v.date} à ${v.heure} (${v.evaluateur})`);
-        commit(`Entretien planifié le ${v.date} à ${v.heure} avec ${s.prenom} ${s.nom} (« ${o.titre} »)`); toast('Entretien planifié'); rerender();
-      },
-    });
+    return import('./agenda.js').then(async (A) => { const { entretiens } = await A.chargerEntretiens(); A.formulairePlanification(c, entretiens); });
   }
   if (act === 'retenir') {
     const pris = D().candidatures.filter((x) => x.offreId === o.id && ['retenue', 'en_stage'].includes(x.statut)).length;
@@ -455,7 +443,7 @@ export function vueMesCandidatures() {
         <div class="carte-h"><div><h2><a href="#/offre/${o.id}">${esc(o.titre)}</a></h2><p class="muted">${esc(e.raisonSociale)} · envoyée le ${date(c.date)}</p></div>${statutCand(c.statut)}</div>
         <ol class="etapes">${ETAPES.map((l, k) => `<li class="${k < i || (k === i && !echec) ? 'fait' : ''}${k === i ? ' cour' : ''}${k === i && echec ? ' echec' : ''}">${l}</li>`).join('')}</ol>
         ${c.statut === 'entretien_planifie' ? `<div class="rdv">${icon('video')}<div><strong>Entretien en ligne le ${date(c.entretien.date)} à ${esc(c.entretien.heure)}</strong><p class="muted">Durée ${c.entretien.duree} min · avec ${esc(c.entretien.evaluateur)}</p></div>
-          <a class="btn btn--primaire" href="${esc(P.visioBase + c.entretien.salle)}" target="_blank" rel="noopener">Rejoindre la salle</a></div>` : ''}
+          <a class="btn btn--primaire" href="#/visio/${esc(c.entretien.salle)}">${icon('video')} Rejoindre l'entretien</a></div>` : ''}
         ${c.statut === 'non_retenue_ia' ? '<p class="note">Votre profil ne correspond pas suffisamment aux compétences demandées pour cette offre. Consultez les offres les plus adaptées à votre profil.</p>' : ''}
         ${convs.length ? `<ul class="liste">${convs.map((x) => `<li><a href="#/convention/${x.id}">${esc(TYPES_CONV[x.type].court)} — ${esc(x.reference)}</a> ${statutConv(x)} ${partiePourMoi(x) ? badge('À signer', 'rouge') : ''}</li>`).join('')}</ul>` : ''}
       </article>`;
@@ -480,7 +468,7 @@ export function vueEntretiens() {
     return `<tr><td><strong>${date(c.entretien.date)}</strong><br><span class="muted">${esc(c.entretien.heure)} · ${c.entretien.duree} min</span></td>
       <td>${u.role === 'stagiaire' ? esc(ent(o.entrepriseId).raisonSociale) : `${esc(s.prenom)} ${esc(s.nom)}`}</td><td><a href="#/offre/${o.id}">${esc(o.titre)}</a></td>
       <td>${retard ? badge('À évaluer', 'rouge') : statutCand(c.statut)}${c.entretien.note != null ? ` <strong>${c.entretien.note}/20</strong>` : ''}</td>
-      <td class="td-actions">${c.statut === 'entretien_planifie' ? `<a class="btn btn--petit" href="${esc(P.visioBase + c.entretien.salle)}" target="_blank" rel="noopener">${icon('video')} Visio</a>` : ''}
+      <td class="td-actions">${c.statut === 'entretien_planifie' ? `<a class="btn btn--petit" href="#/visio/${esc(c.entretien.salle)}">${icon('video')} Visio</a>` : ''}
       ${u.role !== 'stagiaire' ? `<a class="btn btn--petit btn--primaire" href="#/entretien/${c.id}">${c.statut === 'entretien_planifie' ? 'Évaluer' : 'Voir'}</a>` : ''}</td></tr>`;
   };
   const tab = (rows) => `<div class="table-wrap"><table><thead><tr><th>Date</th><th>${u.role === 'stagiaire' ? 'Entreprise' : 'Candidat·e'}</th><th>Offre</th><th>Statut</th><th></th></tr></thead><tbody>${rows.map(ligne).join('')}</tbody></table></div>`;
@@ -495,12 +483,12 @@ export function vueEntretien([id]) {
   const peutEvaluer = (u.role === 'entreprise' && u.orgId === o.entrepriseId) || u.role === 'admin';
   const n = c.entretien.notes || {};
   const crit = [['motivation', 'Motivation et engagement citoyen'], ['technique', 'Compétences techniques'], ['communication', 'Communication'], ['adequation', 'Adéquation au poste']];
-  const lien = P.visioBase + c.entretien.salle;
+  const lien = `${location.origin}/#/visio/${c.entretien.salle}`;
   const html = `${pageHead(`Entretien — ${s.prenom} ${s.nom}`, `${esc(o.titre)} · ${date(c.entretien.date)} à ${esc(c.entretien.heure)}`, '', `#/offre/${o.id}/candidats?f=presel`)}
     <div class="grille-2-1">
       <section class="carte visio">
-        <div class="visio-ecran">${icon('video')}<p><strong>Salle ${esc(c.entretien.salle)}</strong></p><p class="muted">Visioconférence chiffrée, sans installation, accessible depuis un téléphone.</p>
-          <a class="btn btn--primaire" href="${esc(lien)}" target="_blank" rel="noopener">Ouvrir la salle d'entretien</a>
+        <div class="visio-ecran">${icon('video')}<p><strong>Entretien vidéo intégré à la plateforme</strong></p><p class="muted">Connexion chiffrée entre le recruteur et le candidat, sans installation, y compris sur téléphone.</p>
+          <a class="btn btn--primaire" href="#/visio/${esc(c.entretien.salle)}">Ouvrir la salle d'entretien</a>
           <button class="btn btn--clair" data-copier>Copier le lien</button></div>
         ${peutEvaluer ? `<form id="f-eval" class="form"><h2>Grille d'évaluation</h2>
           ${crit.map(([k, l]) => `<fieldset class="etoiles"><legend>${l}</legend>${[1, 2, 3, 4, 5].map((v) => `<label><input type="radio" name="${k}" value="${v}" required ${n[k] === v ? 'checked' : ''}><span>${v}</span></label>`).join('')}</fieldset>`).join('')}
@@ -811,7 +799,7 @@ export function vueParametres() {
       <label>Seuil de présélection IA (/100)<input type="number" name="seuilIA" min="0" max="100" value="${P.seuilIA}" required></label>
       <label>Indemnité mensuelle minimale (FCFA)<input type="number" name="salaireMin" min="0" step="5000" value="${P.salaireMin}" required></label>
       <label>Durée maximale d'un stage (mois)<input type="number" name="dureeMax" min="1" max="24" value="${P.dureeMax}" required></label>
-      <label>Service de visioconférence (URL de base)<input type="url" name="visioBase" value="${esc(P.visioBase)}" required></label>
+      <label>Salle de secours externe (si la vidéo intégrée est bloquée par le réseau)<input type="url" name="visioBase" value="${esc(P.visioBase)}" required></label>
       <label class="check check--bloc"><input type="checkbox" name="iaDistante" ${P.iaDistante ? 'checked' : ''}> Utiliser le moteur IA Claude lorsqu'il est configuré <small class="muted" id="etat-ia"></small></label>
     </div><p class="note">Le taux s'applique aux nouvelles conventions ; les conventions déjà générées conservent leur taux.</p>
     <div class="form-f"><button class="btn btn--primaire">Enregistrer</button></div></form>

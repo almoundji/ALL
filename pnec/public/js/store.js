@@ -2,7 +2,7 @@
 // Tout est stocké dans le navigateur (localStorage) : la couche d'accès ci-dessous
 // est le seul point à remplacer pour brancher une vraie API / base de données.
 
-const KEY = 'pnec.v1';
+const KEY = 'pnec.v2';
 
 export const REGIONS = ['Dakar', 'Thiès', 'Diourbel', 'Fatick', 'Kaolack', 'Kaffrine', 'Kolda',
   'Louga', 'Matam', 'Saint-Louis', 'Sédhiou', 'Tambacounda', 'Kédougou', 'Ziguinchor'];
@@ -81,6 +81,8 @@ function seed() {
   const r = rng(2026);
   const pick = (a) => a[Math.floor(r() * a.length)];
   const between = (a, b) => a + Math.floor(r() * (b - a + 1));
+  // Mélange de Fisher-Yates : résultat identique dans tous les moteurs JavaScript (contrairement à sort aléatoire)
+  const melanger = (a) => { const x = [...a]; for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
   const now = new Date();
   const ago = (n) => iso(addDays(now, -n));
 
@@ -139,7 +141,7 @@ function seed() {
     const n = between(1, 3);
     for (let k = 0; k < n; k++) {
       const comp = competencesParSecteur[e.secteur];
-      const sel = [...comp].sort(() => r() - 0.5).slice(0, between(3, 4));
+      const sel = melanger(comp).slice(0, between(3, 4));
       const titre = titres[e.secteur][k % titres[e.secteur].length];
       offres.push({
         id: `off-${offres.length + 1}`,
@@ -172,7 +174,7 @@ function seed() {
     const prenom = pick(sexe === 'F' ? prenomsF : prenomsH);
     const nom = pick(noms);
     const domaine = pick(domaines);
-    const comp = [...competencesParSecteur[domaine]].sort(() => r() - 0.5).slice(0, between(2, 5));
+    const comp = melanger(competencesParSecteur[domaine]).slice(0, between(2, 5));
     if (r() < 0.4) comp.push(pick(['Excel', 'Anglais', 'Relation client', 'Gestion de projet']));
     const niveau = pick(NIVEAUX.slice(0, 5));
     stagiaires.push({
@@ -210,7 +212,7 @@ function seed() {
   });
 
   offres.forEach((o) => {
-    const pool = [...stagiaires].sort(() => r() - 0.5);
+    const pool = melanger(stagiaires);
     const n = between(3, 9);
     const affines = pool.filter((s) => s.domaine === o.domaine).slice(0, Math.ceil(n * 0.6));
     const autres = pool.filter((s) => s.domaine !== o.domaine).slice(0, n - affines.length);

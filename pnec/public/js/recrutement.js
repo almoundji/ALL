@@ -107,7 +107,7 @@ export function vueRecrutement() {
       <a href="#/cvtheque">${icon('search')}<span><strong>CVthèque</strong><small>${D().stagiaires.filter((s) => s.visibleCVtheque !== false).length} profils · sourcing</small></span></a>
       <a href="#/recrutement/modeles">${icon('inbox')}<span><strong>Modèles de messages</strong><small>communication en masse</small></span></a>
       <a href="#/recrutement/equipe">${icon('users')}<span><strong>Équipe de recrutement</strong><small>${e ? e.equipe.length : '—'} membres · évaluations</small></span></a>
-      <a href="#/entretiens">${icon('video')}<span><strong>Agenda des entretiens</strong><small>visioconférence</small></span></a>
+      <a href="#/agenda">${icon('calendar')}<span><strong>Agenda des entretiens</strong><small>vidéo intégrée</small></span></a>
     </nav>
     <section class="carte"><h2>Mes recrutements</h2>
     ${offres.length ? `<div class="pipes">${offres.map((o) => {
@@ -311,7 +311,7 @@ function ficheCandidat(c, onglet) {
   const actions = [];
   if (['soumise', 'non_retenue_ia'].includes(c.statut)) actions.push(`<button class="btn btn--petit" data-fa="presel">Présélectionner</button>`);
   if (c.statut === 'preselectionnee') actions.push(`<button class="btn btn--petit btn--primaire" data-fa="planifier">${icon('calendar')} Planifier l'entretien</button>`);
-  if (c.statut === 'entretien_planifie') actions.push(`<a class="btn btn--petit btn--primaire" href="#/entretien/${c.id}">${icon('video')} Entretien & évaluation</a>`);
+  if (c.statut === 'entretien_planifie') actions.push(`<a class="btn btn--petit btn--primaire" href="#/visio/${esc(c.entretien.salle)}">${icon('video')} Rejoindre la visio</a><a class="btn btn--petit" href="#/entretien/${c.id}">Évaluer</a><button class="btn btn--petit" data-fa="planifier">Reprogrammer</button>`);
   if (c.statut === 'entretien_realise') actions.push(`<button class="btn btn--petit btn--primaire" data-fa="retenir">Retenir</button>`);
   if (!['retenue', 'en_stage', 'refusee', 'non_retenue_ia'].includes(c.statut)) actions.push(`<button class="btn btn--petit" data-fa="ecarter">Écarter</button>`);
   const pec = D().conventions.find((x) => x.candidatureId === c.id && x.type === 'PRISE_EN_CHARGE');

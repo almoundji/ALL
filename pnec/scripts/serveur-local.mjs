@@ -9,6 +9,8 @@ const routes = [
   ['/api/auth/', '../netlify/functions/auth.mts'],
   ['/api/tri-cv', '../netlify/functions/tri-cv.mts'],
   ['/api/assistant', '../netlify/functions/assistant.mts'],
+  ['/api/entretiens', '../netlify/functions/entretiens.mts'],
+  ['/api/visio/', '../netlify/functions/visio.mts'],
 ];
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 

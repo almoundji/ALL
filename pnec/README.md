@@ -60,6 +60,20 @@ Inspiré des outils du marché (Socium Job…) :
 - **Modèles de messages** avec variables et envoi en masse ; messagerie côté jeune.
 - **Fiche de poste rédigée par IA**, **rapport de fin de recrutement** (synthèse IA), **page carrière** publique.
 
+## Entretiens vidéo et agenda
+
+- **Agenda des entretiens** (`#/agenda`, entreprises) : vues semaine, mois et liste ; planification avec détection des
+  chevauchements, reprogrammation, annulation (candidat prévenu), export `.ics` vers Outlook / Google Agenda.
+- **Registre partagé** (`/api/entretiens`, Netlify Blobs `pnec-entretiens`) : l'entretien planifié par l'entreprise
+  apparaît dans « Mes entretiens » du candidat, sur n'importe quel appareil.
+- **Visioconférence intégrée** (`#/visio/:salle`) en WebRTC : salle d'attente avec test caméra / micro et choix
+  des périphériques, appel chiffré de navigateur à navigateur, micro, caméra, partage d'écran, discussion,
+  minuteur, indicateur de qualité, grille d'évaluation à côté de la vidéo pour le recruteur.
+- **Accès contrôlé par le serveur** (`/api/visio/*`) : seuls l'entreprise propriétaire et le candidat convoqué
+  peuvent ouvrir la salle (identifiants de salle aléatoires de 128 bits). Aucun enregistrement.
+- Réseaux restrictifs : renseigner un relais TURN avec `PNEC_TURN_URL`, `PNEC_TURN_USERNAME`, `PNEC_TURN_CREDENTIAL` ;
+  une salle de secours externe reste paramétrable (*Administration → Paramètres*).
+
 ## Photo de la page d'accueil
 
 `python3 scripts/preparer-photo.py <photo> public/img/mobilisation.jpg` recadre, retouche, compresse et

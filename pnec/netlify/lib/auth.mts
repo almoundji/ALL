@@ -31,25 +31,35 @@ export const env = (k: string): string | undefined =>
 
 export const portailDuRole = (role: string): Portail => ((ROLES_AGENTS as readonly string[]).includes(role) ? 'agents' : 'public');
 
-// ---------- Stockage des comptes créés en ligne (Netlify Blobs) ----------
-type Kv = { get(k: string): Promise<unknown>; set(k: string, v: unknown, onlyIfNew?: boolean): Promise<boolean>; del(k: string): Promise<void> };
-const memoire = new Map<string, unknown>();
-function kv(): Kv {
+// ---------- Stockage serveur (Netlify Blobs) ----------
+export type Kv = {
+  get(k: string): Promise<unknown>;
+  set(k: string, v: unknown, onlyIfNew?: boolean): Promise<boolean>;
+  del(k: string): Promise<void>;
+  list(prefixe: string): Promise<string[]>;
+};
+const memoires = new Map<string, Map<string, unknown>>();
+export function magasin(nom: string): Kv {
   // PNEC_BLOBS_MEMOIRE=1 : stockage en mémoire pour les tests locaux uniquement.
   if (env('PNEC_BLOBS_MEMOIRE') === '1') {
+    if (!memoires.has(nom)) memoires.set(nom, new Map());
+    const m = memoires.get(nom)!;
     return {
-      get: async (k) => memoire.get(k) ?? null,
-      set: async (k, v, onlyIfNew) => { if (onlyIfNew && memoire.has(k)) return false; memoire.set(k, v); return true; },
-      del: async (k) => { memoire.delete(k); },
+      get: async (k) => structuredClone(m.get(k) ?? null),
+      set: async (k, v, onlyIfNew) => { if (onlyIfNew && m.has(k)) return false; m.set(k, structuredClone(v)); return true; },
+      del: async (k) => { m.delete(k); },
+      list: async (p) => [...m.keys()].filter((k) => k.startsWith(p)).sort(),
     };
   }
-  const store = getStore({ name: 'pnec-comptes', consistency: 'strong' });
+  const store = getStore({ name: nom, consistency: 'strong' });
   return {
     get: (k) => store.get(k, { type: 'json' }),
     set: async (k, v, onlyIfNew) => (await store.setJSON(k, v, onlyIfNew ? { onlyIfNew: true } : {})).modified,
     del: (k) => store.delete(k),
+    list: async (p) => (await store.list({ prefix: p })).blobs.map((b) => b.key).sort(),
   };
 }
+const kv = () => magasin('pnec-comptes');
 const cleCompte = (email: string) => `compte/${email.trim().toLowerCase()}`;
 const cleVerrou = (email: string) => `verrou/${email.trim().toLowerCase()}`;
 
