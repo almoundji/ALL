@@ -62,7 +62,7 @@ export const icon = (name, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24
 export function tile({ titre, sous, ico = 'grid', valeur, legende, href, alerte }) {
   return `<a class="tile${alerte ? ' tile--alerte' : ''}" href="${href}">
     <div class="tile-h"><h3>${esc(titre)}</h3>${sous ? `<p>${esc(sous)}</p>` : ''}</div>
-    <div class="tile-b">${icon(ico)}<div class="tile-v"><strong>${esc(valeur)}</strong><span>${esc(legende || '')}</span></div></div>
+    <div class="tile-b">${icon(ico)}<div class="tile-v${String(valeur).length > 7 ? ' tile-v--texte' : ''}"><strong>${esc(valeur)}</strong><span>${esc(legende || '')}</span></div></div>
   </a>`;
 }
 export function tileCreer({ titre, sous, href }) {
