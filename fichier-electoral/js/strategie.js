@@ -137,11 +137,19 @@
     try { await load(); } catch (err) { return h('div', { class: 'note warn' }, 'Données de stratégie indisponibles : ' + err.message); }
     const sub = rest[0] || 'echeances';
     const nav = h('div', { class: 'tabs', style: { marginTop: '0', fontSize: '14px' } },
-      [['echeances', 'Échéances à venir'], ['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['bureaux', 'Résultats par commune et bureau'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
+      [['plan', 'Plan d\'actions Kiiraay'], ['echeances', 'Échéances à venir'], ['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['bureaux', 'Résultats par commune et bureau'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
         .map(([id, lab]) => h('a', { href: '#/strategie/' + id, class: sub === id ? 'active' : null }, lab)));
     const avert = h('div', { class: 'note', style: { marginBottom: '14px' } },
       'Outil d\'aide à l\'analyse, utilisable pour tout parti ou coalition. Les simulations reposent sur des résultats passés agrégés par département et sur une hypothèse de report uniforme : ce ne sont pas des prévisions.');
     if (sub === 'cadre') return [E.section('Stratégie électorale', 'Cadre réglementaire et calendrier'), nav, pageCadre()];
+    if (sub === 'plan') {
+      let txt = null;
+      try { txt = await fetch('data/strategie/plan_actions_kiiraay.md').then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }); } catch (err) { return [E.section('Stratégie électorale'), nav, h('div', { class: 'note warn' }, 'Plan indisponible : ' + err.message)]; }
+      const md = h('div', { class: 'md' }); md.innerHTML = window.marked ? window.marked.parse(txt) : '<pre>' + txt.replace(/</g, '&lt;') + '</pre>';
+      return [E.section('Stratégie électorale', 'Plan d\'actions Kiiraay — hypothèse : 10 % de l\'électorat Pastef au départ'), nav,
+        h('div', { class: 'filters' }, h('button', { class: 'btn', onclick: () => window.print() }, 'Imprimer / PDF'), h('a', { class: 'btn', href: '#/strategie/echeances', style: { display: 'inline-flex', alignItems: 'center' } }, 'Recalculer les seuils (Échéances à venir) →')),
+        h('div', { class: 'panel' }, md)];
+    }
     if (sub === 'bureaux') return [E.section('Stratégie électorale', 'Résultats par commune et par bureau de vote'), nav, await pageBureaux()];
     const withDepts = S.elections.filter(e => e.hasDepts);
     if (!S.familles.length || !withDepts.length) {

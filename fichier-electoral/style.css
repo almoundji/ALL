@@ -197,3 +197,4 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .md code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
 .md a { word-break: break-word; }
 input[type=range] { width: 100%; accent-color: var(--green); }
+@media print { .tabs, .filters, .note, .btn { display: none !important; } .panel { border: 0; padding: 0; } .md table { font-size: 11px; } }

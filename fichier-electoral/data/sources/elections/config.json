@@ -51,8 +51,8 @@
    "id": "KIIRAAY",
    "label": "Kiiraay – Les Patriotes républicains (B. D. Faye)",
    "scissionDe": "PASTEF",
-   "partDefaut": 0,
-   "note": "Parti lancé le 25/07/2026 par le président B. D. Faye après la rupture avec Pastef ; aucun scrutin à ce jour. Aucune part n'est fixée par défaut : l'hypothèse est à régler dans le simulateur."
+   "partDefaut": 0.1,
+   "note": "Parti lancé le 25/07/2026 par le président B. D. Faye après la rupture avec Pastef ; aucun scrutin à ce jour. Hypothèse de départ retenue par l'utilisateur : 10 % de l'électorat Pastef 2024 (réglable)."
   },
   {
    "id": "APR",
