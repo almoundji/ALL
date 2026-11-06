@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   let S = null, loading = null;
-  const state = { famille: null, base: null, swing: {}, scission: {}, ecart: 10, fin: { liste: 'PASTEF', dept: null, commune: null } };
+  const state = { famille: 'KIIRAAY', base: null, swing: {}, scission: {}, ecart: 10, allies: { JAMM: true }, fin: { liste: 'PASTEF', dept: null, commune: null } };
 
   const load = () => loading || (loading = fetch('data/strategie.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(d => { S = prepare(d); return S; }));
 
@@ -135,9 +135,9 @@
   async function page(_s, rest) {
     const E = window.EF, { h } = E;
     try { await load(); } catch (err) { return h('div', { class: 'note warn' }, 'Données de stratégie indisponibles : ' + err.message); }
-    const sub = rest[0] || 'synthese';
+    const sub = rest[0] || 'echeances';
     const nav = h('div', { class: 'tabs', style: { marginTop: '0', fontSize: '14px' } },
-      [['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['bureaux', 'Résultats par commune et bureau'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
+      [['echeances', 'Échéances à venir'], ['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['bureaux', 'Résultats par commune et bureau'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
         .map(([id, lab]) => h('a', { href: '#/strategie/' + id, class: sub === id ? 'active' : null }, lab)));
     const avert = h('div', { class: 'note', style: { marginBottom: '14px' } },
       'Outil d\'aide à l\'analyse, utilisable pour tout parti ou coalition. Les simulations reposent sur des résultats passés agrégés par département et sur une hypothèse de report uniforme : ce ne sont pas des prévisions.');
@@ -157,7 +157,7 @@
       h('select', { id: 'st-fam', onchange: ev => { state.famille = ev.target.value; E.rerender(); } }, S.familles.map(f => h('option', { value: f.id, selected: f.id === state.famille }, famLabel(f)))),
       h('label', { for: 'st-base' }, 'Scrutin de référence'),
       h('select', { id: 'st-base', onchange: ev => { state.base = ev.target.value; state.swing = {}; E.rerender(); } }, withDepts.map(x => h('option', { value: x.id, selected: x.id === state.base }, x.label))));
-    const body = sub === 'simulateur' ? pageSimulateur(e, fams) : sub === 'priorites' ? pagePriorites(e, fams) : sub === 'historique' ? pageHistorique() : pageSynthese(e, fams);
+    const body = sub === 'echeances' ? await pageEcheances(e, fams) : sub === 'simulateur' ? pageSimulateur(e, fams) : sub === 'priorites' ? pagePriorites(e, fams) : sub === 'historique' ? pageHistorique() : pageSynthese(e, fams);
     return [E.section('Stratégie électorale', S.familles.find(f => f.id === state.famille) ? famLabel(S.familles.find(f => f.id === state.famille)) : ''), nav, avert, sub === 'historique' ? null : ctrl, body];
   }
 
@@ -350,6 +350,67 @@
       h('div', { class: 'stack' }, E.panel('Sièges de députés par circonscription', `Décret n° 2024-1982 du 13 septembre 2024 : ${S.totalSieges} sièges, majorité absolue à ${S.majorite}.`, E.table({ rows: seats, sort: 'sieges', pageSize: 60, exportName: 'sieges-legislatives', cols: [{ k: 'nom', label: 'Circonscription' }, { k: 'type', label: 'Type' }, { k: 'region', label: 'Région / zone' }, { k: 'sieges', label: 'Sièges', num: true }, { k: 'bar', label: '', bar: 'pos', get: r => r.sieges }] }))),
       h('div', { class: 'stack' }, h('div', { class: 'panel' }, md)),
     ];
+  }
+
+  // ------------------------------------------------------------------ Échéances à venir : seuils de victoire d'une famille issue d'une scission
+  let PLAN = null;
+  async function pageEcheances(e, fams) {
+    const E = window.EF, { h } = E;
+    // Famille étudiée : la famille choisie si elle est issue d'une scission, sinon Kiiraay
+    const f = S.familles.find(x => x.id === state.famille && x.scissionDe) || S.familles.find(x => x.id === 'KIIRAAY');
+    if (!f) return h('div', { class: 'note' }, 'Aucune famille issue d\'une scission n\'est configurée.');
+    const parent = f.scissionDe;
+    const candidats = fams.filter(x => x.id !== f.id && x.id !== parent);
+    const allies = candidats.filter(x => state.allies[x.id]);
+    const sansScission = fams.filter(x => x.id !== f.id);
+    const sav = state.scission[f.id]; state.scission[f.id] = 0;
+    const zones = [...Object.entries(e.depts), ...Object.entries(e.diasporaZones || {})].map(([k, z]) => {
+      const st = S.siegesDep.get(k) || S.siegesDia.find(x => x.key === k);
+      if (!st || !z.exp) return null;
+      const p = partsZone(e, z, sansScission);
+      const P = p[parent] || 0, A = E.sum(allies, x => p[x.id] || 0);
+      // Seuil s* : s·P + A doit dépasser (1−s)·P et chaque famille non alliée
+      let seuil = P ? (P - A) / (2 * P) : Infinity;
+      candidats.filter(x => !state.allies[x.id]).forEach(x => { seuil = Math.max(seuil, P ? ((p[x.id] || 0) - A) / P : Infinity); });
+      seuil = Math.max(0, seuil);
+      return { key: k, nom: st.nom, region: st.region, sieges: st.sieges, P, A, seuil, diaspora: st.type === 'diaspora' };
+    }).filter(Boolean).sort((a, b) => a.seuil - b.seuil);
+    if (sav == null) delete state.scission[f.id]; else state.scission[f.id] = sav;
+    const courbe = [];
+    for (let t = 0; t <= 100; t += 5) {
+      const zs = zones.filter(z => z.seuil < t / 100);
+      courbe.push({ part: t, sieges: E.sum(zs, z => z.sieges), circ: zs.length });
+    }
+    const pName = famLabel(S.familles.find(x => x.id === parent)).split(' (')[0], fName = famLabel(f).split(' (')[0];
+    const choix = h('div', { class: 'panel' }, h('h3', null, 'Alliances envisagées'), h('div', { class: 'sub' }, `Familles dont l'électorat 2024 s'ajoute à celui de ${fName}.`),
+      candidats.map(x => h('label', { style: { display: 'flex', gap: '8px', alignItems: 'center', padding: '4px 0' } },
+        h('input', { type: 'checkbox', checked: !!state.allies[x.id], onchange: ev => { state.allies[x.id] = ev.target.checked; E.rerender(); } }), famLabel(x))));
+    const out = [
+      h('div', { class: 'grid2' }, choix,
+        E.panel(`Sièges majoritaires gagnés selon la part de l'électorat ${pName} 2024 captée`, `${fName}${allies.length ? ' + ' + allies.map(x => famLabel(x).split(' (')[0]).join(' + ') : ' seul'} ; part identique dans toutes les circonscriptions. ${S.totalSieges - S.siegesNat} sièges majoritaires au total.`,
+          E.barList(courbe.filter(c => c.part % 10 === 0 && c.part > 0).map(c => ({ label: c.part + ' %', value: c.sieges, tip: `<b>${c.part} % de l'électorat ${pName}</b><br>${c.sieges} sièges dans ${c.circ} circonscriptions` })), v => v + ' sièges'))),
+      h('div', { class: 'stack' }, E.panel('Seuil de victoire par circonscription', `Part minimale de l'électorat ${pName} 2024 que ${fName} doit capter pour arriver en tête (base : ${e.label}). Les circonscriptions en haut du tableau sont les plus accessibles.`, E.table({
+        rows: zones, sort: 'seuil', dir: 1, pageSize: 60, exportName: 'seuils-' + f.id,
+        cols: [
+          { k: 'nom', label: 'Circonscription', fmt: v => E.tc(v) },
+          { k: 'region', label: 'Région / zone', fmt: v => E.tc(v) },
+          { k: 'sieges', label: 'Sièges', num: true },
+          { k: 'P', label: pName + ' 2024', num: true, fmt: v => E.pct(v) },
+          { k: 'A', label: 'Alliés 2024', num: true, fmt: v => E.pct(v) },
+          { k: 'seuil', label: 'Seuil à atteindre', num: true, fmt: v => (v > 1 ? 'hors de portée' : E.pct(v, 0)), cls: v => (v <= 0.35 ? 'up' : v > 1 ? 'down' : '') },
+          { k: 'sbar', label: '', bar: 'pos', get: r => (r.seuil > 1 ? 0 : 1 - r.seuil) },
+        ],
+      }))),
+    ];
+    if (f.id === 'KIIRAAY') {
+      try { PLAN = PLAN || await fetch('data/strategie/plan_kiiraay.md').then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }); } catch (_) { PLAN = null; }
+      if (PLAN) {
+        const md = h('div', { class: 'md' });
+        md.innerHTML = window.marked ? window.marked.parse(PLAN) : '<pre>' + PLAN.replace(/</g, '&lt;') + '</pre>';
+        out.unshift(h('div', { class: 'panel', style: { marginBottom: '16px' } }, md));
+      }
+    }
+    return out;
   }
 
   // ------------------------------------------------------------------ Résultats fins (commune / bureau)
