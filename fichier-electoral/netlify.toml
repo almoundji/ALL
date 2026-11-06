@@ -1,0 +1,17 @@
+# Outil d'analyse du fichier électoral : site statique (aucune étape de compilation).
+# Sur Netlify : « Base directory » = fichier-electoral.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
