@@ -8,5 +8,7 @@ test:
 	cd backend && . .venv/bin/activate && python -m pytest -q
 setup:
 	cd backend && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+opendata:          ## Charge les données ouvertes (lieux OSM, sanctions ONU) dans l'instance locale
+	cd backend && . .venv/bin/activate && python scripts/load_open_data.py --url http://localhost:8000
 docker:
 	docker compose up --build

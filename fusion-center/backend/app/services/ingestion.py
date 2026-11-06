@@ -44,13 +44,12 @@ def parse_rows(filename: str, content: bytes) -> list[dict]:
         if isinstance(data, dict):
             data = data.get("rows") or data.get("data") or [data]
         return [dict(r) for r in data]
-    sample = text[:4096]
-    try:
-        dialect = csv.Sniffer().sniff(sample, delimiters=",;\t|")
-    except csv.Error:
-        dialect = csv.excel
-    reader = csv.DictReader(io.StringIO(text), dialect=dialect)
-    return [{(k or "").strip(): (v or "").strip() for k, v in r.items()} for r in reader]
+    # Le séparateur est déduit de la ligne d'en-tête seule : les champs libres (résumés, adresses) contiennent
+    # souvent des virgules ou des points-virgules qui tromperaient une détection sur tout le fichier.
+    header = text.split("\n", 1)[0]
+    delimiter = max(";,\t|", key=header.count) if any(c in header for c in ";,\t|") else ","
+    reader = csv.DictReader(io.StringIO(text), delimiter=delimiter)
+    return [{(k or "").strip(): (v or "").strip() for k, v in r.items() if k is not None and not isinstance(v, list)} for r in reader]
 
 
 def upsert_entity(db: Session, *, type_: str, label: str, attributes: dict, classification: int = 1,

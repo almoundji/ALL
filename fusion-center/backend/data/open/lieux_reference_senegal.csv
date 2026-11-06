@@ -1,0 +1,46 @@
+libelle;type;lat;lon;osm;adresse
+Poste frontière Rosso;Point de passage;16.44077;-15.75314;way/199964381;Rosso, N 2, Ndiaw, Communauté rurale de Ronkh, Arrondissement de Ndiaye, Département de Dagana, Région de Saint-Louis, S
+Poste frontière Karang;Point de passage;13.60632;-16.42352;relation/12995359;Karang Poste, Département de Foundiougne, Région de Fatick, 24020, Sénégal
+Poste frontière Kidira;Point de passage;14.45665;-12.2144;relation/13049760;Kidira, Département de Bakel, Région de Tambacounda, Sénégal
+Poste frontière Moussala;Point de passage;12.93295;-11.38252;node/8240760095;Moussala, Communauté rurale de Bembou, Arrondissement de Bembou, Département de Saraya, Région de Kédougou, Sénégal
+Poste frontière Diaobé-Pakour;Point de passage;12.75997;-13.96255;node/3773230078;Pakour, Communauté rurale de Pakour, Arrondissement de Pakour, Département de Vélingara, Région de Kolda, Sénégal
+Poste frontière Mpack;Point de passage;12.46137;-16.23592;node/3792676750;Mpack, Communauté rurale de Boutoupa-Camaracounda, Arrondissement de Niaguis, Département de Ziguinchor, Région de Zigui
+Poste frontière Séléti;Point de passage;13.14543;-16.57751;node/2411691039;Seleti, Communauté rurale de Kataba 1, Arrondissement de Kataba 1, Département de Bignona, Région de Ziguinchor, Sénégal
+Poste frontière Keur Ayip;Point de passage;13.70816;-15.58226;node/3720554665;Keur Ayip Touré, Communauté rurale de Kayemor, Arrondissement de Médina Sabakh, Département de Nioro du Rip, Région de K
+Poste frontière Bakel;Point de passage;14.90497;-12.45681;relation/13049758;Bakel, Département de Bakel, Région de Tambacounda, Sénégal
+Poste frontière Diama;Point de passage;16.20857;-16.40355;node/2364576425;Diama, Communauté rurale de Diama, Arrondissement de Ndiaye, Département de Dagana, Région de Saint-Louis, Sénégal
+Aéroport international Blaise Diagne (AIBD);Infrastructure critique;14.66499;-17.07347;way/321817547;Aéroport International Blaise-Diagne, N 1, Mbourouk, Communauté rurale de Diass, Arrondissement de Sindia, Département d
+Aéroport de Ziguinchor;Infrastructure critique;12.55653;-16.27906;relation/5568071;Aéroport de Ziguinchor, BS-48, Boucotte Sud, Ziguinchor, Département de Ziguinchor, Région de Ziguinchor, 27000, Sénégal
+Aéroport de Saint-Louis;Infrastructure critique;16.05018;-16.4559;way/1337768016;Route de l'Aéroport, Ngalléle Nord, Saint-Louis, Département de Saint-Louis, Région de Saint-Louis, 32000, Sénégal
+Aéroport de Cap Skirring;Infrastructure critique;12.38845;-16.7385;node/2282224468;Cap Skirring, Communauté rurale de Diembéring, Arrondissement de Kabrousse, Département d'Oussouye, Région de Ziguinchor
+Port autonome de Dakar;Infrastructure critique;14.68413;-17.4279;relation/7001119;Port autonome de Dakar, Commune de Dakar-Plateau, Arrondissement de Dakar-Plateau, Dakar, Région de Dakar, Sénégal
+Port de Ziguinchor;Infrastructure critique;12.58657;-16.26267;relation/5601904;Port de Ziguinchor, Ziguinchor, Département de Ziguinchor, Région de Ziguinchor, Sénégal
+Port de Kaolack;Infrastructure critique;14.13881;-16.07639;relation/12997055;Kaolack, Département de Kaolack, Région de Kaolack, 24000, Sénégal
+Quai de pêche de Mbour;Quai;14.42074;-16.97148;relation/13059662;M'bour, Département de M'bour, Région de Thiès, Sénégal
+Quai de pêche de Joal;Quai;14.15828;-16.83552;relation/13059661;Joal-Fadiouth, Département de M'bour, Région de Thiès, Sénégal
+Quai de pêche de Saint-Louis (Guet Ndar);Quai;16.01816;-16.50923;relation/5964526;Guet Ndar, Saint-Louis, Département de Saint-Louis, Région de Saint-Louis, Sénégal
+Quai de pêche de Kayar;Quai;14.9183;-17.11931;relation/13058975;Kayar, Département de Thiès, Région de Thiès, 20012, Sénégal
+Barrage de Diama;Infrastructure critique;16.21439;-16.41517;relation/15625411;Barrage de Diama سد دياما, Diama, Communauté rurale de Diama, Arrondissement de Ndiaye, Département de Dagana, Région de
+Centrale électrique du Cap des Biches;Infrastructure critique;14.72099;-17.30718;node/7640374435;Cap des Biches, Commune de Rufisque Ouest, Rufisque, Département de Rufisque, Région de Dakar, Sénégal
+Raffinerie SAR de Mbao;Infrastructure critique;14.74154;-17.32615;relation/12989393;Commune de Mbao, Arrondissement de Thiaroye, Département de Pikine, Région de Dakar, Sénégal
+Gare de Dakar;Infrastructure critique;14.67646;-17.43368;way/1016285866;Gare de Dakar, Boulevard du Centenaire de la Commune de Dakar, Commune de Dakar-Plateau, Arrondissement de Dakar-Plateau
+Palais de la République;Site sensible;14.6644;-17.43261;way/224437308;Palais du Président de la Republique du Senegal, Route de la Corniche Est, Commune de Dakar-Plateau, Arrondissement de D
+Place de l'Indépendance Dakar;Site sensible;14.66953;-17.43206;way/27811247;Place de l’Indépendance, Commune de Dakar-Plateau, Arrondissement de Dakar-Plateau, Dakar, Région de Dakar, Sénégal
+Marché Sandaga;Marché;14.66992;-17.43772;way/43720257;Marché Sandaga, Rue Braconnier, Commune de Dakar-Plateau, Arrondissement de Dakar-Plateau, Dakar, Région de Dakar, 99341
+Marché Colobane;Marché;14.69512;-17.44543;relation/7000512;Colobane, Commune de Gueule Tapée-Fass-Colobane, Arrondissement de Dakar-Plateau, Dakar, Région de Dakar, Sénégal
+Gare routière des Baux Maraîchers;Gare routière;14.73967;-17.40355;way/766439311;Baux Maraîchers, Route de Rufisque, Thiaroye, Commune de Dalifort, Arrondissement de Pikine-Dagoudane, Département de Pi
+Université Cheikh Anta Diop;Site sensible;14.68725;-17.46445;way/201445809;Université Cheikh Anta Diop, Rue GT-66, Gueule Tapée, Commune de Gueule Tapée-Fass-Colobane, Arrondissement de Dakar-Pla
+Chef-lieu de région : Dakar;Chef-lieu;14.69342;-17.44794;relation/12982139;Dakar, Région de Dakar, Sénégal
+Chef-lieu de région : Thiès;Chef-lieu;14.79146;-16.92561;relation/13058982;Thiès, Commune de Thiès Ouest, Arrondissement de Thiès Sud, Département de Thiès, Région de Thiès, Sénégal
+Chef-lieu de région : Diourbel;Chef-lieu;14.78445;-16.03165;relation/2908186;Région de Diourbel, Sénégal
+Chef-lieu de région : Fatick;Chef-lieu;13.9406;-16.4024;relation/2908218;Région de Fatick, Sénégal
+Chef-lieu de région : Kaolack;Chef-lieu;14.13881;-16.07639;relation/12997055;Kaolack, Département de Kaolack, Région de Kaolack, 24000, Sénégal
+Chef-lieu de région : Kaffrine;Chef-lieu;14.24854;-15.23548;relation/3405262;Région de Kaffrine, Sénégal
+Chef-lieu de région : Kolda;Chef-lieu;13.12915;-14.41815;relation/3405108;Région de Kolda, Sénégal
+Chef-lieu de région : Kédougou;Chef-lieu;12.88568;-12.28636;relation/2738475;Région de Kédougou, Sénégal
+Chef-lieu de région : Louga;Chef-lieu;15.39669;-15.67793;relation/2908172;Région de Louga, Sénégal
+Chef-lieu de région : Matam;Chef-lieu;15.26814;-13.69916;relation/3405492;Région de Matam, Sénégal
+Chef-lieu de région : Saint-Louis;Chef-lieu;16.02804;-16.50487;relation/12989616;Saint-Louis, Département de Saint-Louis, Région de Saint-Louis, Sénégal
+Chef-lieu de région : Sédhiou;Chef-lieu;12.91025;-15.55298;relation/3405259;Région de Sédhiou, Sénégal
+Chef-lieu de région : Tambacounda;Chef-lieu;13.86863;-13.31903;relation/3405109;Région de Tambacounda, Sénégal
+Chef-lieu de région : Ziguinchor;Chef-lieu;12.56349;-16.27246;relation/13009661;Ziguinchor, Département de Ziguinchor, Région de Ziguinchor, Sénégal

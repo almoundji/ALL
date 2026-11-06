@@ -47,6 +47,8 @@ constater le cloisonnement.
 Fichiers d'exemple pour tester l'ingestion : `backend/data/exemple_annuaire.csv` (modèle *annuaire_personnes*) et
 `backend/data/exemple_cdr.csv` (modèle *cdr_appels*). La première ligne de l'annuaire fusionne avec une personne existante.
 
+Données ouvertes de référence (45 lieux géocodés, 274 personnes et organisations sous sanctions ONU) : `make opendata`, détail dans `backend/data/open/README.md`.
+
 Tests : `make test` (17 tests : habilitations, compartiments, résolution d'identité, ingestion, graphe, audit).
 
 Déploiement de référence avec PostgreSQL : `FC_SECRET_KEY=$(openssl rand -hex 32) docker compose up --build`.

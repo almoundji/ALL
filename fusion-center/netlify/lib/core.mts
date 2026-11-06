@@ -80,14 +80,14 @@ export function buildKey(type: string, label: string, a: Record<string, any> = {
   return `${type.toLowerCase()}:${normalizeText(label)}`;
 }
 
-// token_set_ratio simplifié (intersection / union pondérée par Levenshtein sur le reste).
-function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
-  let prev = Array.from({ length: n + 1 }, (_, i) => i);
-  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+// token_set_ratio équivalent à RapidFuzz : ratio = 2·LCS / (|a|+|b|) (distance d'indel, une substitution compte double).
+function lcs(a: string, b: string): number {
+  const m = a.length, n = b.length; if (!m || !n) return 0;
+  let prev = new Array(n + 1).fill(0);
+  for (let i = 1; i <= m; i++) { const cur = [0]; for (let j = 1; j <= n; j++) cur[j] = a[i - 1] === b[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]); prev = cur; }
   return prev[n];
 }
-const ratio = (a: string, b: string) => (a.length + b.length === 0 ? 100 : (100 * (a.length + b.length - levenshtein(a, b))) / (a.length + b.length));
+const ratio = (a: string, b: string) => (a.length + b.length === 0 ? 100 : (200 * lcs(a, b)) / (a.length + b.length));
 export function tokenSetRatio(a: string, b: string): number {
   const ta = new Set(a.split(" ").filter(Boolean)), tb = new Set(b.split(" ").filter(Boolean));
   const inter = [...ta].filter((t) => tb.has(t)).sort().join(" ");
@@ -272,10 +272,19 @@ export function parseRows(filename: string, text: string): Record<string, string
   if (filename.toLowerCase().endsWith(".json")) { let data = JSON.parse(text); if (!Array.isArray(data)) data = data.rows || data.data || [data]; return data.map((r: any) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v == null ? "" : String(v)]))); }
   const first = text.split(/\r?\n/)[0] || "";
   const delim = [";", ",", "\t", "|"].map((d) => [d, first.split(d).length] as const).sort((a, b) => b[1] - a[1])[0][0];
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const split = (line: string) => { const out: string[] = []; let cur = "", q = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (ch === '"') { if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q; } else if (ch === delim && !q) { out.push(cur); cur = ""; } else cur += ch; } out.push(cur); return out.map((x) => x.trim()); };
-  const header = split(lines[0]);
-  return lines.slice(1).map((l) => { const vals = split(l); return Object.fromEntries(header.map((h, i) => [h, vals[i] ?? ""])); });
+  // Lecture caractère par caractère : les guillemets peuvent contenir le séparateur et des sauts de ligne.
+  const records: string[][] = []; let row: string[] = []; let cur = ""; let q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; continue; }
+    if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); cur = ""; if (row.some((v) => v.trim())) records.push(row); row = []; }
+    else cur += ch;
+  }
+  if (cur || row.length) { row.push(cur); if (row.some((v) => v.trim())) records.push(row); }
+  const header = records[0].map((h) => h.trim());
+  return records.slice(1).map((vals) => Object.fromEntries(header.map((h, i) => [h, (vals[i] ?? "").trim()])));
 }
 const render = (tpl: any, row: Record<string, string>) => (typeof tpl === "string" ? tpl.replace(/\{([^{}]+)\}/g, (_, k) => row[k] ?? "").trim() : tpl);
 const toNum = (v: any) => { if (v === "" || v == null) return null; const n = Number(String(v).replace(",", ".")); return Number.isFinite(n) ? n : null; };
