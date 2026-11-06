@@ -16,6 +16,7 @@ en backlog Scrum.
 | **0. Vision produit** | Une phrase et une page : pour qui, quel problème, ce qu'on ne fera pas | 1 jour | *Vision board* validée par le sponsor |
 | **1. Rôles** | Nommer **un seul** Product Owner, un Scrum Master et l'équipe (5 à 9 personnes) | 1 jour | Organigramme Scrum |
 | **2. Cadre réglementaire** | Licence visée, juridiction, exigences de certification (RNG, RTP, jeu responsable, LCB-FT) | en parallèle, dès le début | Liste d'exigences **non négociables** (elles entrent dans la *Definition of Done*) |
+| **2 bis. Nom et charte** | Choisir le nom (proposition : **Yoon**), vérifier domaine et marque, valider la charte graphique et les principes UX (voir `UX_UI.md`) | 2 jours, en parallèle | Nom déposé, charte v1, maquette du lanceur |
 | **3. Backlog initial** | Épopées = les modules ci-dessous ; user stories pour les 2 premiers sprints seulement | 2–3 jours | Backlog priorisé |
 | **4. Definition of Ready / Done** | Règles communes (voir § 5) | ½ jour | Affichées au mur |
 | **5. Sprint 0** | Socle technique, pas de fonctionnalité métier | 1–2 semaines | Dépôt, CI, environnement de recette, squelette d'API déployé |
@@ -55,6 +56,7 @@ en backlog Scrum.
 - Intégration continue : tests automatiques à chaque commit.
 - Environnement de recette déployé avec un `GET /api/health`.
 - Modèle de données des **montants en unités mineures (entiers)**, jamais en flottants.
+- **UX/UI** : maquette statique du lanceur et de la *shell bar* (`mockup/launchpad.html`), jetons de la charte (couleurs, typographie) intégrés dans le projet frontend, gabarits *List Report* et *Object Page* vides.
 - Backlog des sprints 1–2 affiné et estimé.
 
 ### Sprint 1 — « Une partie de bout en bout » (objectif de sprint)
@@ -70,18 +72,22 @@ en backlog Scrum.
 | Lancer une session de jeu | M6 | Renvoie un jeton et une URL de lancement |
 | Jouer un tour (mise + gain) | M7, M8 | Solde final = solde initial − mise + gain ; tour clôturé |
 | Journaliser chaque action | M10 | Le journal chaîné se vérifie sans erreur |
+| Lanceur opérateur avec tuiles à indicateurs | UX | Les tuiles Jeux, Joueurs, Sessions affichent des chiffres réels |
+| Fiche jeu et liste des jeux (*Object Page* / *List Report*) | UX, M3 | Filtres par catégorie et fournisseur ; action principale « Activer » |
 
 ### Sprints suivants (proposition)
 
 | Sprint | Objectif |
 | --- | --- |
-| 2 | Annulations, transactions tardives, limites de jeu responsable, auto-exclusion |
-| 3 | Protocole de callbacks signés pour un **vrai** fournisseur externe |
-| 4 | *Seamless wallet* (le solde reste chez l'opérateur) |
-| 5 | Bonus / tours gratuits |
-| 6 | Reporting GGR et facturation |
-| 7 | Back-office et lobby |
-| 8 | Durcissement : tests de charge, audit de sécurité, préparation à la certification |
+| 2 | Annulations, transactions tardives, limites de jeu responsable, auto-exclusion — *UX : fiche joueur, confirmation avec motif, Worklist conformité* |
+| 3 | Protocole de callbacks signés pour un **vrai** fournisseur externe — *UX : assistant (Wizard) d'intégration fournisseur, lanceur fournisseur* |
+| 4 | *Seamless wallet* (le solde reste chez l'opérateur) — *UX : List Report des transactions, états d'erreur avec action* |
+| 5 | Bonus / tours gratuits — *UX : Object Page campagne* |
+| 6 | Reporting GGR et facturation — *UX : Analytical List Page, lanceur finance, mode sombre* |
+| 7 | Back-office et lobby — *UX : Overview Page opérateur, version tablette* |
+| 8 | Durcissement : tests de charge, audit de sécurité, préparation à la certification — *UX : audit d'accessibilité WCAG AA* |
+
+Règle : aucun écran n'est maquetté plus d'un sprint avant le module qu'il sert ; la maquette est validée au *Refinement* précédent.
 
 ---
 

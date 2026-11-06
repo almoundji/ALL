@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yoon — Lanceur opérateur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#1B2A6B;--accent:#E0A227;--bg:#F4F5F9;--surface:#fff;--line:#DDE1EC;--text:#1A1F36;--muted:#5B6480;
+  --ok:#1E7D4A;--warn:#C7681B;--neg:#B3261E;--info:#2563EB;--mono:"JetBrains Mono",monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--brand:#8FA3FF;--accent:#F2C35B;--bg:#0F1424;--surface:#182040;--line:#2A3357;--text:#E8ECFA;--muted:#9AA5C8;--ok:#4FCB84;--warn:#F2994A;--neg:#FF6B64;--info:#7AA7FF}}
+:root[data-theme=dark]{--brand:#8FA3FF;--accent:#F2C35B;--bg:#0F1424;--surface:#182040;--line:#2A3357;--text:#E8ECFA;--muted:#9AA5C8;--ok:#4FCB84;--warn:#F2994A;--neg:#FF6B64;--info:#7AA7FF}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}
+.shell{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.shell-in{max-width:1400px;margin:auto;display:flex;align-items:center;gap:20px;padding:10px 28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.02em;color:var(--brand)}
+.logo .n{color:var(--accent)}.logo small{font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-left:6px}
+.search{flex:1;max-width:520px;margin-left:auto;position:relative}
+.search input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:6px;padding:9px 70px 9px 36px;font:inherit}
+.search .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted)}
+.role{border:1px solid var(--line);border-radius:40px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted)}
+.bell{position:relative;color:var(--muted);font-size:18px}.bell::after{content:'3';position:absolute;top:-6px;right:-10px;background:var(--neg);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:0 5px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.page{max-width:1400px;margin:auto;padding:22px 28px 48px}
+.hello{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}h1{margin:0;font-size:28px;font-weight:700}.date{color:var(--muted)}
+.sec{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:28px 0 12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 18px 14px;min-height:170px;display:flex;flex-direction:column;text-decoration:none;color:var(--text);transition:.18s}
+.tile:hover{box-shadow:0 6px 18px rgba(27,42,107,.08);transform:translateY(-1px);border-color:var(--brand)}
+.tt{font-size:16px;font-weight:600}.ts{color:var(--muted);font-size:13px;margin-top:2px}
+.tb{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between}
+.tv{font-size:40px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.tv.ok{color:var(--ok)}.tv.warn{color:var(--warn)}.tv.neg{color:var(--neg)}
+.tc{font-size:12px;color:var(--muted);margin-top:6px;text-align:right}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.ico{width:34px;height:34px;border-radius:8px;background:var(--bg);display:grid;place-items:center;color:var(--brand);font-weight:700}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#1A1F36;border:0;border-radius:6px;padding:10px 16px;font:600 13px Inter;cursor:pointer}
+.fab{position:fixed;right:28px;bottom:28px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.mono{font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<header class="shell"><div class="shell-in">
+  <div class="logo">yo<span class="n">on</span><small>Opérateur · Casino Dakar Royal</small></div>
+  <div class="search"><span class="i">⌕</span><input placeholder="Rechercher un jeu, un joueur, une transaction…"><kbd>Ctrl K</kbd></div>
+  <span class="role">Opérateur ▾</span><span class="bell">🔔</span><div class="avatar">MS</div>
+</div></header>
+
+<main class="page">
+  <div class="hello"><h1>Bonjour, Mouhamadou</h1><span class="date">Jeudi 6 novembre 2026 · 15:58</span></div>
+
+  <div class="sec">Activité en direct</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="ico">◎</div><div class="tt">Sessions en cours</div><div class="ts">Joueurs connectés à un jeu</div>
+      <div class="tb"><span></span><div><div class="tv">1 284</div><div class="tc">▲ 12 % vs hier à la même heure</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">◈</div><div class="tt">GGR du jour</div><div class="ts">Mises − gains, toutes devises en FCFA</div>
+      <div class="tb"><span></span><div><div class="tv ok">4,21 M</div><div class="tc">FCFA · objectif 5,0 M</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">⬡</div><div class="tt">Tours joués</div><div class="ts">Depuis minuit</div>
+      <div class="tb"><span></span><div><div class="tv">318 402</div><div class="tc">RTP constaté 96,1 %</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">⚠</div><div class="tt">Incidents fournisseurs</div><div class="ts">Callbacks en échec ou en retard</div>
+      <div class="tb"><span></span><div><div class="tv warn">3</div><div class="tc"><span class="dot" style="background:var(--warn)"></span>Studio Nord · 2 tours en attente</div></div></div></a>
+  </div>
+
+  <div class="sec">Catalogue et joueurs</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="ico">▦</div><div class="tt">Mes jeux actifs</div><div class="ts">Catalogue unifié, 6 fournisseurs</div>
+      <div class="tb"><span></span><div><div class="tv">412</div><div class="tc">18 nouveaux à activer</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">◉</div><div class="tt">Joueurs</div><div class="ts">Comptes rattachés</div>
+      <div class="tb"><span></span><div><div class="tv">58 930</div><div class="tc">2 140 actifs aujourd'hui</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">✦</div><div class="tt">Bonus et tours gratuits</div><div class="ts">Campagnes en cours</div>
+      <div class="tb"><span></span><div><div class="tv">7</div><div class="tc">coût du jour 612 000 FCFA</div></div></div></a>
+  </div>
+
+  <div class="sec">Conformité et finance</div>
+  <div class="tiles">
+    <a class="tile" href="#"><div class="ico">⛨</div><div class="tt">Jeu responsable</div><div class="ts">Limites, auto-exclusions, délais</div>
+      <div class="tb"><span></span><div><div class="tv neg">5</div><div class="tc"><span class="dot" style="background:var(--neg)"></span>demandes de limite à valider</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">⊟</div><div class="tt">Rapprochement quotidien</div><div class="ts">Portefeuille ↔ fournisseurs</div>
+      <div class="tb"><span></span><div><div class="tv ok">0</div><div class="tc">écart · dernier contrôle 15:45</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">▤</div><div class="tt">Factures</div><div class="ts">Partage de revenus mensuel</div>
+      <div class="tb"><span></span><div><div class="tv">Oct.</div><div class="tc">à valider avant le 10 nov.</div></div></div></a>
+    <a class="tile" href="#"><div class="ico">≡</div><div class="tt">Journal d'audit</div><div class="ts">Chaîné, vérifié</div>
+      <div class="tb"><span></span><div><div class="tv mono" style="font-size:22px;font-weight:500">a91f…c3</div><div class="tc"><span class="dot" style="background:var(--ok)"></span>intégrité vérifiée</div></div></div></a>
+  </div>
+</main>
+<button class="cta fab">+ Activer des jeux</button>
+</body>
+</html>
