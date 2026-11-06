@@ -1,0 +1,165 @@
+{
+ "_aide": "Rattachement des listes/candidats à des familles politiques. 'membres' : noms exacts tels qu'ils figurent dans les CSV de résultats. 'scissionDe' : famille issue d'une scission, dont la part initiale est un pourcentage du score de la famille d'origine (réglable dans l'outil).",
+ "elections": {
+  "PRESIDENTIELLE_2019-02-24": {
+   "label": "Présidentielle 2019",
+   "type": "presidentielle",
+   "date": "2019-02-24"
+  },
+  "LEGISLATIVES_2022-07-31": {
+   "label": "Législatives 2022",
+   "type": "legislatives",
+   "date": "2022-07-31"
+  },
+  "PRESIDENTIELLE_2024-03-24": {
+   "label": "Présidentielle 2024",
+   "type": "presidentielle",
+   "date": "2024-03-24"
+  },
+  "LEGISLATIVES_2024-11-17": {
+   "label": "Législatives 2024",
+   "type": "legislatives",
+   "date": "2024-11-17"
+  },
+  "LOCALES_2022-01-23": {
+   "label": "Locales 2022 (grandes villes)",
+   "type": "locales",
+   "date": "2022-01-23"
+  }
+ },
+ "familles": [
+  {
+   "id": "PASTEF",
+   "label": "Pastef (Ousmane Sonko)",
+   "membres": {
+    "PRESIDENTIELLE_2019-02-24": [
+     "Ousmane Sonko"
+    ],
+    "LEGISLATIVES_2022-07-31": [
+     "Coalition Yewwi Askan Wi (YAW, Libérer le peuple)"
+    ],
+    "PRESIDENTIELLE_2024-03-24": [
+     "Bassirou Diomaye Faye"
+    ],
+    "LEGISLATIVES_2024-11-17": [
+     "PASTEF (Patriotes africains du Sénégal pour le travail, l'éthique et la fraternité)"
+    ]
+   },
+   "note": "En 2022, Pastef concourt au sein de Yewwi Askan Wi ; en 2024, B. D. Faye est le candidat de Pastef."
+  },
+  {
+   "id": "KIIRAAY",
+   "label": "Kiiraay – Les Patriotes républicains (B. D. Faye)",
+   "scissionDe": "PASTEF",
+   "partDefaut": 0.3,
+   "note": "Parti lancé le 25/07/2026 par le président B. D. Faye après la rupture avec Pastef ; aucun scrutin à ce jour : sa part est une hypothèse réglable."
+  },
+  {
+   "id": "APR",
+   "label": "APR / Benno Bokk Yakaar – Takku Wallu (Macky Sall)",
+   "membres": {
+    "PRESIDENTIELLE_2019-02-24": [
+     "Macky Sall"
+    ],
+    "LEGISLATIVES_2022-07-31": [
+     "Coalition Benno Bokk Yakaar (BBY, Unis par l'espoir)"
+    ],
+    "PRESIDENTIELLE_2024-03-24": [
+     "Amadou Ba"
+    ],
+    "LEGISLATIVES_2024-11-17": [
+     "Coalition Takku Wallu Sénégal (TWS)"
+    ]
+   },
+   "note": "En 2024 (présidentielle), Amadou Ba est le candidat de BBY ; aux législatives 2024, Macky Sall conduit Takku Wallu (APR + PDS)."
+  },
+  {
+   "id": "JAMM",
+   "label": "Nouvelle Responsabilité – Jàmm ak Njariñ (Amadou Ba)",
+   "scissionDe": "APR",
+   "partDefaut": 0.38,
+   "membres": {
+    "LEGISLATIVES_2024-11-17": [
+     "Coalition Jàmm ak Njariñ (Diam ak Njarin)"
+    ]
+   },
+   "note": "Part par défaut tirée des législatives 2024 : 330 865 voix contre 531 466 pour Takku Wallu (38 %)."
+  },
+  {
+   "id": "PDS",
+   "label": "PDS / Wallu (Karim Wade)",
+   "membres": {
+    "LEGISLATIVES_2022-07-31": [
+     "Grande coalition Wallu Sénégal"
+    ]
+   },
+   "note": "Pas de candidat en 2024 (présidentielle) ; allié à l'APR dans Takku Wallu aux législatives 2024."
+  },
+  {
+   "id": "TAXAWU",
+   "label": "Taxawu / Sàmm Sa Kàddu (Khalifa Sall)",
+   "membres": {
+    "PRESIDENTIELLE_2024-03-24": [
+     "Khalifa Ababacar Sall"
+    ],
+    "LEGISLATIVES_2024-11-17": [
+     "Coalition Sàmm Sa Kàddu"
+    ]
+   }
+  },
+  {
+   "id": "REWMI",
+   "label": "Rewmi (Idrissa Seck)",
+   "membres": {
+    "PRESIDENTIELLE_2019-02-24": [
+     "Idrissa Seck"
+    ],
+    "PRESIDENTIELLE_2024-03-24": [
+     "Idrissa Seck"
+    ]
+   }
+  },
+  {
+   "id": "PUR",
+   "label": "PUR (Issa Sall, Aliou Mamadou Dia)",
+   "membres": {
+    "PRESIDENTIELLE_2019-02-24": [
+     "El Hadji Issa Sall"
+    ],
+    "PRESIDENTIELLE_2024-03-24": [
+     "Aliou Mamadou Dia"
+    ]
+   }
+  }
+ ],
+ "sources": [
+  {
+   "label": "Présidentielle 2024 – résultats par département (annexe II, rapport final MOE UE, résultats définitifs du Conseil constitutionnel)",
+   "url": "https://www.eeas.europa.eu/sites/default/files/documents/2024/Rapport%20final_MOE%20UE%20Senegal_240524.pdf"
+  },
+  {
+   "label": "Présidentielle 2024 – résultats nationaux (DGE)",
+   "url": "https://dge.sn/wp-content/uploads/2024/09/Resultats-de-lelection-presidentielle-2024.pdf"
+  },
+  {
+   "label": "Législatives 2024 – décision n° 20/E/2024 du Conseil constitutionnel",
+   "url": "https://www.cena.sn/rapports/decision/Decision-20.E.2024.pdf"
+  },
+  {
+   "label": "Législatives 2024 – vainqueurs par département",
+   "url": "https://en.wikipedia.org/wiki/2024_Senegalese_parliamentary_election"
+  },
+  {
+   "label": "Présidentielle 2019 – résultats (DGE)",
+   "url": "https://dge.sn/wp-content/uploads/2024/09/Resultats-de-lelection-presidentielle-2019.pdf"
+  },
+  {
+   "label": "Législatives 2022 – rapport CENA",
+   "url": "https://www.cena.sn/rapports/Rapport_CENA_Legislatives_2022_OK.pdf"
+  },
+  {
+   "label": "Sièges par département – décret n° 2024-1982 du 13/09/2024",
+   "url": "https://primature.sn/publications/lois-et-reglements/decret-ndeg-2024-1982-du-13-septembre-2024-portant-repartition-des"
+  }
+ ]
+}

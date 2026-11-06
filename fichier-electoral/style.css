@@ -185,3 +185,15 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
   .topbar, .header, .tabs, .filters, .tbl-tools, .footer { display: none; }
   body { background: #fff; }
 }
+
+/* ---------- Texte juridique (markdown) ---------- */
+.md { font-size: 15px; line-height: 1.6; max-width: 980px; }
+.md h1 { font-size: 22px; margin: 4px 0 10px; } .md h2 { font-size: 19px; margin: 26px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.md h3 { font-size: 16px; margin: 18px 0 6px; }
+.md table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; display: block; overflow-x: auto; }
+.md th, .md td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.md th { background: var(--bg); }
+.md blockquote { margin: 10px 0; padding: 8px 14px; background: var(--amber-bg); border-left: 4px solid var(--amber); border-radius: 6px; }
+.md code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+.md a { word-break: break-word; }
+input[type=range] { width: 100%; accent-color: var(--green); }

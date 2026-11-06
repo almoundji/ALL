@@ -276,7 +276,7 @@
       let data = rows;
       if (q) { const kq = key(q); data = data.filter(r => cols.some(c => !c.num && key(val(c, r)).includes(kq))); }
       if (sortK) {
-        const c = cols.find(x => x.k === sortK);
+        const c = cols.find(x => x.k === sortK) || { k: sortK };
         data = [...data].sort((a, b) => {
           const va = val(c, a), vb = val(c, b);
           if (va == null && vb == null) return 0; if (va == null) return 1; if (vb == null) return -1;
@@ -399,14 +399,14 @@
   // ------------------------------------------------------------------ Navigation
   const TABS = [
     ['accueil', 'Mon accueil'], ['carte', 'Carte électorale 2022'], ['evolution', 'Évolution 2019 → 2022'], ['comparatif', 'Locales → Législatives'],
-    ['transferts', 'Transferts d\'électeurs'], ['qualite', 'Qualité des données'], ['sources', 'Sources & méthode'],
+    ['transferts', 'Transferts d\'électeurs'], ['strategie', 'Stratégie électorale'], ['qualite', 'Qualité des données'], ['sources', 'Sources & méthode'],
   ];
   function renderTabs(page, s) {
-    $('#tabs').replaceChildren(...TABS.map(([id, label]) => h('a', { href: id === 'sources' || id === 'qualite' ? '#/' + id : hrefWith(id, s), class: page === id ? 'active' : null }, label)));
+    $('#tabs').replaceChildren(...TABS.map(([id, label]) => h('a', { href: ['sources', 'qualite', 'strategie'].includes(id) ? '#/' + id : hrefWith(id, s), class: page === id ? 'active' : null }, label)));
   }
   function renderFilters(page, s) {
     const box = $('#filters');
-    if (['sources', 'qualite', 'fiche'].includes(page)) { box.replaceChildren(); return; }
+    if (['sources', 'qualite', 'fiche', 'strategie'].includes(page)) { box.replaceChildren(); return; }
     const go = ns => { location.hash = hrefWith(page, ns); };
     const rSel = h('select', { id: 'f-region', onchange: e => go({ r: e.target.value || null }) },
       h('option', { value: '' }, 'Tout le fichier'), IDX.regionNames.map(n => h('option', { value: n, selected: s.r && key(s.r) === key(n) }, tc(n))),
@@ -431,7 +431,7 @@
     renderTabs(page, s);
     renderFilters(page, s);
     const view = $('#view');
-    const pages = { accueil: pageAccueil, carte: pageCarte, evolution: pageEvolution, comparatif: pageComparatif, transferts: pageTransferts, qualite: pageQualite, sources: pageSources, fiche: pageFiche };
+    const pages = { strategie: (sc, rest) => window.Strategie.page(sc, rest), accueil: pageAccueil, carte: pageCarte, evolution: pageEvolution, comparatif: pageComparatif, transferts: pageTransferts, qualite: pageQualite, sources: pageSources, fiche: pageFiche };
     const fn = pages[page] || pageAccueil;
     view.replaceChildren(h('div', { class: 'loading' }, 'Chargement…'));
     Promise.resolve(fn(s, parts.slice(1))).then(nodes => {
@@ -836,6 +836,10 @@
     });
     document.addEventListener('scroll', hideTip, { passive: true });
   }
+
+  // Composants partagés avec le module Stratégie (js/strategie.js)
+  window.EF = { h, put, svgEl, n0, sn, pct, spct, big, key, tc, ratio, sum, enc, tiles, tile, section, panel, table, barList, kpi, icon,
+    get R() { return R; }, get IDX() { return IDX; }, rerender: () => route() };
 
   // ------------------------------------------------------------------ Démarrage
   async function start() {

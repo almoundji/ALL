@@ -9,6 +9,7 @@ Outil web en tuiles pour analyser la carte électorale et l'évolution du fichie
 | Évolution 2019 → 2022 | Bilan : électeurs 2019 − disparus − sortis + venus + nouveaux inscrits = 2022 |
 | Locales → Législatives | Variation des centres, bureaux et électeurs entre janvier et juillet 2022 |
 | Transferts d'électeurs | Matrice inter-régions, soldes par département et commune, principaux flux |
+| Stratégie électorale | Rapport de force par département, simulateur de sièges (165 : 112 majoritaires + 53 proportionnels), priorités de mobilisation, historique des scrutins, cadre réglementaire et calendrier |
 | Qualité des données | Contrôles de cohérence automatiques (doublons, numérotation, écarts entre sources…) |
 | Fiches | Région, département, commune, lieu de vote (bureaux), pays — accessibles par clic ou recherche (Ctrl K) |
 
@@ -28,6 +29,9 @@ le navigateur bloque la lecture des fichiers de données en `file://`.)
 - `scripts/build_data.py` : prépare les données (nécessite `openpyxl`) et les découpe :
   - `data/resume.json` — agrégats nationaux à communaux, chargés à l'ouverture ;
   - `data/regions/<REGION>.json` — détail par région (lieux et bureaux, transferts entre communes), chargé à la demande.
+
+- `scripts/build_strategie.py` : prépare `data/strategie.json` à partir de `data/sources/elections/` (résultats,
+  `config.json` = familles politiques et scissions) et `data/sources/reglementation/` (sièges, calendrier, cadre juridique).
 
 Pour ajouter ou mettre à jour des données : déposer les fichiers dans `data/sources/` puis lancer
 `python3 scripts/build_data.py`.
