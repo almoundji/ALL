@@ -51,6 +51,23 @@ Tests : `make test` (17 tests : habilitations, compartiments, résolution d'iden
 
 Déploiement de référence avec PostgreSQL : `FC_SECRET_KEY=$(openssl rand -hex 32) docker compose up --build`.
 
+## Déploiement Netlify (démo en ligne)
+
+Site : <https://centre-fusion-national.netlify.app> (projet Netlify `centre-fusion-national`).
+
+Netlify n'exécute pas de serveur Python : la version en ligne sert l'interface compilée (`frontend/dist`) et une **fonction
+serverless TypeScript** (`netlify/functions/api.mts`) qui réimplémente l'API complète. L'état (entités, dossiers, audit…)
+est conservé en un document JSON dans **Netlify Blobs** ; c'est une configuration de démonstration, pas de production
+(pas de transactions, limite de 4 Mo par fichier importé, un seul état partagé). Le backend Python reste la référence
+pour un déploiement souverain (`docker compose`).
+
+```bash
+npm run test:netlify            # scénarios de bout en bout sur la fonction serverless (Node 22, sans Netlify)
+npx netlify deploy --build      # redéploiement manuel (ou brancher le dépôt GitHub sur le projet Netlify, base = fusion-center)
+```
+
+Variable d'environnement du site : `FC_SECRET_KEY` (signature des jetons) ; optionnel `FC_ADMIN_PASSWORD`.
+
 ## Structure
 
 ```
@@ -63,13 +80,16 @@ fusion-center/
 │   └── seed.py      jeu de données fictif
 ├── backend/tests/   tests d'intégration API
 ├── frontend/src/    React + TypeScript (Cytoscape, Leaflet, Recharts)
-└── docs/            ARCHITECTURE.md · SCRUM.md · GOUVERNANCE.md
+├── netlify/         fonction serverless (port TypeScript de l'API) + test de scénarios
+├── netlify.toml     build et routage Netlify
+└── docs/            ARCHITECTURE.md · SCRUM.md · GOUVERNANCE.md · FONCTIONNALITES_CAS_USAGE.md
 ```
 
 ## Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture cible, modèle de sécurité, montée en charge, trajectoire vers Neo4j / OpenSearch / Kafka.
 - [docs/SCRUM.md](docs/SCRUM.md) — **méthode Scrum** proposée : équipe composite, rôles, cadence, backlog produit priorisé, 12 sprints, définition de prêt / de fini, indicateurs.
+- [docs/FONCTIONNALITES_CAS_USAGE.md](docs/FONCTIONNALITES_CAS_USAGE.md) — fonctionnalités détaillées et 10 cas d'usage opérationnels.
 - [docs/GOUVERNANCE.md](docs/GOUVERNANCE.md) — cadre juridique et éthique, conduite du changement, exigences de souveraineté, contrôles.
 
 ## Limites du prototype (assumées)

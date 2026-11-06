@@ -1,0 +1,28 @@
+# Déploiement Netlify du Centre de Fusion : interface statique (Vite) + API en fonction serverless.
+# Démo : l'état est conservé dans Netlify Blobs (document JSON unique). Pour la production, voir docs/ARCHITECTURE.md.
+[build]
+  command = "npm ci --prefix frontend --no-audit --no-fund && npm run build --prefix frontend -- --mode netlify"
+  publish = "frontend/dist"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/docs"
+  to = "/api/docs"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
