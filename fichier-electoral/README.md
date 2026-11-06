@@ -33,6 +33,9 @@ le navigateur bloque la lecture des fichiers de données en `file://`.)
 - `scripts/build_strategie.py` : prépare `data/strategie.json` à partir de `data/sources/elections/` (résultats,
   `config.json` = familles politiques et scissions) et `data/sources/reglementation/` (sièges, calendrier, cadre juridique).
 
+- `scripts/build_resultats_fins.py` : résultats par commune et par bureau (Législatives 2024, source SAGE,
+  couverture partielle : 27 départements sur 46) -> `data/resultats/L2024/` (un fichier par département).
+
 Pour ajouter ou mettre à jour des données : déposer les fichiers dans `data/sources/` puis lancer
 `python3 scripts/build_data.py`.
 

@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   let S = null, loading = null;
-  const state = { famille: null, base: null, swing: {}, scission: {}, ecart: 10 };
+  const state = { famille: null, base: null, swing: {}, scission: {}, ecart: 10, fin: { liste: 'PASTEF', dept: null, commune: null } };
 
   const load = () => loading || (loading = fetch('data/strategie.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(d => { S = prepare(d); return S; }));
 
@@ -137,11 +137,12 @@
     try { await load(); } catch (err) { return h('div', { class: 'note warn' }, 'Données de stratégie indisponibles : ' + err.message); }
     const sub = rest[0] || 'synthese';
     const nav = h('div', { class: 'tabs', style: { marginTop: '0', fontSize: '14px' } },
-      [['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
+      [['synthese', 'Rapport de force'], ['simulateur', 'Simulateur de sièges'], ['priorites', 'Priorités de mobilisation'], ['bureaux', 'Résultats par commune et bureau'], ['historique', 'Historique des scrutins'], ['cadre', 'Cadre réglementaire & calendrier']]
         .map(([id, lab]) => h('a', { href: '#/strategie/' + id, class: sub === id ? 'active' : null }, lab)));
     const avert = h('div', { class: 'note', style: { marginBottom: '14px' } },
       'Outil d\'aide à l\'analyse, utilisable pour tout parti ou coalition. Les simulations reposent sur des résultats passés agrégés par département et sur une hypothèse de report uniforme : ce ne sont pas des prévisions.');
     if (sub === 'cadre') return [E.section('Stratégie électorale', 'Cadre réglementaire et calendrier'), nav, pageCadre()];
+    if (sub === 'bureaux') return [E.section('Stratégie électorale', 'Résultats par commune et par bureau de vote'), nav, await pageBureaux()];
     const withDepts = S.elections.filter(e => e.hasDepts);
     if (!S.familles.length || !withDepts.length) {
       return [E.section('Stratégie électorale'), nav, avert, h('div', { class: 'note warn' }, 'Les résultats électoraux détaillés par département ne sont pas encore intégrés. ', h('a', { href: '#/strategie/cadre' }, 'Voir le cadre réglementaire et le calendrier →')),
@@ -349,6 +350,89 @@
       h('div', { class: 'stack' }, E.panel('Sièges de députés par circonscription', `Décret n° 2024-1982 du 13 septembre 2024 : ${S.totalSieges} sièges, majorité absolue à ${S.majorite}.`, E.table({ rows: seats, sort: 'sieges', pageSize: 60, exportName: 'sieges-legislatives', cols: [{ k: 'nom', label: 'Circonscription' }, { k: 'type', label: 'Type' }, { k: 'region', label: 'Région / zone' }, { k: 'sieges', label: 'Sièges', num: true }, { k: 'bar', label: '', bar: 'pos', get: r => r.sieges }] }))),
       h('div', { class: 'stack' }, h('div', { class: 'panel' }, md)),
     ];
+  }
+
+  // ------------------------------------------------------------------ Résultats fins (commune / bureau)
+  let FIN = null; const finDept = {};
+  const loadFin = () => FIN || (FIN = fetch('data/resultats/L2024/index.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }));
+  const loadFinDept = code => finDept[code] || (finDept[code] = fetch('data/resultats/L2024/' + code + '.json').then(r => r.json()));
+
+  async function pageBureaux() {
+    const E = window.EF, { h } = E;
+    let I;
+    try { I = await loadFin(); } catch (err) { return h('div', { class: 'note warn' }, 'Résultats détaillés indisponibles : ' + err.message); }
+    const F = state.fin;
+    const li = Math.max(0, I.listes.indexOf(F.liste));
+    const presentes = v => v.reduce((a, x, k) => a + (x && I.listes[k] !== 'Takku Wallu Sénégal' ? x : 0), 0);
+    const go = () => E.rerender();
+    const avert = h('div', { class: 'note warn', style: { marginBottom: '14px' } },
+      h('b', null, 'Données partielles. '), `${I.scrutin} uniquement, seule source publique trouvée à ce niveau. ${I.departements.length} départements sur 46 (${E.n0(E.sum(I.departements, d => d.bureaux))} bureaux), pas de diaspora. `,
+      'La liste Takku Wallu Sénégal est absente de presque tous les départements et les suffrages exprimés ne sont pas fournis : on ne peut donc pas désigner la liste arrivée en tête d\'un bureau. ',
+      'L\'indicateur fiable est la part des inscrits obtenue par une liste (voix / inscrits). Source : ', h('a', { href: I.source.url, target: '_blank', rel: 'noopener' }, I.source.label), '.');
+    const dSel = h('select', { id: 'fin-dept', onchange: ev => { F.dept = ev.target.value || null; F.commune = null; go(); } },
+      h('option', { value: '' }, 'Tous les départements couverts'), [...I.departements].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')).map(d => h('option', { value: d.code, selected: F.dept === d.code }, E.tc(d.nom) + ' (' + E.tc(d.region) + ')')));
+    const lSel = h('select', { id: 'fin-liste', onchange: ev => { F.liste = ev.target.value; go(); } },
+      [...I.listes].sort((a, b) => (b === 'PASTEF') - (a === 'PASTEF') || a.localeCompare(b, 'fr')).map(n => h('option', { value: n, selected: n === F.liste }, n)));
+    const ctrl = h('div', { class: 'filters' }, h('label', { for: 'fin-liste' }, 'Liste'), lSel, h('label', { for: 'fin-dept' }, 'Département'), dSel);
+    const part = (v, i) => (i ? v / i : null);
+    const colsAgg = (label) => [
+      { k: 'nom', label, fmt: v => E.tc(v) },
+      { k: 'bureaux', label: 'Bureaux', num: true },
+      { k: 'inscrits', label: 'Inscrits', num: true, fmt: (v, r) => E.n0(v) + (r.inscritsManquants ? ' *' : '') },
+      { k: 'voixListe', label: 'Voix ' + F.liste, num: true },
+      { k: 'pInscrits', label: '% des inscrits', num: true, fmt: v => E.pct(v), title: 'Voix de la liste / inscrits (bureaux dont les inscrits sont connus)' },
+      { k: 'pbar', label: '', bar: 'pos', get: r => r.pInscrits },
+      { k: 'presentes', label: 'Voix des listes présentes', num: true, title: 'Hors Takku Wallu, absente de la source' },
+    ];
+    const aggRow = x => ({ ...x, voixListe: x.voix[li] || 0, pInscrits: part(x.voix[li] || 0, x.inscritsManquants ? null : x.inscrits) ?? (x.inscrits ? (x.voix[li] || 0) / x.inscrits : null), presentes: presentes(x.voix) });
+    const out = [avert, ctrl];
+
+    if (!F.dept) {
+      const rows = I.departements.map(aggRow);
+      const ins = E.sum(rows.filter(r => !r.inscritsManquants), r => r.inscrits), vv = E.sum(rows.filter(r => !r.inscritsManquants), r => r.voixListe);
+      out.push(E.tiles([
+        { title: 'Bureaux couverts', sub: I.departements.length + ' départements', icon: 'box', value: E.n0(E.sum(rows, r => r.bureaux)), caption: 'bureaux de vote' },
+        { title: 'Voix ' + F.liste, sub: 'Dans les bureaux couverts', icon: 'users', value: E.big(E.sum(rows, r => r.voixListe)), caption: 'voix' },
+        { title: 'Part des inscrits', sub: 'Bureaux aux inscrits connus', icon: 'gauge', value: E.pct(part(vv, ins)), caption: 'voix / inscrits' },
+        { title: 'Départements absents', sub: 'Non couverts par la source', icon: 'alert', value: E.n0(I.manquants.length), caption: E.n0(E.sum(I.manquants, m => m.electeurs)) + ' électeurs', cls: 'warn' },
+      ]));
+      out.push(h('div', { class: 'stack' }, E.panel('Par département', 'Cliquez pour voir les communes. * : inscrits manquants pour une partie des bureaux.', E.table({ rows, sort: 'pInscrits', exportName: 'L2024-departements-' + F.liste, onRow: r => { F.dept = r.code; go(); }, cols: colsAgg('Département') }))));
+      out.push(h('div', { class: 'stack' }, E.panel('Départements non couverts', 'Aucun résultat par bureau public trouvé pour ces départements (ni pour la diaspora).', E.table({ rows: I.manquants, searchable: false, sort: 'electeurs', cols: [{ k: 'nom', label: 'Département', fmt: v => E.tc(v) }, { k: 'region', label: 'Région', fmt: v => E.tc(v) }, { k: 'bureaux', label: 'Bureaux', num: true }, { k: 'electeurs', label: 'Électeurs', num: true }] }))));
+      return out;
+    }
+    const D = I.departements.find(d => d.code === F.dept);
+    const det = await loadFinDept(F.dept);
+    if (!F.commune) {
+      const rows = I.communes.filter(c => c.dept === D.nom).map(aggRow);
+      out.push(h('p', { class: 'crumbs' }, h('a', { href: '#/strategie/bureaux', onclick: ev => { ev.preventDefault(); F.dept = null; go(); } }, 'Tous les départements'), ' › ', E.tc(D.nom)));
+      out.push(h('div', { class: 'stack' }, E.panel('Communes de ' + E.tc(D.nom), 'Cliquez sur une commune pour voir ses bureaux.', E.table({ rows, sort: 'pInscrits', exportName: 'L2024-communes-' + D.nom + '-' + F.liste, onRow: r => { F.commune = r.nom; go(); }, cols: colsAgg('Commune') }))));
+      return out;
+    }
+    const C = det.communes.find(c => c.commune === F.commune);
+    const rows = [];
+    (C ? C.lieux : []).forEach(l => l.bureaux.forEach(([b, ins, v]) => rows.push({ lieu: l.nom, bureau: +b || b, inscrits: ins, voixListe: v[li] || 0, pInscrits: ins ? (v[li] || 0) / ins : null, presentes: presentes(v), pPresentes: presentes(v) ? (v[li] || 0) / presentes(v) : null })));
+    const ins = E.sum(rows.filter(r => r.inscrits), r => r.inscrits), vv = E.sum(rows.filter(r => r.inscrits), r => r.voixListe);
+    out.push(h('p', { class: 'crumbs' }, h('a', { href: '#/strategie/bureaux', onclick: ev => { ev.preventDefault(); F.dept = null; F.commune = null; go(); } }, 'Tous les départements'), ' › ',
+      h('a', { href: '#/strategie/bureaux', onclick: ev => { ev.preventDefault(); F.commune = null; go(); } }, E.tc(D.nom)), ' › ', E.tc(F.commune)));
+    out.push(E.tiles([
+      { title: 'Bureaux', sub: E.tc(F.commune), icon: 'box', value: E.n0(rows.length), caption: (C ? C.lieux.length : 0) + ' lieux de vote' },
+      { title: 'Voix ' + F.liste, sub: 'Législatives 2024', icon: 'users', value: E.n0(E.sum(rows, r => r.voixListe)), caption: 'voix' },
+      { title: 'Part des inscrits', sub: 'Moyenne de la commune', icon: 'gauge', value: E.pct(part(vv, ins)), caption: 'voix / inscrits' },
+    ]));
+    out.push(h('div', { class: 'stack' }, E.panel('Bureaux de vote', 'Triez par « % des inscrits » pour repérer les bureaux les plus faibles ou les plus forts. « Part des listes présentes » surestime le score (Takku Wallu absent de la source).', E.table({
+      rows, sort: 'pInscrits', dir: 1, pageSize: 50, exportName: 'L2024-bureaux-' + F.commune + '-' + F.liste,
+      cols: [
+        { k: 'lieu', label: 'Lieu de vote', fmt: v => E.tc(v) },
+        { k: 'bureau', label: 'Bureau', num: true },
+        { k: 'inscrits', label: 'Inscrits', num: true },
+        { k: 'voixListe', label: 'Voix ' + F.liste, num: true },
+        { k: 'pInscrits', label: '% des inscrits', num: true, fmt: v => E.pct(v) },
+        { k: 'pbar', label: '', bar: 'pos', get: r => r.pInscrits },
+        { k: 'presentes', label: 'Voix listes présentes', num: true },
+        { k: 'pPresentes', label: 'Part des listes présentes', num: true, fmt: v => E.pct(v) },
+      ],
+    }))));
+    return out;
   }
 
   window.Strategie = { page };
