@@ -1,0 +1,28 @@
+name: Yoon (agrégateur de jeux)
+
+on:
+  push:
+    paths: ["game-aggregator/**", ".github/workflows/game-aggregator.yml"]
+  pull_request:
+    paths: ["game-aggregator/**", ".github/workflows/game-aggregator.yml"]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: game-aggregator/backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip, cache-dependency-path: game-aggregator/backend/requirements.txt }
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: game-aggregator/frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: game-aggregator/frontend/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build

@@ -1,0 +1,25 @@
+/* Jetons de la charte Yoon (docs/UX_UI.md § 3). Une seule source de vérité pour les couleurs,
+   la typographie et les espacements. Mode sombre : préférence système ou attribut data-theme. */
+:root {
+  --brand: #1B2A6B; --accent: #E0A227; --accent-text: #1A1F36;
+  --bg: #F4F5F9; --surface: #FFFFFF; --line: #DDE1EC;
+  --text: #1A1F36; --muted: #5B6480;
+  --ok: #1E7D4A; --warn: #C7681B; --neg: #B3261E; --info: #2563EB;
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", Consolas, monospace;
+  --r-s: 6px; --r-m: 10px; --r-pill: 40px;
+  --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 28px;
+  --shadow-hover: 0 6px 18px rgba(27, 42, 107, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #8FA3FF; --accent: #F2C35B; --bg: #0F1424; --surface: #182040; --line: #2A3357;
+    --text: #E8ECFA; --muted: #9AA5C8; --ok: #4FCB84; --warn: #F2994A; --neg: #FF6B64; --info: #7AA7FF;
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, .35);
+  }
+}
+:root[data-theme="dark"] {
+  --brand: #8FA3FF; --accent: #F2C35B; --bg: #0F1424; --surface: #182040; --line: #2A3357;
+  --text: #E8ECFA; --muted: #9AA5C8; --ok: #4FCB84; --warn: #F2994A; --neg: #FF6B64; --info: #7AA7FF;
+  --shadow-hover: 0 6px 18px rgba(0, 0, 0, .35);
+}

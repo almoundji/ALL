@@ -1,0 +1,21 @@
+# Environnement de recette : API + PostgreSQL. Pour une démo rapide sans Postgres : `make dev`.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: yoon
+      POSTGRES_USER: yoon
+      POSTGRES_PASSWORD: ${YOON_DB_PASSWORD:-changeme}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U yoon"], interval: 5s, retries: 10 }
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      YOON_DATABASE_URL: postgresql+psycopg://yoon:${YOON_DB_PASSWORD:-changeme}@db:5432/yoon
+      YOON_SECRET_KEY: ${YOON_SECRET_KEY:?Définir YOON_SECRET_KEY (64 caractères aléatoires)}
+      YOON_ENVIRONMENT: recette
+      YOON_CORS_ORIGINS: '[]'
+    ports: ["8000:8000"]
+volumes:
+  pgdata:
