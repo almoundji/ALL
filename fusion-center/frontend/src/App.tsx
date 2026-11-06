@@ -8,6 +8,7 @@ import Audit from './pages/Audit'
 import CaseDetailPage from './pages/CaseDetail'
 import Cases from './pages/Cases'
 import Dashboard from './pages/Dashboard'
+import Home from './pages/Home'
 import EntityPage from './pages/EntityPage'
 import GraphExplorer from './pages/GraphExplorer'
 import Ingest from './pages/Ingest'
@@ -29,7 +30,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route element={<Layout user={user} />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Home user={user} />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/search" element={<Search />} />
         <Route path="/entities/:id" element={<EntityPage user={user} />} />
         <Route path="/graph" element={<GraphExplorer />} />

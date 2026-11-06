@@ -32,7 +32,20 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_us
     day = func.date(IngestJob.created_at)
     ingest_days = db.execute(select(day, func.sum(IngestJob.entities_created + IngestJob.entities_merged)).where(IngestJob.created_at >= since).group_by(day).order_by(day)).all()
     analytics = centrality(db, user, top=5)
+    geo = db.execute(select(func.count()).select_from(ent_sub).where(ent_sub.c.lat.is_not(None))).scalar_one()
+    from ..models import Source, Watchlist
+    sources = db.execute(select(func.count()).select_from(Source).where(Source.classification <= user.clearance)).scalar_one()
+    watchlists = db.execute(select(func.count()).select_from(Watchlist).where(Watchlist.is_active.is_(True))).scalar_one()
+    jobs_30d = db.execute(select(func.count()).select_from(IngestJob).where(IngestJob.created_at >= since)).scalar_one()
+    admin_stats = {}
+    if user.role == "admin":
+        admin_stats = {
+            "users": db.execute(select(func.count()).select_from(User)).scalar_one(),
+            "audit_entries": db.execute(select(func.count()).select_from(AuditLog)).scalar_one(),
+            "audit_today": db.execute(select(func.count()).select_from(AuditLog).where(AuditLog.ts >= datetime.now(timezone.utc) - timedelta(days=1))).scalar_one(),
+        }
     return {
+        "geo_entities": geo, "sources": sources, "watchlists_active": watchlists, "jobs_30d": jobs_30d, **admin_stats,
         "entities": total_entities, "relations": total_relations,
         "by_type": [{"type": t, "count": c} for t, c in by_type],
         "by_classification": [{"level": l, "count": c} for l, c in by_class],

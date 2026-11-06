@@ -37,7 +37,7 @@ export default function GraphExplorer() {
   }
   const selected = g.nodes.find((n) => n.id === sel)
   return (
-    <div className="col" style={{ height: 'calc(100% - 60px)' }}>
+    <div className="col" style={{ minHeight: 640 }}>
       <div className="row"><div className="grow"><h1>Analyse de liens</h1><div className="muted small">Double-clic sur un nœud : étendre d'un cran. Clic : détails. Les objets hors habilitation n'apparaissent jamais.</div></div>
         <label className="row small">Profondeur <select style={{ width: 70 }} value={depth} onChange={(e) => setDepth(Number(e.target.value))}>{[1, 2, 3].map((d) => <option key={d}>{d}</option>)}</select></label>
         <span className="chip">{g.nodes.length} nœuds · {g.edges.length} liens</span>

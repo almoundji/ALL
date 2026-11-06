@@ -21,6 +21,16 @@ au compte rendu de la mission de benchmark de Dubaï (22–25 septembre 2024, MC
 | **Journal d'audit chaîné** | Chaque lecture de fiche, expansion de graphe, connexion, écriture est journalisée ; les entrées sont chaînées par SHA-256, l'intégrité est vérifiable en un clic. |
 | **Administration** | Utilisateurs, rôles (admin / analyst / viewer), niveaux, compartiments, désactivation. |
 
+## Interface
+
+- **Structure** inspirée des portails métier en tuiles : en-tête fixe avec recherche globale (`Ctrl K`), salutation datée, onglets
+  horizontaux par domaine, page d'accueil en sections de tuiles (titre, sous-titre, pictogramme, indicateur, légende) et tuiles
+  d'action en pointillé (« Créer un dossier », « Importer un fichier »).
+- **Charte graphique** alignée sur le site de la Présidence de la République (presidence.sn) : fond blanc, texte `#272727`,
+  titres noirs en capitales, vert `#008f36`, jaune `#ffeb00`, rouge `#e1001a`, boutons en pilule, cartes plates, bandeau tricolore
+  étoilé sous l'en-tête, pied de page noir. Les variables sont centralisées dans `frontend/src/styles.css` (`:root`).
+- **Bandeau de classification** permanent, coloré selon l'habilitation de la session (NP vert, DR bleu, CD ocre, SD rouge).
+
 ## Démarrage rapide (démo locale, 5 minutes)
 
 ```bash

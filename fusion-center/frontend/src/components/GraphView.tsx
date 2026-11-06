@@ -25,16 +25,16 @@ export default function GraphView({ graph, highlight = [], selected, onSelect, o
       wheelSensitivity: 0.25,
       style: [
         { selector: 'node', style: {
-          'background-color': 'data(color)', label: 'data(label)', color: '#e6ebf5', 'font-size': 10, 'text-valign': 'bottom', 'text-margin-y': 5,
-          'text-outline-color': '#0b1020', 'text-outline-width': 2, width: 'data(size)', height: 'data(size)', 'border-width': 2, 'border-color': 'data(border)',
+          'background-color': 'data(color)', label: 'data(label)', color: '#272727', 'font-size': 10, 'text-valign': 'bottom', 'text-margin-y': 5,
+          'text-outline-color': '#ffffff', 'text-outline-width': 2, width: 'data(size)', height: 'data(size)', 'border-width': 2, 'border-color': 'data(border)',
         } },
-        { selector: 'node.hl', style: { 'border-color': '#ffd166', 'border-width': 4 } },
-        { selector: 'node:selected', style: { 'border-color': '#fff', 'border-width': 4 } },
+        { selector: 'node.hl', style: { 'border-color': '#e1001a', 'border-width': 4 } },
+        { selector: 'node:selected', style: { 'border-color': '#000', 'border-width': 4 } },
         { selector: 'edge', style: {
-          width: 'data(width)', 'line-color': '#3a4668', 'target-arrow-color': '#3a4668', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
-          label: 'data(label)', 'font-size': 8, color: '#8b95b3', 'text-rotation': 'autorotate', 'text-outline-color': '#0b1020', 'text-outline-width': 2,
+          width: 'data(width)', 'line-color': '#9aa3ad', 'target-arrow-color': '#9aa3ad', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
+          label: 'data(label)', 'font-size': 8, color: '#5c5c5c', 'text-rotation': 'autorotate', 'text-outline-color': '#ffffff', 'text-outline-width': 2,
         } },
-        { selector: 'edge.hl', style: { 'line-color': '#ffd166', 'target-arrow-color': '#ffd166', width: 4 } },
+        { selector: 'edge.hl', style: { 'line-color': '#e1001a', 'target-arrow-color': '#e1001a', width: 4 } },
       ],
     })
     cy.current.on('tap', 'node', (e) => onSelect?.(Number(e.target.id())))

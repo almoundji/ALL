@@ -14,11 +14,11 @@ export default function MapView({ entities, center = [14.6, -16.5], zoom = 7 }: 
   return (
     <div className="map">
       <MapContainer center={L.latLng(center[0], center[1])} zoom={zoom} style={{ height: '100%', width: '100%' }}>
-        <TileLayer url={TILES} attribution="&copy; OpenStreetMap" className="dark-tiles" />
+        <TileLayer url={TILES} attribution="&copy; OpenStreetMap" />
         {geo.map((e) => (
           <CircleMarker key={e.id} center={[e.lat!, e.lon!]} radius={8} pathOptions={{ color: TYPE_COLOR[e.type], fillColor: TYPE_COLOR[e.type], fillOpacity: 0.75, weight: 2 }}>
             <Popup>
-              <div style={{ color: '#111', minWidth: 180 }}>
+              <div style={{ minWidth: 180 }}>
                 <b>{e.label}</b><br />
                 <span>{TYPE_LABEL[e.type]}</span> · <ClassBadge level={e.classification} compartment={e.compartment} /><br />
                 <Link to={`/entities/${e.id}`}>Ouvrir la fiche</Link> · <Link to={`/graph?ids=${e.id}`}>Graphe</Link>
