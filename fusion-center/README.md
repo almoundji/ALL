@@ -90,6 +90,7 @@ fusion-center/
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture cible, modèle de sécurité, montée en charge, trajectoire vers Neo4j / OpenSearch / Kafka.
 - [docs/SCRUM.md](docs/SCRUM.md) — **méthode Scrum** proposée : équipe composite, rôles, cadence, backlog produit priorisé, 12 sprints, définition de prêt / de fini, indicateurs.
 - [docs/FONCTIONNALITES_CAS_USAGE.md](docs/FONCTIONNALITES_CAS_USAGE.md) — fonctionnalités détaillées et 10 cas d'usage opérationnels.
+- [docs/MISE_EN_PRODUCTION.md](docs/MISE_EN_PRODUCTION.md) — étapes de mise en production, planning Scrum daté (13 sprints, 6 jalons), chantiers préalables, risques ; version visuelle : `docs/planning-production.html`.
 - [docs/GOUVERNANCE.md](docs/GOUVERNANCE.md) — cadre juridique et éthique, conduite du changement, exigences de souveraineté, contrôles.
 
 ## Limites du prototype (assumées)

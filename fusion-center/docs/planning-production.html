@@ -1,0 +1,153 @@
+<title>Mise en production du Centre de Fusion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Charte presidence.sn : fond blanc, texte anthracite, titres noirs en capitales, vert / jaune / rouge. Mise en page : résumé → chantiers → frise → sprints → gates → risques. */
+:root { --bg:#ffffff; --bg-2:#f6f6f4; --line:#e1e1dd; --fg:#272727; --title:#000; --muted:#5c5c5c; --green:#008f36; --green-bg:#e6f3ea; --yellow:#ffeb00; --red:#e1001a; --red-bg:#fbe9eb; --blue:#1f6fb2; --blue-bg:#e8f0f8; --ink:#1a171b;
+  --sans:"Proxima Nova","Montserrat","Segoe UI",Arial,sans-serif; --mono:"JetBrains Mono",Consolas,monospace; color-scheme:light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121413; --bg-2:#1a1d1b; --line:#2c312e; --fg:#e4e6e2; --title:#fff; --muted:#a0a59f; --green:#3dbb6a; --green-bg:#163522; --red:#ff5a6a; --red-bg:#3a1a1f; --blue:#6aa8e6; --blue-bg:#1b2a3a; --ink:#f2f2f2; color-scheme:dark } }
+:root[data-theme="dark"] { --bg:#121413; --bg-2:#1a1d1b; --line:#2c312e; --fg:#e4e6e2; --title:#fff; --muted:#a0a59f; --green:#3dbb6a; --green-bg:#163522; --red:#ff5a6a; --red-bg:#3a1a1f; --blue:#6aa8e6; --blue-bg:#1b2a3a; --ink:#f2f2f2; color-scheme:dark }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:auto;padding-block:0 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tricolor{height:6px;background:linear-gradient(90deg,var(--green) 0 33.33%,var(--yellow) 33.33% 66.66%,var(--red) 66.66% 100%)}
+header{padding:26px 0 18px;border-bottom:1px solid var(--line);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.emb{width:48px;height:48px;flex:none}
+.k1{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--title)} .k2{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+h1{font-size:clamp(26px,4vw,40px);font-weight:800;text-transform:uppercase;color:var(--title);margin:28px 0 6px;letter-spacing:.01em;text-wrap:balance}
+h2{font-size:20px;font-weight:800;text-transform:uppercase;color:var(--title);margin:44px 0 14px;letter-spacing:.03em}
+h3{font-size:16px;font-weight:700;color:var(--title);margin:0 0 4px}
+.lead{max-width:70ch;color:var(--muted);font-size:16px;margin:0 0 8px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-weight:700}
+.gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:18px}
+.gate{border-top:3px solid var(--green);padding:10px 0 4px}
+.gate .d{font-family:var(--mono);font-size:12px;color:var(--muted)} .gate .n{font-weight:800;color:var(--title);font-size:17px;margin:2px 0} .gate .t{font-size:13px;color:var(--muted)}
+.gate.final{border-top-color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:14px} th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top} th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tbl{overflow-x:auto} td.who{white-space:nowrap;color:var(--muted)}
+.pill{display:inline-block;padding:1px 8px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.04em;font-family:var(--mono)} .pill.g{background:var(--green-bg);color:var(--green)} .pill.r{background:var(--red-bg);color:var(--red)} .pill.b{background:var(--blue-bg);color:var(--blue)}
+/* Frise */
+.frise{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--bg-2);padding:14px 12px 10px}
+.fgrid{display:grid;grid-template-columns:150px repeat(30,minmax(26px,1fr));gap:2px 0;min-width:960px;font-size:11px}
+.fgrid .m{grid-row:1;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-left:1px solid var(--line);padding:0 0 6px}
+.fgrid .lab{grid-column:1;padding:4px 8px 4px 0;font-weight:700;color:var(--title);white-space:nowrap;font-size:12px}
+.bar{height:22px;border-radius:3px;display:flex;align-items:center;padding:0 6px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;font-size:11px}
+.bar.p0{background:#5c5c5c}.bar.p1{background:var(--blue)}.bar.p2{background:var(--green)}.bar.p3{background:#0b7a5c}.bar.p4{background:#b07a00}.bar.p5{background:var(--red)}.bar.p6{background:#777}
+.bar.pause{background:repeating-linear-gradient(135deg,var(--line) 0 4px,transparent 4px 8px);color:var(--muted)}
+.gmark{grid-row:4;height:10px;position:relative} .gmark::after{content:"";position:absolute;left:50%;top:-2px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:var(--red)}
+.gl{grid-row:5;text-align:center;font-family:var(--mono);color:var(--red);font-weight:700}
+/* Sprints */
+.sprints{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.sp{border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;position:relative;background:var(--bg)}
+.sp::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 3px 3px 0;background:var(--ph)}
+.sp .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline} .sp .num{font-family:var(--mono);font-size:12px;color:var(--muted)} .sp .dates{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.sp .obj{color:var(--fg);font-weight:600} .sp ul{margin:0;padding-left:18px;color:var(--fg);font-size:14px} .sp li{margin:3px 0}
+.sp .out{margin-top:auto;padding-top:8px;border-top:1px dashed var(--line);font-size:13px} .sp .out b{color:var(--green)}
+.pause-note{color:var(--muted);font-style:italic;margin:10px 0 0}
+.risk td:first-child{font-weight:600;color:var(--title)}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (max-width:640px){.sp .hd{flex-direction:column}}
+</style>
+<div class="tricolor"></div>
+<div class="wrap">
+<header>
+  <svg class="emb" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#fff" stroke="#008f36" stroke-width="3"/><circle cx="32" cy="32" r="22" fill="none" stroke="#ffeb00" stroke-width="2.5"/><polygon points="32,14 36.5,26.5 50,26.5 39,34.5 43,47 32,39.5 21,47 25,34.5 14,26.5 27.5,26.5" fill="#008f36"/><circle cx="32" cy="32" r="3.2" fill="#e1001a"/></svg>
+  <div><div class="k1">République du Sénégal</div><div class="k2">Centre de Fusion National · Programme de mise en production</div></div>
+  <div class="k2" style="margin-left:auto">Version du 6 novembre 2026 · Diffusion restreinte</div>
+</header>
+
+<h1>Mise en production : étapes, planning Scrum et sprints à venir</h1>
+<p class="lead">Du prototype livré à une production nationale homologuée en six phases et treize sprints de deux semaines, avec deux paliers de pilote et cinq jalons de décision tenus par le comité de pilotage.</p>
+
+<div class="gates">
+  <div class="gate"><div class="d">20 nov 2026</div><div class="n">J0 Lancement</div><div class="t">Équipe habilitée, base légale engagée, backlog priorisé</div></div>
+  <div class="gate"><div class="d">15 jan 2027</div><div class="n">J1 Socle sécurisé</div><div class="t">PostgreSQL, SSO + MFA, CI, avis OSSI n° 1</div></div>
+  <div class="gate"><div class="d">26 fév 2027</div><div class="n">J2 Pilote restreint</div><div class="t">10 analystes DRN sur données réelles, flux temps réel</div></div>
+  <div class="gate"><div class="d">9 avr 2027</div><div class="n">J3 Pilote élargi</div><div class="t">30 analystes, 3 services, supervision, PRA testé</div></div>
+  <div class="gate"><div class="d">7 mai 2027</div><div class="n">J4 Homologation</div><div class="t">Tests d'intrusion corrigés, dossier signé</div></div>
+  <div class="gate final"><div class="d">24 → 28 mai 2027</div><div class="n">J5 Production</div><div class="t">Décision du comité stratégique le 21 mai, bascule, hypercare jusqu'au 18 juin</div></div>
+</div>
+
+<h2>1. Frise des sprints</h2>
+<div class="frise">
+  <div class="fgrid" id="frise"></div>
+</div>
+<p class="pause-note">Sprints de deux semaines, du lundi au vendredi suivant. Pause du 21 décembre au 1er janvier. Les losanges rouges marquent les jalons de décision.</p>
+
+<h2>2. Les sept chantiers préalables</h2>
+<p class="lead">Ils avancent en parallèle des sprints et conditionnent les jalons. Chaque chantier a un responsable unique.</p>
+<div class="tbl"><table>
+<thead><tr><th>Chantier</th><th>Responsable</th><th>Aujourd'hui (prototype)</th><th>Cible production</th><th>Jalon</th></tr></thead>
+<tbody>
+<tr><td><b>A. Juridique et gouvernance</b></td><td class="who">Présidence (conseiller sécurité) + MCTN</td><td>Document de gouvernance</td><td>Acte réglementaire (finalités, données, durées, destinataires), avis CDP, charte d'usage signée par chaque agent, protocoles d'échange avec chaque FDS, comités installés</td><td><span class="pill b">J0</span> <span class="pill r">J4</span></td></tr>
+<tr><td><b>B. Infrastructure et hébergement</b></td><td class="who">Senum SA</td><td>Docker Compose, SQLite / PostgreSQL</td><td>Local habilité, trois environnements, PostgreSQL HA, OpenSearch, Kafka, MinIO, sauvegardes chiffrées hors site, PRA testé</td><td><span class="pill b">J1</span> <span class="pill g">J3</span></td></tr>
+<tr><td><b>C. Sécurité et homologation</b></td><td class="who">OSSI DRN + ingénieur sécurité</td><td>JWT, bcrypt, habilitations, audit chaîné, 404 non révélateur</td><td>SSO OIDC + MFA, chiffrement au repos, TLS mutuel, ancrage externe de l'audit, SIEM, analyse de risques, tests d'intrusion, dossier d'homologation</td><td><span class="pill b">J1</span> <span class="pill r">J4</span></td></tr>
+<tr><td><b>D. Données et connecteurs</b></td><td class="who">Ingénieur données + PO délégué FDS</td><td>Import CSV/JSON, 4 modèles, données fictives</td><td>Catalogue de 8 sources ou plus, protocoles signés, connecteurs CDR, frontières, CENTIF, immatriculations, doublons < 2 %, purge selon durées légales</td><td><span class="pill g">J2</span> <span class="pill g">J3</span></td></tr>
+<tr><td><b>E. Qualité logicielle</b></td><td class="who">Scrum Master + équipe</td><td>17 tests API, build local</td><td>GitLab interne, CI/CD complète, couverture ≥ 80 % sur accès et résolution, tests de cloisonnement automatisés, tests de charge</td><td><span class="pill b">J1</span> <span class="pill g">J3</span></td></tr>
+<tr><td><b>F. Exploitation</b></td><td class="who">Senum SA (exploitants)</td><td>Aucune</td><td>Supervision et alertes, journalisation centralisée, procédures, astreinte, gestion des incidents et des changements, plan de capacité</td><td><span class="pill g">J3</span> <span class="pill r">J5</span></td></tr>
+<tr><td><b>G. Formation et conduite du changement</b></td><td class="who">DRN (cellule fusion) + UX</td><td>Comptes de démonstration</td><td>Parcours de 3 jours, fiches d'une page, super-utilisateurs par service, cellule fusion créée, officier de sécurité des données nommé</td><td><span class="pill g">J2</span> <span class="pill r">J5</span></td></tr>
+</tbody></table></div>
+
+<h2>3. Sprints à venir</h2>
+<p class="lead">Équipe de huit personnes : deux backend, deux frontend, un ingénieur données, un data scientist, un ingénieur sécurité, un UX. Capacité de référence 40 points par sprint, à affiner après le sprint 2. Planning le lundi, revue et revue sécurité le vendredi de la deuxième semaine.</p>
+<div class="sprints" id="sprints"></div>
+
+<h2>4. Critères de passage des jalons</h2>
+<div class="tbl"><table>
+<thead><tr><th>Jalon</th><th>Critères mesurables</th></tr></thead>
+<tbody>
+<tr><td><b>J0</b></td><td>100 % de l'équipe habilitée · 10 cas d'usage écrits · 2 protocoles d'échange signés · backlog estimé pour 3 sprints</td></tr>
+<tr><td><b>J1</b></td><td>SSO et MFA en service · CI verte · tests de cloisonnement 100 % · avis OSSI n° 1 favorable · sauvegarde restaurée avec succès</td></tr>
+<tr><td><b>J2</b></td><td>10 analystes actifs · 4 sources réelles ou plus · doublons < 2 % · alerte temps réel < 5 min · satisfaction ≥ 3,5 / 5</td></tr>
+<tr><td><b>J3</b></td><td>30 formés, 20 actifs ou plus · 3 services · PRA réussi · p95 recherche < 1 s · 0 incident de sécurité · 100 utilisateurs en charge</td></tr>
+<tr><td><b>J4</b></td><td>0 vulnérabilité critique ou haute ouverte · dossier d'homologation signé · procédures d'exploitation validées</td></tr>
+<tr><td><b>J5</b></td><td>Recette finale signée · répétition de bascule réussie · plan de retour arrière testé · communication faite aux services</td></tr>
+</tbody></table></div>
+
+<h2>5. Risques du planning et parades</h2>
+<div class="tbl"><table class="risk">
+<thead><tr><th>Risque</th><th>Impact</th><th>Parade</th></tr></thead>
+<tbody>
+<tr><td>Base légale ou avis CDP en retard</td><td>Bloque J4</td><td>Saisine dès le sprint 0, suivi au comité de pilotage, pilote sur données anonymisées tant que l'acte n'est pas pris</td></tr>
+<tr><td>Accès aux données réelles refusé ou tardif</td><td>Décale J2</td><td>Protocoles signés au sprint 0, données synthétiques pour ne jamais bloquer un sprint, escalade par le Scrum Master</td></tr>
+<tr><td>Habilitations de l'équipe tardives</td><td>Décale le sprint 1</td><td>Enquêtes d'habilitation lancées avant le sprint 0 ; développement sur données fictives en attendant</td></tr>
+<tr><td>Local habilité non livré</td><td>Décale J1</td><td>Recette provisoire chez Senum, bascule vers le local au sprint 3</td></tr>
+<tr><td>Tests d'intrusion lourds</td><td>Décale J4</td><td>Revue sécurité à chaque sprint, tests internes aux sprints 6 et 9 avant le test externe</td></tr>
+<tr><td>Rejet par les utilisateurs</td><td>Compromet J3</td><td>Analystes référents dans l'équipe dès le sprint 1, démonstrations faites par eux, formation continue</td></tr>
+<tr><td>Dérive de périmètre</td><td>Décale tout</td><td>Un seul Product Owner, gel fonctionnel dès le sprint 10, toute nouvelle demande au backlog post-production</td></tr>
+</tbody></table></div>
+
+<footer><span>Centre de Fusion National · Direction du Renseignement National</span><span>Planning prévisionnel, révisé à chaque comité de pilotage</span></footer>
+</div>
+<script>
+const SPRINTS = [
+ {n:"S0",t:"Cadrage et sécurisation",a:"2026-11-09",b:"2026-11-20",ph:0,obj:"Une équipe habilitée, un local, des environnements et un backlog prêts.",items:["Nomination du PO (Directeur technique DRN), du Scrum Master (Senum), de l'officier de liaison FDS ; habilitations.","Local habilité, GitLab interne, environnement de développement, import du prototype.","10 cas d'usage DRN avec critères d'acceptation ; backlog estimé ; charte de sécurité et d'usage.","Saisine juridique ; protocoles d'échange avec 2 services pilotes."],out:"J0 : backlog priorisé, Definition of Ready / Done adoptées, 2 protocoles signés.",gate:"J0"},
+ {n:"S1",t:"Fondations de production",a:"2026-11-23",b:"2026-12-04",ph:1,obj:"Le socle tourne sur PostgreSQL, derrière un SSO, avec une chaîne CI.",items:["Migration PostgreSQL, migrations de schéma versionnées, environnements dev et recette.","SSO Keycloak (OIDC) + MFA ; fin des comptes locaux de démonstration.","CI/CD : tests, analyse statique, scan de dépendances, image signée ; tests de cloisonnement automatisés.","Durcissement : TLS, secrets hors code, en-têtes, rotation des clés."],out:"Démo : connexion SSO/MFA, graphe sur PostgreSQL, pipeline vert."},
+ {n:"S2",t:"Premières données réelles",a:"2026-12-07",b:"2026-12-18",ph:1,obj:"Deux fichiers réels anonymisés dans le graphe, avec revue humaine des appariements.",items:["Ingestion asynchrone (workers), suivi des lots, reprise sur erreur.","File de revue des appariements incertains ; fusion et scission manuelles avec historique.","Ancrage externe quotidien de l'audit ; sauvegardes chiffrées et restauration testée.","Import de 2 fichiers réels anonymisés ; mesure du taux de doublons."],out:"Démo : import réel, revue d'un appariement, restauration d'une sauvegarde."},
+ {n:"S3",t:"Dossiers et collaboration",a:"2027-01-04",b:"2027-01-15",ph:1,obj:"Un dossier réel conduit de bout en bout ; première revue sécurité OSSI.",items:["Compartiments par dossier, partage contrôlé entre services, notifications.","Rapport PDF classifié d'un dossier, export journalisé.","Durées de conservation et purge planifiée par source.","Formation des 3 analystes référents ; revue sécurité OSSI n° 1."],out:"J1 : avis OSSI favorable, dossier réel démontré par un analyste.",gate:"J1"},
+ {n:"S4",t:"Recherche et volumétrie",a:"2027-01-18",b:"2027-01-29",ph:2,obj:"Recherche instantanée sur un million d'objets.",items:["OpenSearch : texte intégral, facettes, phonétique français et wolof.","Partitionnement PostgreSQL ; import d'un million d'objets en moins d'une heure.","Serveur de tuiles interne (OpenStreetMap Sénégal), carte hors ligne."],out:"Démo : recherche < 1 s sur 1 M d'objets, carte sans Internet."},
+ {n:"S5",t:"Flux temps réel",a:"2027-02-01",b:"2027-02-12",ph:2,obj:"Une alerte moins de cinq minutes après l'événement source.",items:["Kafka et consommateurs ; connecteur relevés d'appels ; connecteur passages frontières.","Veille au fil de l'eau, déduplication des alertes, escalade par sévérité.","Supervision initiale (Prometheus, Grafana)."],out:"Démo : passage frontière simulé → alerte en moins de 5 minutes."},
+ {n:"S6",t:"Analyse temporelle et pilote restreint",a:"2027-02-15",b:"2027-02-26",ph:2,obj:"Ouverture du pilote à 10 analystes DRN.",items:["Chronologie interactive, filtres temporels, motifs, exports graphe.","Formation des 10 analystes ; support niveau 1 ; recueil des retours.","Comité de pilotage n° 2 : décision d'ouverture du pilote."],out:"J2 : 10 analystes actifs, 3 réseaux détectés en atelier, doublons < 2 %.",gate:"J2"},
+ {n:"S7",t:"Extraction d'entités",a:"2027-03-01",b:"2027-03-12",ph:3,obj:"Les comptes rendus alimentent le graphe automatiquement.",items:["Reconnaissance d'entités nommées hébergée localement.","Suggestions de liens à valider ; traçabilité « suggéré par le modèle, validé par X ».","Jeu de test DRN annoté, précision et rappel mesurés."],out:"Démo : compte rendu déposé → entités et liens proposés, validés en deux clics."},
+ {n:"S8",t:"Anomalies et pilotage",a:"2027-03-15",b:"2027-03-26",ph:3,obj:"Signaux faibles sur les flux, tableau de bord de direction.",items:["Détection d'anomalies sur relevés d'appels et flux financiers.","Scoring de priorité des alertes, explicable.","Tableau de bord direction : tendances, charge, délais, exports."],out:"Démo : anomalie financière détectée, tableau de bord présenté au comité."},
+ {n:"S9",t:"Pilote élargi",a:"2027-03-29",b:"2027-04-09",ph:3,obj:"30 analystes dans 3 services, exploitation en conditions réelles.",items:["Onboarding Gendarmerie, Police, Douanes (compartiments, super-utilisateurs).","Supervision complète, SIEM, astreinte, procédures d'incident.","Test du PRA (restauration sur site de secours), charge à 100 utilisateurs."],out:"J3 : 30 formés, 20 actifs par semaine, PRA réussi, p95 recherche < 1 s.",gate:"J3"},
+ {n:"S10",t:"Haute disponibilité et tests d'intrusion",a:"2027-04-12",b:"2027-04-23",ph:4,obj:"L'architecture tient la panne et l'attaque.",items:["PostgreSQL HA (Patroni), clusters OpenSearch et Kafka ; décision graphe natif selon volumétrie.","Tests d'intrusion externes par prestataire habilité.","Gel fonctionnel : seules les corrections entrent au backlog."],out:"Démo : perte d'un nœud sans interruption ; rapport de tests d'intrusion reçu."},
+ {n:"S11",t:"Corrections et homologation",a:"2027-04-26",b:"2027-05-07",ph:4,obj:"Dossier d'homologation signé.",items:["Correction des vulnérabilités critiques et hautes ; contre-test.","Dossier d'homologation : risques, mesures, résidus, procédures, PV de tests.","Procédures d'exploitation finalisées, formation des exploitants."],out:"J4 : décision d'homologation signée.",gate:"J4"},
+ {n:"S12",t:"Bascule",a:"2027-05-10",b:"2027-05-21",ph:5,obj:"Mise en production nationale.",items:["Recette finale sur l'environnement de production ; reprise des données du pilote.","Plan de bascule, répétition générale, communication aux services.","Dernières formations ; mise hors service de la démo Netlify.","Comité stratégique du 21 mai : go-live ; bascule du 24 au 28 mai ; hypercare jusqu'au 18 juin."],out:"J5 : production ouverte, 0 incident de sécurité, audit intègre depuis J1.",gate:"J5"},
+ {n:"S13+",t:"Amélioration continue",a:"2027-05-31",b:"2027-06-25",ph:6,obj:"Même cadence, équipe réduite à 5 après l'hypercare.",items:["Nouveaux connecteurs (AIS maritime, ANPR), modèles prédictifs, multilinguisme.","Revue trimestrielle du comité stratégique, audit indépendant annuel."],out:"Cadence maintenue."},
+];
+const PH = ["#5c5c5c","var(--blue)","var(--green)","#0b7a5c","#b07a00","var(--red)","#777"];
+const fmt = (d) => new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+// Frise : 30 semaines à partir du lundi 9 novembre 2026
+const start = new Date("2026-11-09T00:00:00"); const weeks = 30; const wk = (d) => Math.floor((new Date(d+"T00:00:00") - start)/(7*86400000));
+const months = ["Jan","Fév","Mars","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"]; const fr = document.getElementById("frise"); let html = '<div class="lab" style="grid-row:1"></div>';
+let lastM = -1; for (let w=0; w<weeks; w++){ const d = new Date(start.getTime()+w*7*86400000); const m=d.getMonth(); if(m!==lastM){ let span=0; for(let x=w;x<weeks;x++){ if(new Date(start.getTime()+x*7*86400000).getMonth()===m) span++; else break;} html += `<div class="m" style="grid-column:${w+2} / span ${span}">${months[m]}${m===0||w===0?" "+d.getFullYear():""}</div>`; lastM=m; } }
+html += '<div class="lab" style="grid-row:2">Sprints</div>';
+SPRINTS.forEach(s => { const c0 = wk(s.a)+2, len = Math.max(1, wk(s.b)-wk(s.a)+1); html += `<div class="bar p${s.ph}" style="grid-row:2;grid-column:${c0} / span ${len}" title="${s.n} · ${s.t}">${s.n}</div>`; });
+const p0 = wk("2026-12-21")+2; html += `<div class="bar pause" style="grid-row:2;grid-column:${p0} / span 2">pause</div>`;
+html += '<div class="lab" style="grid-row:3">Phases</div>';
+[["Cadrage","2026-11-09","2026-11-20",0],["Socle","2026-11-23","2027-01-15",1],["Pilote restreint","2027-01-18","2027-02-26",2],["Pilote élargi · IA","2027-03-01","2027-04-09",3],["Homologation","2027-04-12","2027-05-07",4],["Bascule","2027-05-10","2027-05-28",5],["Hypercare","2027-05-31","2027-06-18",6]].forEach(([t,a,b,ph]) => { html += `<div class="bar p${ph}" style="grid-row:3;grid-column:${wk(a)+2} / span ${wk(b)-wk(a)+1};opacity:.75">${t}</div>`; });
+html += '<div class="lab" style="grid-row:4">Jalons</div><div class="lab" style="grid-row:5"></div>';
+[["J0","2026-11-20"],["J1","2027-01-15"],["J2","2027-02-26"],["J3","2027-04-09"],["J4","2027-05-07"],["J5","2027-05-24"]].forEach(([g,d]) => { const c = wk(d)+2; html += `<div class="gmark" style="grid-column:${c}"></div><div class="gl" style="grid-column:${c}">${g}</div>`; });
+fr.innerHTML = html;
+// Cartes de sprint
+document.getElementById("sprints").innerHTML = SPRINTS.map(s => `<article class="sp" style="--ph:${PH[s.ph]}"><div class="hd"><div><span class="num">${s.n}</span> <h3 style="display:inline">${s.t}</h3></div><span class="dates">${fmt(s.a)} → ${fmt(s.b)}${s.a.startsWith("2026")&&s.n==="S0"?" 2026":""}</span></div><div class="obj">${s.obj}</div><ul>${s.items.map(i=>`<li>${i}</li>`).join("")}</ul><div class="out">${s.gate?`<b>${s.gate}</b> · `:""}${s.out.replace(/^J\d : /,"")}</div></article>`).join("");
+</script>
