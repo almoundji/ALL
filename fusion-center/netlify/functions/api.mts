@@ -264,11 +264,19 @@ route("PATCH", "/api/users/:id", async (c, p) => {
   audit(c.s, c.user.username, "USER_UPDATE", "user", u.id, b, c.ip); c.dirty = true; return pub(u);
 });
 
+route("POST", "/api/admin/reset-demo", async (c) => {
+  requireRole(c.user, "admin");
+  const fresh = createState(env("FC_ADMIN_PASSWORD", "admin123"));
+  audit(fresh, c.user.username, "DEMO_RESET", "state", "demo", { previous_entities: c.s.entities.length }, c.ip);
+  await saveState(fresh); c.dirty = false;
+  return { ok: true, entities: fresh.entities.length, relations: fresh.relations.length };
+});
+
 // ---------- Point d'entrée ----------
 export default async (req: Request, context: Context) => {
   const url = new URL(req.url); const ip = context?.ip || req.headers.get("x-nf-client-connection-ip") || "";
   try {
-    if (url.pathname === "/api/docs") return new Response(`<!doctype html><meta charset="utf-8"><title>API</title><body style="font-family:system-ui;max-width:800px;margin:40px auto"><h1>Centre de Fusion National — API</h1><p>Version serverless (Netlify). Routes :</p><ul>${routes.map((r) => `<li><code>${r.method} ${r.pattern.source.replace(/^\^|\/\?\$$/g, "").replace(/\(\\d\+\)/g, ":id").replace(/\\\//g, "/")}</code></li>`).join("")}</ul><p>Authentification : <code>POST /api/auth/login</code> (formulaire username / password) puis <code>Authorization: Bearer &lt;jeton&gt;</code>.</p>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+    if (url.pathname === "/api/docs" || url.pathname === "/docs") return new Response(`<!doctype html><meta charset="utf-8"><title>API</title><body style="font-family:system-ui;max-width:800px;margin:40px auto"><h1>Centre de Fusion National — API</h1><p>Version serverless (Netlify). Routes :</p><ul>${routes.map((r) => `<li><code>${r.method} ${r.pattern.source.replace(/^\^|\/\?\$$/g, "").replace(/\(\\d\+\)/g, ":id").replace(/\\\//g, "/")}</code></li>`).join("")}</ul><p>Authentification : <code>POST /api/auth/login</code> (formulaire username / password) puis <code>Authorization: Bearer &lt;jeton&gt;</code>.</p>`, { headers: { "content-type": "text/html; charset=utf-8" } });
     const s = await loadState();
     if (url.pathname.replace(/\/$/, "") === "/api/auth/login" && req.method === "POST") {
       const form = await req.formData(); const username = String(form.get("username") || ""), password = String(form.get("password") || "");
@@ -297,4 +305,4 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-export const config: Config = { path: ["/api", "/api/*"] };
+export const config: Config = { path: ["/api", "/api/*", "/docs"] };
