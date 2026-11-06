@@ -249,12 +249,43 @@
         rows: res.map(r => ({ nom: famLabel(r.f), maj: r.maj, prop: r.prop, tot: r.tot, delta: r.tot - r.base })), searchable: false, sort: 'tot',
         cols: [{ k: 'nom', label: 'Famille' }, { k: 'maj', label: 'Majoritaires', num: true }, { k: 'prop', label: 'Proportionnels', num: true }, { k: 'tot', label: 'Total', num: true }, { k: 'delta', label: 'Écart / référence', num: true, fmt: v => E.sn(v), cls: v => (v > 0 ? 'up' : v < 0 ? 'down' : '') }],
       }))),
+      ...fams.filter(f => f.scissionDe && !aMembres(f, e)).map(f => scenarios(e, fams, f)),
       h('div', { class: 'stack' }, E.panel('Départements qui basculent', bascules.length ? 'Par rapport au scrutin de référence.' : 'Aucun basculement avec ces hypothèses.', bascules.length ? E.table({
         rows: bascules, searchable: false, sort: 'sieges',
         cols: [{ k: 'nom', label: 'Département', fmt: v => E.tc(v) }, { k: 'sieges', label: 'Sièges', num: true }, { k: 'gagnantBase', label: 'Avant', get: r => advLabel(r.gagnantBase) }, { k: 'gagnant', label: 'Après', get: r => advLabel(r.gagnant) }, { k: 'marge', label: 'Marge simulée', num: true, fmt: v => E.pct(v) }],
       }) : null)),
       h('div', { class: 'note stack' }, 'Limites : report uniforme ; les scissions (Kiiraay, Jàmm ak Njariñ) sont modélisées comme une part fixe du score de la famille d\'origine, identique partout ; les listes non rattachées sont dispersées et ne gagnent ici aucune circonscription ; un scrutin présidentiel sert d\'approximation du comportement aux législatives.'));
     return out;
+  }
+
+  // Sièges selon la part captée par une famille issue d'une scission (0 à 100 %, autres hypothèses inchangées)
+  function scenarios(e, fams, f) {
+    const E = window.EF, { h } = E;
+    const parent = S.familles.find(x => x.id === f.scissionDe);
+    const saved = state.scission[f.id];
+    const shown = fams.filter(x => x.id === f.id || x.id === parent.id || !x.scissionDe).slice(0, 6);
+    const rows = [];
+    for (let t = 0; t <= 100; t += 10) {
+      state.scission[f.id] = t / 100;
+      const sim = simulate(e, fams, state.swing);
+      const row = { part: t };
+      let best = null;
+      fams.forEach(x => { const n = sim.seats[x.id].maj + sim.seats[x.id].prop; row[x.id] = n; if (!best || n > best.n) best = { id: x.id, n }; });
+      row.majorite = best && best.n >= S.majorite ? famLabel(fams.find(x => x.id === best.id)).split(' (')[0] : 'Aucune majorité absolue';
+      rows.push(row);
+    }
+    if (saved == null) delete state.scission[f.id]; else state.scission[f.id] = saved;
+    const cur = Math.round(partScission(f) * 100);
+    return h('div', { class: 'stack' }, E.panel(`Scénarios : part de ${famLabel(parent).split(' (')[0]} captée par ${famLabel(f).split(' (')[0]}`,
+      `Sièges simulés pour chaque hypothèse de partage, avec les autres réglages actuels. Ligne surlignée : hypothèse en cours (${cur} %). Les deux familles se partagent le même électorat de référence ; la répartition peut varier d'un département à l'autre dans la réalité.`,
+      E.table({
+        rows, searchable: false, sort: 'part', dir: 1, pageSize: 20, exportName: 'scenarios-' + f.id,
+        cols: [
+          { k: 'part', label: 'Part captée', num: true, fmt: v => v + ' %', cls: v => (v === cur ? 'up' : '') },
+          ...shown.map(x => ({ k: x.id, label: famLabel(x).split(' (')[0].split(' / ')[0].split(' – ')[0], num: true, cls: v => (v >= S.majorite ? 'up' : '') })),
+          { k: 'majorite', label: 'Majorité absolue (≥ ' + S.majorite + ')' },
+        ],
+      })));
   }
 
   function pagePriorites(e, fams) {
