@@ -1,8 +1,10 @@
-backend/.venv/
-backend/data/*.db*
-backend/app/static/
-backend/.env
-frontend/node_modules/
-frontend/dist/
-__pycache__/
+.netlify/
 .pytest_cache/
+__pycache__/
+backend/.env
+backend/.venv/
+backend/app/static/
+backend/data/*.db*
+frontend/dist/
+frontend/node_modules/
+node_modules/

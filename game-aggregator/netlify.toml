@@ -1,0 +1,22 @@
+# Déploiement Netlify de Yoon : interface statique (Vite) + API en fonction serverless (port du socle FastAPI).
+[build]
+  command = "npm ci --prefix frontend --no-audit --no-fund && npm run build --prefix frontend -- --mode netlify"
+  publish = "frontend/dist"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

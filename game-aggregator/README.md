@@ -40,3 +40,18 @@ backend/app/modules/   un paquet par module (operators, providers, catalog, play
 backend/tests/         tests pytest
 frontend/src/          React + Vite : tokens.css, Shell, Tile, Launchpad, ListReport, ObjectPage
 ```
+
+## Version en ligne (Netlify)
+
+Recette publique : <https://yoon-agregateur-jeux.netlify.app> (protégée par mot de passe, réglable dans
+*Project configuration → Access & security*). `netlify.toml` construit l'interface (`frontend/dist`) et expose l'API
+Sprint 0 en fonction serverless (`netlify/functions/api.mts`), port du socle FastAPI. Le backend Python reste la
+référence ; la fonction est réalignée à chaque sprint.
+
+Déployer : depuis `game-aggregator/`, `npx netlify-cli deploy --prod --build` (projet `yoon-agregateur-jeux`).
+
+## Documentation intégrée
+
+L'onglet **Documentation** de l'interface (`/documentation`) est bilingue français / anglais dès le Sprint 0 :
+présentation, modules, feuille de route Scrum, API, charte, glossaire. La langue est mémorisée par navigateur et
+bascule aussi la shell bar (`frontend/src/lib/i18n.ts`).
