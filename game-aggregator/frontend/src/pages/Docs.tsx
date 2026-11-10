@@ -25,7 +25,7 @@ const SECTIONS: Section[] = [
           'Yoon (“the path” in Wolof) is a gaming aggregator: a single integration connects operators (casinos, betting sites) to every game provider.')}</p>
         <p>{t(l, 'Il fournit un catalogue unifié, un portefeuille à grand livre idempotent, le lancement de sessions, les tours de jeu, le jeu responsable, un journal d’audit chaîné et le reporting.',
           'It provides a unified catalogue, an idempotent ledger wallet, session launch, game rounds, responsible gaming, a hash‑chained audit log and reporting.')}</p>
-        <p className="muted">{t(l, 'État actuel : Sprint 0 livré. Cette documentation évolue à chaque sprint.', 'Current state: Sprint 0 delivered. This documentation grows with every sprint.')}</p>
+        <p className="muted">{t(l, 'État actuel : Sprint 1 livré — une partie se joue de bout en bout (opérateur → joueur → mise → gain), vérifiable publiquement. Cette documentation évolue à chaque sprint.', 'Current state: Sprint 1 delivered — a game is played end to end (operator → player → stake → win) and is publicly verifiable. This documentation grows with every sprint.')}</p>
       </>
     ),
   },
@@ -35,7 +35,7 @@ const SECTIONS: Section[] = [
       <div className="table-wrap"><table>
         <thead><tr><th>{t(l, 'Clé', 'Key')}</th><th>{t(l, 'Module', 'Module')}</th><th>{t(l, 'Sprint', 'Sprint')}</th><th>{t(l, 'État', 'Status')}</th></tr></thead>
         <tbody>{mods.map((m) => (
-          <tr key={m.key}><td data-label="Clé" className="mono">{m.key}</td><td data-label="Module">{m.name}</td><td data-label="Sprint">S{m.sprint}</td>
+          <tr key={m.key}><td data-label="Clé" className="mono">{m.key}</td><td data-label="Module">{t(l, m.name, m.name_en)}</td><td data-label="Sprint">S{m.sprint}</td>
             <td data-label="État"><span className={`status ${m.status === 'livré' ? 'ok' : m.status === 'en cours' ? 'warn' : 'muted'}`}>{t(l, m.status, m.status === 'livré' ? 'delivered' : m.status === 'en cours' ? 'in progress' : 'planned')}</span></td></tr>
         ))}</tbody>
       </table></div>
@@ -64,15 +64,17 @@ const SECTIONS: Section[] = [
           <tbody>
             <tr><td className="mono">GET /api/health</td><td>{t(l, 'État du service, version, environnement', 'Service status, version, environment')}</td><td>S0</td></tr>
             <tr><td className="mono">GET /api/modules</td><td>{t(l, 'Modules et avancement', 'Modules and progress')}</td><td>S0</td></tr>
-            <tr><td className="mono">POST /api/operators</td><td>{t(l, 'Créer un opérateur, clé d’API affichée une seule fois', 'Create an operator, API key shown once')}</td><td>S1</td></tr>
+            <tr><td className="mono">POST /api/operators</td><td>{t(l, 'Créer un opérateur, clé d’API affichée une seule fois (admin, en-tête X-Admin-Key)', 'Create an operator, API key shown once (admin, X-Admin-Key header)')}</td><td>S1</td></tr>
+            <tr><td className="mono">GET /api/operators/me/stats</td><td>{t(l, 'Chiffres du lanceur de l’opérateur (X-Api-Key)', 'Operator launchpad figures (X-Api-Key)')}</td><td>S1</td></tr>
             <tr><td className="mono">GET /api/catalog/games</td><td>{t(l, 'Catalogue unifié', 'Unified catalogue')}</td><td>S1</td></tr>
             <tr><td className="mono">POST /api/wallet/transactions</td><td>{t(l, 'Crédit / débit idempotent', 'Idempotent credit / debit')}</td><td>S1</td></tr>
             <tr><td className="mono">POST /api/sessions</td><td>{t(l, 'Lancer une session de jeu', 'Launch a game session')}</td><td>S1</td></tr>
-            <tr><td className="mono">POST /api/rounds</td><td>{t(l, 'Jouer un tour : mise → gain → clôture', 'Play a round: stake → win → close')}</td><td>S1</td></tr>
+            <tr><td className="mono">POST /api/rounds</td><td>{t(l, 'Jouer un tour : mise → gain → clôture (jeton de session)', 'Play a round: stake → win → close (session token)')}</td><td>S1</td></tr>
+            <tr><td className="mono">GET /api/rounds/{'{id}'}/verify</td><td>{t(l, 'Vérification publique d’un tour (graines révélées)', 'Public verification of a round (revealed seeds)')}</td><td>S1</td></tr>
             <tr><td className="mono">GET /api/audit/verify</td><td>{t(l, 'Vérifier l’intégrité du journal chaîné', 'Verify the hash‑chained audit log')}</td><td>S1</td></tr>
           </tbody>
         </table></div>
-        <p className="muted">{t(l, 'En local, la documentation interactive OpenAPI est servie sur /docs par FastAPI.', 'Locally, FastAPI serves the interactive OpenAPI documentation at /docs.')}</p>
+        <p className="muted">{t(l, 'En local, la documentation interactive OpenAPI est servie sur /api/docs par FastAPI.', 'Locally, FastAPI serves the interactive OpenAPI documentation at /api/docs.')}</p>
       </>
     ),
   },
@@ -115,7 +117,7 @@ export default function Docs() {
   return (
     <>
       <div className="hello" style={{ justifyContent: 'space-between' }}>
-        <div><h1>{t(l, 'Documentation', 'Documentation')}</h1><span className="muted">{t(l, 'Yoon · Sprint 0', 'Yoon · Sprint 0')}</span></div>
+        <div><h1>{t(l, 'Documentation', 'Documentation')}</h1><span className="muted">{t(l, 'Yoon · Sprint 1', 'Yoon · Sprint 1')}</span></div>
         <div className="row" style={{ display: 'flex', gap: 6 }}>
           <button className={l === 'fr' ? 'primary' : ''} onClick={() => setLang('fr')} aria-pressed={l === 'fr'}>Français</button>
           <button className={l === 'en' ? 'primary' : ''} onClick={() => setLang('en')} aria-pressed={l === 'en'}>English</button>

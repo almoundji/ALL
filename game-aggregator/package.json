@@ -4,9 +4,13 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "npm run build --prefix frontend -- --mode netlify"
+    "build": "npm run build --prefix frontend -- --mode netlify",
+    "test:netlify": "node --experimental-strip-types --no-warnings netlify/test_api.mts"
   },
   "devDependencies": {
     "@netlify/functions": "^6.0.0"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.0.0"
   }
 }

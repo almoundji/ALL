@@ -11,13 +11,19 @@ reporting.
 | [docs/UX_UI.md](docs/UX_UI.md) | Nom, principes UX (SAP Fiori), charte graphique |
 | [mockup/launchpad.html](mockup/launchpad.html) | Maquette statique du lanceur |
 
-## État : Sprint 0 livré
+## État : Sprint 1 livré — une partie de bout en bout
 
-- API FastAPI avec `GET /api/health` et `GET /api/modules` (feuille de route), 12 modules enregistrés (routeurs vides).
+- API FastAPI : opérateurs et clés d'API (hachées, affichées une fois), fournisseurs, catalogue unifié avec activation par opérateur,
+  joueurs (18 ans minimum), portefeuille à grand livre **idempotent**, sessions à jeton, tours de jeu avec **RNG prouvablement
+  équitable** (engagement sha256, vérification publique), journal d'audit **chaîné**. Documentation OpenAPI sur `/api/docs`.
 - Montants en **unités mineures entières** (`app/core/money.py`), flottants refusés, XOF sans subdivision.
-- Interface React : jetons de la charte (`frontend/src/tokens.css`), shell bar, lanceur branché sur l'API,
-  gabarits Fiori *List Report* et *Object Page* vides, mode sombre.
-- Tests backend (`pytest`), CI GitHub Actions (backend + build frontend), Docker + PostgreSQL pour la recette.
+- Interface React (Fiori) : connexion par clé d'API, lanceur à chiffres réels, catalogue et fiche jeu, joueurs et portefeuille,
+  client de jeu « Dés de Yoon » (`/play/<jeton>`), onglet Documentation FR/EN, mode sombre.
+- 34 tests backend (`pytest`), test de bout en bout de la fonction Netlify (`npm run test:netlify`), CI GitHub Actions, Docker + PostgreSQL.
+
+**Comptes de démonstration (hors production)** : clé d'administration `admin-dev-key` (en-tête `X-Admin-Key`), clé de l'opérateur
+démo `yk_demo-operator-key-change-me` (en-tête `X-Api-Key`, proposée sur la page de connexion). À remplacer par `YOON_ADMIN_KEY`
+et `YOON_DEMO_OPERATOR_KEY` en recette.
 
 ## Lancer en local
 
