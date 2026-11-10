@@ -1,7 +1,7 @@
 """Registre des modules de Yoon.
 
-Chaque module est un paquet `app.modules.<clé>` exposant un `router` FastAPI. Au Sprint 0 les routeurs sont
-vides : le registre sert à afficher la feuille de route (`GET /api/modules`) et à fixer la structure.
+Chaque module est un paquet `app.modules.<clé>` exposant un `router` FastAPI dans `api.py` et ses tables dans `models.py`.
+Le registre alimente `GET /api/modules` (feuille de route) et garantit l'import des modèles avant `create_all`.
 """
 from dataclasses import dataclass
 from importlib import import_module
@@ -13,31 +13,37 @@ from fastapi import APIRouter
 class Module:
     key: str
     name: str
+    name_en: str
     sprint: int
     status: str  # planifié | en cours | livré
     router: APIRouter
 
 
-def _router(key: str, name: str) -> APIRouter:
+def _load(key: str, name: str) -> APIRouter:
+    try:
+        import_module(f"app.modules.{key}.models")
+    except ModuleNotFoundError:
+        pass
     try:
         return import_module(f"app.modules.{key}.api").router
     except ModuleNotFoundError:
         return APIRouter(prefix=f"/api/{key}", tags=[name])
 
 
-_SPEC: list[tuple[str, str, int]] = [
-    ("operators", "Opérateurs", 1),
-    ("providers", "Fournisseurs", 1),
-    ("catalog", "Catalogue", 1),
-    ("players", "Joueurs", 1),
-    ("wallet", "Portefeuille", 1),
-    ("sessions", "Sessions", 1),
-    ("rounds", "Tours de jeu", 1),
-    ("rng", "RNG équitable", 1),
-    ("audit", "Journal d'audit", 1),
-    ("responsible", "Jeu responsable", 2),
-    ("bonus", "Bonus", 5),
-    ("reporting", "Reporting et facturation", 6),
+# clé, nom FR, nom EN, sprint, état
+_SPEC: list[tuple[str, str, str, int, str]] = [
+    ("audit", "Journal d'audit", "Audit log", 1, "livré"),
+    ("operators", "Opérateurs", "Operators", 1, "livré"),
+    ("providers", "Fournisseurs", "Providers", 1, "livré"),
+    ("catalog", "Catalogue", "Catalogue", 1, "livré"),
+    ("players", "Joueurs", "Players", 1, "livré"),
+    ("wallet", "Portefeuille", "Wallet", 1, "livré"),
+    ("sessions", "Sessions", "Sessions", 1, "livré"),
+    ("rng", "RNG équitable", "Provably fair RNG", 1, "livré"),
+    ("rounds", "Tours de jeu", "Game rounds", 1, "livré"),
+    ("responsible", "Jeu responsable", "Responsible gaming", 2, "planifié"),
+    ("bonus", "Bonus", "Bonuses", 5, "planifié"),
+    ("reporting", "Reporting et facturation", "Reporting and invoicing", 6, "planifié"),
 ]
 
-MODULES: list[Module] = [Module(k, n, s, "planifié", _router(k, n)) for k, n, s in _SPEC]
+MODULES: list[Module] = [Module(k, n, en, s, st, _load(k, n)) for k, n, en, s, st in _SPEC]

@@ -8,8 +8,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .core.config import settings
-from .core.db import Base, engine
+from .core.db import Base, SessionLocal, engine
 from .modules import MODULES
+from .seed import seed_demo
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -17,11 +18,14 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
+    if settings.seed_demo:
+        with SessionLocal() as db:
+            seed_demo(db)
     yield
 
 
 app = FastAPI(
-    title=settings.app_name, version=settings.version, lifespan=lifespan,
+    title=settings.app_name, version=settings.version, lifespan=lifespan, docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json",
     description="Agrégateur de jeux de hasard : un seul chemin entre les opérateurs et tous les fournisseurs de jeux.",
 )
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -38,7 +42,7 @@ def health():
 @app.get("/api/modules", tags=["socle"])
 def modules():
     """Liste des modules et de leur état d'avancement (feuille de route Scrum)."""
-    return [{"key": m.key, "name": m.name, "sprint": m.sprint, "status": m.status} for m in MODULES]
+    return [{"key": m.key, "name": m.name, "name_en": m.name_en, "sprint": m.sprint, "status": m.status} for m in MODULES]
 
 
 if STATIC_DIR.exists():

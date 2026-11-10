@@ -20,7 +20,7 @@ def test_modules_registered(client):
 
 
 def test_openapi_lists_module_tags(client):
-    spec = client.get("/openapi.json").json()
+    spec = client.get("/api/openapi.json").json()
     assert spec["info"]["title"] == "Yoon"
 
 
