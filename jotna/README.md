@@ -46,3 +46,9 @@ dossier sur Netlify (`netlify.toml` fourni). Les vues sont adressables par ancre
    webhooks Wave Business.
 3. Envoi réel des relances via l'API WhatsApp Business et génération des reçus PDF.
 4. Multi-établissements, rôles (gestionnaire, direction, comptable) et abonnement mensuel.
+
+## Planning
+
+- `docs/SCRUM.md` : méthode Scrum, équipe, cadence, backlog, 15 sprints de deux semaines du 16 novembre 2026
+  à la rentrée d'octobre 2027, jalons J0 à J5, indicateurs et risques.
+- `docs/planning-scrum.html` : la même feuille de route en page visuelle (frise, chantiers, cartes de sprint), style Fiori.

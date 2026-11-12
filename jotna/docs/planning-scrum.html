@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} img{max-width:100%} [hidden]{display:none!important}</style>
+<title>Planning Scrum Jotna</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+/* Fiori 3 (Quartz) : barre de shell, page dynamique, cartes. Ordre : jalons → frise → chantiers → sprints → critères → risques. */
+:root { --shell:#354a5f; --bg:#f7f7f7; --surface:#fff; --surface-2:#fafafa; --border:#d9d9d9; --fg:#32363a; --muted:#6a6d70; --brand:#0a6ed1; --brand-fg:#fff;
+  --positive:#107e3e; --critical:#e9730c; --negative:#bb0000; --info:#0a6ed1; --positive-bg:#f1fdf6; --critical-bg:#fef7f1; --negative-bg:#ffebeb; --info-bg:#ebf5fe;
+  --p0:#6a6d70; --p1:#0a6ed1; --p2:#107e3e; --p3:#0b7a5c; --p4:#b07a00; --p5:#bb0000; --p6:#8a8f94;
+  --shadow:0 0 .125rem rgba(0,0,0,.08),0 .125rem .5rem rgba(0,0,0,.08); --font:"72","Inter","Segoe UI",system-ui,sans-serif; --radius:.25rem; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --shell:#1d2d3e; --bg:#1d232a; --surface:#29313a; --surface-2:#232a32; --border:#404a55; --fg:#eaecee; --muted:#a2aab3; --brand:#4db1ff; --brand-fg:#0b1620;
+  --positive:#5dc122; --critical:#fabd64; --negative:#ff8888; --info:#4db1ff; --positive-bg:#1f3222; --critical-bg:#3a2d1c; --negative-bg:#3c2222; --info-bg:#1f3650;
+  --p0:#8a8f94; --p1:#4db1ff; --p2:#5dc122; --p3:#3fbf9a; --p4:#e0a93a; --p5:#ff8888; --p6:#6f767d; --shadow:0 0 .125rem rgba(0,0,0,.4),0 .125rem .5rem rgba(0,0,0,.4); color-scheme:dark } }
+:root[data-theme="dark"] { --shell:#1d2d3e; --bg:#1d232a; --surface:#29313a; --surface-2:#232a32; --border:#404a55; --fg:#eaecee; --muted:#a2aab3; --brand:#4db1ff; --brand-fg:#0b1620;
+  --positive:#5dc122; --critical:#fabd64; --negative:#ff8888; --info:#4db1ff; --positive-bg:#1f3222; --critical-bg:#3a2d1c; --negative-bg:#3c2222; --info-bg:#1f3650;
+  --p0:#8a8f94; --p1:#4db1ff; --p2:#5dc122; --p3:#3fbf9a; --p4:#e0a93a; --p5:#ff8888; --p6:#6f767d; --shadow:0 0 .125rem rgba(0,0,0,.4),0 .125rem .5rem rgba(0,0,0,.4); color-scheme:dark }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:.875rem;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--shell)}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.shell{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--shell);color:#fff;height:2.75rem;display:flex;align-items:center;gap:.75rem}
+.shell .brand{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:.9375rem}
+.shell .mark{width:1.5rem;height:1.5rem;border-radius:.25rem;background:#0a6ed1;display:grid;place-items:center;font-size:.75rem;font-weight:700;color:#fff}
+.shell .crumb{color:rgba(255,255,255,.75);font-size:.8125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shell .right{margin-left:auto;font-size:.75rem;color:rgba(255,255,255,.75);white-space:nowrap}
+.dp{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 .125rem .25rem rgba(0,0,0,.04)}
+.dp .inner{max-width:80rem;margin:auto;padding-block:1rem 1.25rem}
+h1{font-size:1.375rem;font-weight:400;margin:0 0 .25rem;text-wrap:balance}
+.lead{color:var(--muted);max-width:70ch;margin:0}
+.wrap{max-width:80rem;margin:auto;padding-block:0 3rem}
+h2{font-size:1rem;font-weight:600;margin:1.75rem 0 .625rem}
+h3{font-size:.9375rem;font-weight:600;margin:0}
+.gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));gap:.75rem;margin-top:1rem}
+.gate{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--brand);border-radius:var(--radius);padding:.625rem .75rem;box-shadow:var(--shadow)}
+.gate .d{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums} .gate .n{font-weight:600;font-size:.9375rem;margin:.125rem 0} .gate .t{font-size:.8125rem;color:var(--muted)}
+.gate.final{border-top-color:var(--negative)} .gate.done{border-top-color:var(--positive)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.tbl{overflow-x:auto} table{width:100%;border-collapse:collapse;font-size:.8125rem;min-width:40rem} th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--border);vertical-align:top} th{font-weight:400;color:var(--muted);background:var(--surface-2);white-space:nowrap} tbody tr:last-child td{border-bottom:0}
+td.who{white-space:nowrap;color:var(--muted)}
+.pill{display:inline-block;padding:.0625rem .5rem;border-radius:.75rem;font-size:.6875rem;font-weight:600;border:1px solid currentColor;white-space:nowrap} .pill.pos{color:var(--positive);background:var(--positive-bg)} .pill.crit{color:var(--critical);background:var(--critical-bg)} .pill.neg{color:var(--negative);background:var(--negative-bg)} .pill.info{color:var(--info);background:var(--info-bg)}
+/* Frise */
+.frise{overflow-x:auto;padding:.875rem .75rem .625rem}
+.fgrid{display:grid;grid-template-columns:9rem repeat(47,minmax(1.5rem,1fr));gap:2px 0;min-width:78rem;font-size:.6875rem}
+.fgrid .m{grid-row:1;text-align:center;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;border-left:1px solid var(--border);padding-bottom:.375rem}
+.fgrid .lab{grid-column:1;padding:.25rem .5rem .25rem 0;font-weight:600;white-space:nowrap;font-size:.75rem}
+.bar{height:1.375rem;border-radius:3px;display:flex;align-items:center;padding:0 .375rem;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;font-size:.6875rem}
+.bar.p0{background:var(--p0)}.bar.p1{background:var(--p1)}.bar.p2{background:var(--p2)}.bar.p3{background:var(--p3)}.bar.p4{background:var(--p4)}.bar.p5{background:var(--p5)}.bar.p6{background:var(--p6)}
+.bar.pause{background:repeating-linear-gradient(135deg,var(--border) 0 4px,transparent 4px 8px);color:var(--muted)}
+.bar.due{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical);justify-content:center;padding:0}
+.gmark{grid-row:5;height:.625rem;position:relative} .gmark::after{content:"";position:absolute;left:50%;top:-2px;width:.625rem;height:.625rem;transform:translateX(-50%) rotate(45deg);background:var(--negative)}
+.gl{grid-row:6;text-align:center;color:var(--negative);font-weight:600;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:.8125rem;margin:.5rem 0 0}
+/* Sprints */
+.sprints{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,20.5rem),1fr));gap:.75rem}
+.sp{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:.875rem 1rem;display:flex;flex-direction:column;gap:.5rem;position:relative;min-width:0}
+.sp::before{content:"";position:absolute;left:0;top:.875rem;bottom:.875rem;width:4px;border-radius:0 3px 3px 0;background:var(--ph)}
+.sp .hd{display:flex;justify-content:space-between;gap:.5rem;align-items:baseline;flex-wrap:wrap} .sp .num{color:var(--muted);font-size:.75rem;margin-right:.375rem} .sp .dates{font-size:.75rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sp .obj{font-weight:500} .sp ul{margin:0;padding-left:1.125rem;font-size:.8125rem} .sp li{margin:.1875rem 0}
+.sp .out{margin-top:auto;padding-top:.5rem;border-top:1px dashed var(--border);font-size:.8125rem} .sp .out b{color:var(--positive)}
+.risk td:first-child{font-weight:600}
+footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+@media (max-width:640px){.shell .crumb,.shell .right{display:none}}
+</style>
+</head>
+<body>
+<header class="shell gutter">
+  <span class="brand"><span class="mark">J</span>Jotna</span>
+  <span class="crumb">Planning Scrum · du prototype au lancement commercial</span>
+  <span class="right">Version du 12 novembre 2026</span>
+</header>
+
+<div class="dp"><div class="inner gutter">
+  <h1>Planning Scrum : du prototype Fiori à cinquante établissements</h1>
+  <p class="lead">Quinze sprints de deux semaines en cinq phases : produit minimum pour la fin janvier 2027, pilote de cinq écoles sur les mensualités de février et mars, premiers abonnements en avril, version 1.0 en juin, campagne de rentrée pour octobre 2027. Cinq jalons de décision, chacun tenu par le fondateur avec les gestionnaires référents.</p>
+  <div class="gates">
+    <div class="gate"><div class="d">20 nov 2026</div><div class="n">J0 Lancement</div><div class="t">Temps et capital décidés, 5 lettres d'intention, compte Wave Business, demande d'API déposée</div></div>
+    <div class="gate"><div class="d">15 jan 2027</div><div class="n">J1 Pilote prêt</div><div class="t">Payeurs, échéancier, import de relevés, reçus et relances démontrés sur les données d'une école</div></div>
+    <div class="gate"><div class="d">26 fév 2027</div><div class="n">J2 Pilote concluant</div><div class="t">5 écoles, mensualité de février suivie, 70 % de rapprochement automatique, tarif fixé</div></div>
+    <div class="gate"><div class="d">9 avr 2027</div><div class="n">J3 Premiers revenus</div><div class="t">10 établissements payants dont un bailleur et une salle de sport, API PI-SPI en test</div></div>
+    <div class="gate"><div class="d">18 juin 2027</div><div class="n">J4 Version 1.0</div><div class="t">Déclaration CDP, sauvegardes, supervision, portail parents, inscription autonome</div></div>
+    <div class="gate final"><div class="d">4 oct 2027</div><div class="n">J5 Rentrée</div><div class="t">50 établissements actifs, support en place, cadence maintenue</div></div>
+  </div>
+</div></div>
+
+<div class="wrap gutter">
+<h2>1. Frise des sprints</h2>
+<div class="panel frise"><div class="fgrid" id="frise"></div></div>
+<p class="note">Sprints de deux semaines, du lundi au vendredi suivant. Pause du 21 décembre au 1er janvier. Les losanges marquent les jalons ; les repères « 5 » marquent les échéances mensuelles des écoles, que le pilote doit suivre en conditions réelles.</p>
+
+<h2>2. Les six chantiers parallèles</h2>
+<p class="lead">Ils avancent en parallèle des sprints et conditionnent les jalons. Chaque chantier a un responsable unique.</p>
+<div class="panel tbl"><table>
+<thead><tr><th>Chantier</th><th>Responsable</th><th>Aujourd'hui</th><th>Cible</th><th>Jalon</th></tr></thead>
+<tbody>
+<tr><td><b>A. Accès aux transactions</b></td><td class="who">Fondateur + dev lead</td><td>Rapprochement par import de relevé (prototype)</td><td>Webhooks Wave Business en production ; API Business PI-SPI d'une banque partenaire (demandes de paiement groupées, notifications) ; Orange Money si l'opérateur ouvre un accès</td><td><span class="pill info">J2</span> <span class="pill pos">J3</span></td></tr>
+<tr><td><b>B. Juridique et données personnelles</b></td><td class="who">Fondateur + conseil</td><td>Rien</td><td>Société créée, CGV et contrat d'abonnement, déclaration à la CDP, politique de conservation, aucune manipulation de fonds (pas d'agrément requis)</td><td><span class="pill info">J0</span> <span class="pill crit">J4</span></td></tr>
+<tr><td><b>C. Commercial et tarif</b></td><td class="who">Fondateur</td><td>Idée, pas de client</td><td>5 écoles pilotes signées, tarif validé (hypothèse : 25 000 FCFA par mois jusqu'à 200 payeurs), 10 payants en avril, 50 à la rentrée, un bailleur et une salle de sport dès avril</td><td><span class="pill info">J0</span> <span class="pill pos">J3</span> <span class="pill neg">J5</span></td></tr>
+<tr><td><b>D. Produit et expérience</b></td><td class="who">UX + gestionnaires référents</td><td>Prototype Fiori (5 écrans)</td><td>Parcours gestionnaire complet, portail parents (consulter, payer par alias ou QR), application mobile du gestionnaire, textes en français et wolof</td><td><span class="pill info">J1</span> <span class="pill crit">J4</span></td></tr>
+<tr><td><b>E. Technique et qualité</b></td><td class="who">Dev lead</td><td>Page HTML autonome, données fictives</td><td>Base PostgreSQL, API, CI avec tests, hébergement cloud avec sauvegardes quotidiennes testées, supervision, journal des accès</td><td><span class="pill info">J1</span> <span class="pill crit">J4</span></td></tr>
+<tr><td><b>F. Support et formation</b></td><td class="who">UX / support</td><td>Rien</td><td>Prise en main en 30 minutes, fiches d'une page, groupe WhatsApp de support, suivi mensuel des indicateurs par établissement</td><td><span class="pill info">J2</span> <span class="pill neg">J5</span></td></tr>
+</tbody></table></div>
+
+<h2>3. Sprints</h2>
+<p class="lead">Équipe de trois à quatre personnes : le fondateur comme Product Owner, un développeur full-stack qui tient aussi le rôle de Scrum Master, un développeur front et mobile, une personne UX et support à mi-temps. Cinq gestionnaires d'écoles pilotes sont utilisateurs référents et font les démonstrations. Capacité de référence 25 points par sprint, à ajuster après le sprint 2.</p>
+<div class="sprints" id="sprints"></div>
+
+<h2>4. Critères de passage des jalons</h2>
+<div class="panel tbl"><table>
+<thead><tr><th>Jalon</th><th>Critères mesurables</th></tr></thead>
+<tbody>
+<tr><td><b>J0</b></td><td>Décision temps et capital écrite · 5 lettres d'intention d'écoles de Dakar · compte Wave Business ouvert · demande d'API Business PI-SPI déposée auprès d'une banque · backlog estimé pour 3 sprints</td></tr>
+<tr><td><b>J1</b></td><td>Import des élèves d'une école réelle · échéancier généré · import d'un relevé réel et rapprochement de 100 lignes · reçu PDF envoyé · relance WhatsApp envoyée · sauvegarde restaurée</td></tr>
+<tr><td><b>J2</b></td><td>5 écoles actives · mensualité du 5 février suivie dans Jotna · rapprochement automatique ≥ 70 % des lignes · pointage mensuel < 1 h par école · satisfaction des gestionnaires ≥ 4 / 5 · tarif accepté par au moins 3 écoles</td></tr>
+<tr><td><b>J3</b></td><td>10 établissements payants · premier bailleur et première salle de sport en production · API Business PI-SPI en test avec la banque ou refus documenté · taux de recouvrement à J+10 en hausse d'au moins 10 points dans les écoles pilotes</td></tr>
+<tr><td><b>J4</b></td><td>Déclaration CDP effectuée · sauvegardes quotidiennes testées · supervision et alertes · portail parents utilisé par 30 % des familles pilotes · un établissement s'inscrit et démarre sans intervention</td></tr>
+<tr><td><b>J5</b></td><td>50 établissements actifs · 0 incident de données · support répond en moins de 4 heures ouvrées · churn mensuel < 3 %</td></tr>
+</tbody></table></div>
+
+<h2>5. Risques du planning et parades</h2>
+<div class="panel tbl"><table class="risk">
+<thead><tr><th>Risque</th><th>Impact</th><th>Parade</th></tr></thead>
+<tbody>
+<tr><td>Accès API Business PI-SPI refusé ou tardif</td><td>Décale J3</td><td>Demande déposée dès le sprint 0 auprès de deux banques ; le pilote tourne sur webhooks Wave et import de relevés, qui couvrent déjà la majorité des flux</td></tr>
+<tr><td>Parents qui ne passent pas par l'alias</td><td>Baisse le rapprochement automatique</td><td>Référence unique par élève dans le libellé, demande de paiement PI-SPI pré-remplie, saisie manuelle rapide pour les espèces</td></tr>
+<tr><td>Écoles pilotes qui décrochent</td><td>Compromet J2</td><td>Gratuité pendant le pilote, visite sur place à chaque échéance du 5, démonstrations faites par les gestionnaires eux-mêmes</td></tr>
+<tr><td>Saisonnalité scolaire (pas de mensualités de juillet à septembre)</td><td>Creux de revenus</td><td>Bailleurs et salles de sport dès avril pour lisser ; l'été sert à la campagne de rentrée</td></tr>
+<tr><td>Données personnelles de mineurs et de familles</td><td>Bloque J4</td><td>Déclaration CDP engagée au sprint 7, minimisation des données, chiffrement, droits d'accès par rôle</td></tr>
+<tr><td>Coût de l'API WhatsApp Business</td><td>Marge réduite</td><td>Messages groupés par échéance, SMS en secours, coût suivi par établissement et répercuté au-delà d'un quota</td></tr>
+<tr><td>Dérive de périmètre (gestion scolaire complète)</td><td>Décale tout</td><td>Jotna ne fait que le recouvrement récurrent ; toute demande hors périmètre va au backlog post-J5</td></tr>
+</tbody></table></div>
+
+<footer><span>Jotna · suivi des mensualités sur PI-SPI</span><span>Planning prévisionnel, révisé à chaque revue de sprint</span></footer>
+</div>
+
+<script>
+const SPRINTS = [
+ {n:"S0",t:"Cadrage",a:"2026-11-16",b:"2026-11-20",ph:0,obj:"Les décisions de départ sont prises et cinq écoles attendent le pilote.",items:["Décision temps et capital du fondateur ; constitution de l'équipe ; choix de la pile technique.","Cinq lettres d'intention d'écoles privées de Dakar (200 à 600 élèves).","Compte Wave Business ouvert ; demande d'API Business PI-SPI déposée auprès de deux banques.","Backlog initial estimé ; Definition of Ready et Done adoptées."],out:"J0 : lancement.",gate:"J0"},
+ {n:"S1",t:"Socle et payeurs",a:"2026-11-23",b:"2026-12-04",ph:1,obj:"Un gestionnaire crée son école, importe ses élèves et voit l'échéancier.",items:["Base PostgreSQL, API, authentification, CI avec tests.","Établissement, payeurs, élèves, classes, mensualités ; import CSV ou Excel des listes d'élèves.","Échéancier mensuel généré ; écran Payeurs (rapport de liste Fiori) branché sur la base."],out:"Démo : import des élèves d'une école pilote, échéancier de décembre à juin."},
+ {n:"S2",t:"Encaissements et reçus",a:"2026-12-07",b:"2026-12-18",ph:1,obj:"Les paiements sont saisis ou importés, rapprochés et reçus.",items:["Saisie manuelle (espèces, virement) ; import de relevés Wave Business, Orange Money et banque (CSV).","Rapprochement : alias ou référence reconnus → automatique ; sinon file de vérification avec payeur proposé.","Reçu PDF par paiement, envoi par WhatsApp ou e-mail ; fiche payeur (page objet)."],out:"Démo : relevé réel de décembre importé, 100 lignes rapprochées, reçus envoyés."},
+ {n:"S3",t:"Relances et tableau de bord",a:"2027-01-04",b:"2027-01-15",ph:1,obj:"Les retardataires sont relancés et le gestionnaire voit son mois d'un coup d'œil.",items:["Modèle de relance avec variables, envoi WhatsApp Business, historique par payeur.","Demande de paiement PI-SPI (alias, QR, libellé avec référence élève).","Tuiles KPI de l'accueil (taux, encaissé, retards, partiels) ; sauvegardes et restauration testées."],out:"J1 : pilote prêt, démontré par un gestionnaire sur ses propres données.",gate:"J1"},
+ {n:"S4",t:"Mise en service de deux écoles",a:"2027-01-18",b:"2027-01-29",ph:2,obj:"Deux écoles pilotes suivent l'échéance du 5 février dans Jotna.",items:["Formation des gestionnaires (30 minutes), import des élèves, alias communiqué aux parents.","Message aux parents : comment payer vers l'alias avec la référence de l'élève.","Corrections rapides à partir des premiers retours ; support sur groupe WhatsApp."],out:"Démo : deux écoles configurées, parents informés avant le 5 février."},
+ {n:"S5",t:"Première échéance réelle",a:"2027-02-01",b:"2027-02-12",ph:2,obj:"La mensualité de février est pointée en moins d'une heure par école.",items:["Webhooks Wave Business : notification de paiement reçu en temps réel.","Trois écoles supplémentaires mises en service.","Mesure : part des lignes rapprochées automatiquement, temps de pointage, retards relancés."],out:"Démo : échéance du 5 février suivie en direct, relances parties le 8."},
+ {n:"S6",t:"Mesure et décision tarif",a:"2027-02-15",b:"2027-02-26",ph:2,obj:"Le pilote est jugé sur des chiffres et le prix est fixé.",items:["Entretiens avec les cinq gestionnaires ; indicateurs par école.","Corrections prioritaires ; export comptable (SYSCOHADA) des encaissements.","Proposition tarifaire testée sur les cinq écoles."],out:"J2 : pilote concluant, tarif accepté par trois écoles au moins.",gate:"J2"},
+ {n:"S7",t:"API Business PI-SPI",a:"2027-03-01",b:"2027-03-12",ph:3,obj:"Les demandes de paiement partent par lot et les paiements remontent sans import.",items:["Intégration de l'API Business de la banque partenaire : demandes groupées, notifications, suivi.","Repli documenté si la banque n'a pas ouvert l'accès : webhooks Wave + import.","Déclaration CDP engagée ; registre des traitements."],out:"Démo : 50 demandes de paiement envoyées en un clic, retours rapprochés automatiquement."},
+ {n:"S8",t:"Abonnement et multi-établissements",a:"2027-03-15",b:"2027-03-26",ph:3,obj:"Jotna se facture lui-même par abonnement.",items:["Offres, essai, facturation mensuelle de l'établissement par alias PI-SPI ou Wave.","Plusieurs établissements par compte, rôles gestionnaire, direction, comptable.","Mensualité du 5 mars suivie dans les cinq écoles."],out:"Démo : première facture d'abonnement payée."},
+ {n:"S9",t:"Bailleurs et salles de sport",a:"2027-03-29",b:"2027-04-09",ph:3,obj:"Le modèle « contrat récurrent » remplace l'élève et la classe.",items:["Objet générique : contrat, échéance, montant, payeur (loyer, abonnement sportif).","Un bailleur (10 à 30 lots) et une salle de sport en production.","Premiers clients payants hors pilote."],out:"J3 : dix établissements payants.",gate:"J3"},
+ {n:"S10",t:"Sécurité et exploitation",a:"2027-04-12",b:"2027-04-23",ph:4,obj:"Le service tient la panne et protège les données des familles.",items:["Sauvegardes quotidiennes chiffrées, restauration testée, supervision et alertes.","Journal des accès, chiffrement, rôles revus, minimisation des données des mineurs.","Test d'intrusion léger par un prestataire local."],out:"Démo : restauration complète, rapport de test reçu."},
+ {n:"S11",t:"Portail parents",a:"2027-04-26",b:"2027-05-07",ph:4,obj:"Un parent consulte ses échéances et paie en deux gestes.",items:["Lien personnel : solde, historique, reçus, bouton payer (alias, QR, demande PI-SPI).","Rappels automatiques programmés (J-3, J+3, J+10).","Mensualité du 5 mai suivie."],out:"Démo : un parent paie depuis le portail, le statut passe à Payé sans intervention."},
+ {n:"S12",t:"Application mobile du gestionnaire",a:"2027-05-10",b:"2027-05-21",ph:4,obj:"Le gestionnaire pointe et relance depuis son téléphone.",items:["Application web installable (PWA) : accueil en tuiles, payeurs, relances, saisie espèces.","Notifications de paiement reçu.","Textes en français et en wolof."],out:"Démo : pointage d'une journée entièrement depuis un téléphone."},
+ {n:"S13",t:"Inscription autonome",a:"2027-05-24",b:"2027-06-04",ph:4,obj:"Un établissement s'inscrit, importe et démarre sans appel.",items:["Parcours d'inscription, import guidé, alias et modèles pré-remplis.","Documentation d'une page, vidéos courtes, FAQ.","Mensualité du 5 juin suivie."],out:"Démo : un établissement inconnu démarre seul en 30 minutes."},
+ {n:"S14",t:"Version 1.0",a:"2027-06-07",b:"2027-06-18",ph:4,obj:"Tout ce qui précède est stable, documenté et déclaré.",items:["Gel fonctionnel ; corrections ; revue des indicateurs des cinq mois de pilote.","Déclaration CDP effectuée ; CGV et contrat d'abonnement finalisés.","Plan de campagne de rentrée : cibles, argumentaire, prix."],out:"J4 : version 1.0.",gate:"J4"},
+ {n:"S15+",t:"Campagne de rentrée",a:"2027-06-21",b:"2027-10-01",ph:6,obj:"Même cadence, priorité au commercial et au support.",items:["Prospection de 150 écoles de Dakar et Thiès ; démonstrations par les gestionnaires pilotes.","Sprints de maintenance et petites évolutions issues du terrain.","Objectif : 50 établissements actifs à la rentrée d'octobre 2027."],out:"J5 : rentrée.",gate:"J5"},
+];
+const PH = ["var(--p0)","var(--p1)","var(--p2)","var(--p3)","var(--p4)","var(--p5)","var(--p6)"];
+const fmt = d => new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+const start = new Date("2026-11-16T00:00:00"); const weeks = 47; const wk = d => Math.floor((new Date(d+"T00:00:00") - start)/(7*86400000));
+const months = ["Jan","Fév","Mars","Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov","Déc"];
+let html = '<div class="lab" style="grid-row:1"></div>'; let lastM = -1;
+for (let w=0; w<weeks; w++){ const d = new Date(start.getTime()+w*7*86400000); const m=d.getMonth(); if(m!==lastM){ let span=0; for(let x=w;x<weeks;x++){ if(new Date(start.getTime()+x*7*86400000).getMonth()===m) span++; else break;} html += `<div class="m" style="grid-column:${w+2} / span ${span}">${months[m]}${m===0||w===0?" "+d.getFullYear():""}</div>`; lastM=m; } }
+html += '<div class="lab" style="grid-row:2">Sprints</div>';
+SPRINTS.forEach(s => { const c0 = wk(s.a)+2, len = Math.max(1, wk(s.b)-wk(s.a)+1); html += `<div class="bar p${s.ph}" style="grid-row:2;grid-column:${c0} / span ${len}" title="${s.n} · ${s.t}">${s.n}</div>`; });
+html += `<div class="bar pause" style="grid-row:2;grid-column:${wk("2026-12-21")+2} / span 2">pause</div>`;
+html += '<div class="lab" style="grid-row:3">Phases</div>';
+[["Cadrage","2026-11-16","2026-11-20",0],["Produit minimum","2026-11-23","2027-01-15",1],["Pilote 5 écoles","2027-01-18","2027-02-26",2],["PI-SPI · abonnement · bailleurs","2027-03-01","2027-04-09",3],["Industrialisation · version 1.0","2027-04-12","2027-06-18",4],["Campagne de rentrée","2027-06-21","2027-10-01",6]].forEach(([t,a,b,ph]) => { html += `<div class="bar p${ph}" style="grid-row:3;grid-column:${wk(a)+2} / span ${wk(b)-wk(a)+1};opacity:.75">${t}</div>`; });
+html += '<div class="lab" style="grid-row:4">Échéances du 5</div>';
+["2026-12-05","2027-01-05","2027-02-05","2027-03-05","2027-04-05","2027-05-05","2027-06-05","2027-10-05"].forEach(d => { html += `<div class="bar due" style="grid-row:4;grid-column:${wk(d)+2}" title="Mensualité du ${fmt(d)}">5</div>`; });
+html += '<div class="lab" style="grid-row:5">Jalons</div><div class="lab" style="grid-row:6"></div>';
+[["J0","2026-11-20"],["J1","2027-01-15"],["J2","2027-02-26"],["J3","2027-04-09"],["J4","2027-06-18"],["J5","2027-10-01"]].forEach(([g,d]) => { const c = wk(d)+2; html += `<div class="gmark" style="grid-column:${c}"></div><div class="gl" style="grid-column:${c}">${g}</div>`; });
+document.getElementById("frise").innerHTML = html;
+document.getElementById("sprints").innerHTML = SPRINTS.map(s => `<article class="sp" style="--ph:${PH[s.ph]}"><div class="hd"><div><span class="num">${s.n}</span><h3 style="display:inline">${s.t}</h3></div><span class="dates">${fmt(s.a)} → ${fmt(s.b)}${s.a < "2027" ? " 2026" : " 2027"}</span></div><div class="obj">${s.obj}</div><ul>${s.items.map(i=>`<li>${i}</li>`).join("")}</ul><div class="out">${s.gate?`<b>${s.gate}</b> · `:""}${s.out.replace(/^J\d : /,"")}</div></article>`).join("");
+</script>
+
+</body>
+</html>
