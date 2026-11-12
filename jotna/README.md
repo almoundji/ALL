@@ -21,6 +21,11 @@ par l'outil : il va directement sur le compte du client, ce qui permet de démar
 
 Les envois (WhatsApp, demandes de paiement, reçus) sont simulés et le signalent.
 
+**Téléphone et alias PI-SPI sont deux champs distincts.** Le téléphone sert au contact (relances WhatsApp).
+L'alias PI-SPI est l'identifiant de paiement que le payeur a choisi auprès de sa banque ou de son opérateur ; il est
+facultatif. Le rapprochement se fait d'abord par l'alias ou la référence élève dans le libellé, puis par le numéro émetteur
+pour Wave et Orange Money, et manuellement pour les espèces. L'école a son propre alias (`keur-xaleyi` dans la démo).
+
 ## Interface
 
 Inspirée de **SAP Fiori 3** (thème Quartz), comme les autres outils du dépôt :

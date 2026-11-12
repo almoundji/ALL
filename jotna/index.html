@@ -275,7 +275,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
 <!-- Launchpad -->
 <section class="view" id="v-accueil">
   <div class="page gutter">
-    <div class="strip"><span class="dot"></span><span>Prototype avec des données d'exemple. Mois en cours : novembre 2026, échéance le 5. Les boutons simulent les envois ; aucun message ne part.</span></div>
+    <div class="strip"><span class="dot"></span><span>Prototype avec des données d'exemple. Mois en cours : novembre 2026, échéance le 5. Les boutons simulent les envois ; aucun message ne part. Le téléphone (contact WhatsApp) et l'alias PI-SPI (identifiant de paiement) sont deux champs distincts.</span></div>
     <div class="lp-head">
       <h1>Bonjour, Mme Diène</h1>
       <div class="sub" id="lpSub"></div>
@@ -306,7 +306,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
       </div>
     </div>
     <div class="filterbar" id="filterbar">
-      <div class="field"><label for="fSearch">Rechercher</label><input id="fSearch" type="search" placeholder="Nom, élève, téléphone"></div>
+      <div class="field"><label for="fSearch">Rechercher</label><input id="fSearch" type="search" placeholder="Nom, élève, téléphone, alias"></div>
       <div class="field"><label for="fClasse">Classe</label><select id="fClasse"><option value="">Toutes</option></select></div>
       <div class="field"><label for="fStatut">Statut novembre</label><select id="fStatut"><option value="">Tous</option><option>Payé</option><option>Partiel</option><option>En retard</option></select></div>
       <div class="field"><label for="fCanal">Canal habituel</label><select id="fCanal"><option value="">Tous</option><option>Alias PI-SPI</option><option>Wave</option><option>Orange Money</option><option>Virement</option><option>Espèces</option></select></div>
@@ -423,6 +423,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
     const cl = pick(CLASSES);
     const tel = '77 ' + String(100 + Math.floor(rnd() * 900)) + ' ' + String(10 + Math.floor(rnd() * 90)) + ' ' + String(10 + Math.floor(rnd() * 90));
     const canal = pick(CANAUX);
+    const alias = rnd() < 0.8 ? nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, '').trim().replace(/ +/g, '.') : '';
     const r = rnd();
     let statut = r < 0.62 ? 'Payé' : r < 0.74 ? 'Partiel' : 'En retard';
     const hist = MONTHS.slice(0, 5).map((m, k) => {
@@ -434,8 +435,8 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
     const dayNov = 1 + Math.floor(rnd() * 11);
     hist.push({ mois: 'nov. 2026', num: 11, attendu: cl[1], recu: recuNov, paye: recuNov ? `${String(dayNov).padStart(2,'0')}/11/2026` : '', statut });
     const paiements = hist.filter(h => h.recu > 0).map(h => ({ date: h.paye, montant: h.recu, canal: canal === 'Espèces' ? 'Espèces' : (rnd() < 0.8 ? canal : pick(CANAUX)), ref: refFor(h.num), rapp: canal === 'Espèces' ? 'Saisie manuelle' : 'Automatique' }));
-    const relances = statut === 'En retard' && rnd() < 0.6 ? [{ date: '07/11/2026', canal: 'WhatsApp', msg: `Bonjour ${nom.split(' ')[0]}, la mensualité de novembre (${fmt(cl[1])}) pour ${'ÉLÈVE'} est attendue depuis le 5. Vous pouvez payer depuis n'importe quel compte vers l'alias PI-SPI 33 824 11 20. Merci.` }] : [];
-    return { id: i + 1, nom, tel, eleve: pick(KIDS) + ' ' + nom.split(' ').slice(-1)[0], classe: cl[0], montant: cl[1], canal, statut, hist, paiements, relances, email: nom.toLowerCase().replace(/[^a-z ]/g, '').replace(/ /g, '.') + '@exemple.sn', quartier: pick(['Mermoz','Sacré-Cœur','Ouakam','Parcelles Assainies','Yoff','Grand Yoff','Liberté 6','HLM','Pikine','Guédiawaye']) };
+    const relances = statut === 'En retard' && rnd() < 0.6 ? [{ date: '07/11/2026', canal: 'WhatsApp', msg: `Bonjour ${nom.split(' ')[0]}, la mensualité de novembre (${fmt(cl[1])}) pour ${'ÉLÈVE'} est attendue depuis le 5. Vous pouvez payer depuis n'importe quel compte vers l'alias PI-SPI keur-xaleyi. Merci.` }] : [];
+    return { id: i + 1, nom, tel, alias, eleve: pick(KIDS) + ' ' + nom.split(' ').slice(-1)[0], classe: cl[0], montant: cl[1], canal, statut, hist, paiements, relances, email: nom.toLowerCase().replace(/[^a-z ]/g, '').replace(/ /g, '.') + '@exemple.sn', quartier: pick(['Mermoz','Sacré-Cœur','Ouakam','Parcelles Assainies','Yoff','Grand Yoff','Liberté 6','HLM','Pikine','Guédiawaye']) };
   });
   payers.forEach(p => p.relances.forEach(r => r.msg = r.msg.replace('ÉLÈVE', p.eleve)));
   function refFor(m) { return 'PI' + String(m).padStart(2, '0') + String(100000 + Math.floor(rnd() * 900000)); }
@@ -443,19 +444,19 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
   function initials(n) { return n.split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase(); }
   function stClass(s) { return s === 'Payé' ? 'paye' : s === 'Partiel' ? 'partiel' : s === 'En retard' ? 'retard' : 'avenir'; }
   function due(p) { return p.montant - (p.hist[5].recu || 0); }
-  const ALIAS = '33 824 11 20';
+  const ALIAS = 'keur-xaleyi';
   const TODAY = { d: 12, m: 11 };
   function daysLate() { return TODAY.d - 5; }
 
   // Reconciliation lines
-  const recMatched = payers.filter(p => p.statut === 'Payé' && p.canal !== 'Espèces').map(p => ({ date: p.hist[5].paye, emetteur: p.nom + ' · ' + p.tel, montant: p.montant, canal: p.canal, ref: p.paiements[p.paiements.length - 1].ref, motif: '', payer: p.id, auto: true }));
+  const recMatched = payers.filter(p => p.statut === 'Payé' && p.canal !== 'Espèces').map(p => ({ date: p.hist[5].paye, emetteur: p.canal === 'Alias PI-SPI' && p.alias ? 'Alias ' + p.alias : p.nom + ' · ' + p.tel, montant: p.montant, canal: p.canal, ref: p.paiements[p.paiements.length - 1].ref, motif: '', payer: p.id, auto: true }));
   const lateOnes = payers.filter(p => p.statut !== 'Payé');
   const recToCheck = [
     { date: '09/11/2026', emetteur: 'Seydou ' + lateOnes[0].nom.split(' ').slice(-1)[0] + ' · 78 455 21 09', montant: lateOnes[0].montant, canal: 'Wave', ref: 'WV1109A7F3', motif: 'Émetteur inconnu, même nom de famille qu\'un payeur en retard', guess: lateOnes[0].id },
-    { date: '10/11/2026', emetteur: lateOnes[1].nom + ' · ' + lateOnes[1].tel, montant: Math.round(lateOnes[1].montant * 0.5 / 1000) * 1000, canal: 'Alias PI-SPI', ref: 'PI11504211', motif: 'Montant inférieur à la mensualité', guess: lateOnes[1].id },
+    { date: '10/11/2026', emetteur: 'Alias ' + (lateOnes[1].alias || lateOnes[1].nom.toLowerCase().replace(/ /g, '.')), montant: Math.round(lateOnes[1].montant * 0.5 / 1000) * 1000, canal: 'Alias PI-SPI', ref: 'PI11504211', motif: 'Montant inférieur à la mensualité', guess: lateOnes[1].id },
     { date: '11/11/2026', emetteur: 'Famille ' + lateOnes[2].nom.split(' ').slice(-1)[0] + ' · 76 210 88 41', montant: lateOnes[2].montant * 2, canal: 'Orange Money', ref: 'OM2211B0C4', motif: 'Montant égal à deux mensualités (fratrie ?)', guess: lateOnes[2].id },
     { date: '11/11/2026', emetteur: 'DIAGNE ET FRERES SARL · virement', montant: 110000, canal: 'Virement', ref: 'VIR-2026-11-0431', motif: 'Émetteur entreprise, montant sans correspondance', guess: 0 },
-    { date: '12/11/2026', emetteur: lateOnes[3].nom + ' · ' + lateOnes[3].tel, montant: lateOnes[3].montant, canal: 'Alias PI-SPI', ref: 'PI11587720', motif: 'Reçu ce matin, en attente de confirmation', guess: lateOnes[3].id },
+    { date: '12/11/2026', emetteur: 'Alias papa.' + lateOnes[3].nom.split(' ').slice(-1)[0].toLowerCase(), montant: lateOnes[3].montant, canal: 'Alias PI-SPI', ref: 'PI11587720', motif: 'Alias inconnu, référence élève présente dans le libellé', guess: lateOnes[3].id },
     { date: '12/11/2026', emetteur: '70 334 09 77 (sans nom)', montant: 55000, canal: 'Wave', ref: 'WV1112C9D1', motif: 'Numéro inconnu', guess: 0 },
     { date: '08/11/2026', emetteur: lateOnes[4].nom + ' · ' + lateOnes[4].tel, montant: lateOnes[4].montant, canal: 'Wave', ref: 'WV1108E2A8', motif: 'Doublon possible avec la ligne du 08/11 déjà associée', guess: lateOnes[4].id },
     { date: '06/11/2026', emetteur: 'Tante ' + lateOnes[5].nom.split(' ').slice(-1)[0] + ' · 77 902 15 63', montant: lateOnes[5].montant - 5000, canal: 'Orange Money', ref: 'OM0611F7B2', motif: 'Montant moins 5 000 (frais retenus ?)', guess: lateOnes[5].id },
@@ -528,7 +529,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
   function readFilters() { state.filters = { q: $('#fSearch').value.trim().toLowerCase(), classe: $('#fClasse').value, statut: $('#fStatut').value, canal: $('#fCanal').value }; }
   function filtered() {
     const f = state.filters;
-    let rows = payers.filter(p => (!f.q || (p.nom + ' ' + p.eleve + ' ' + p.tel).toLowerCase().includes(f.q)) && (!f.classe || p.classe === f.classe) && (!f.statut || p.statut === f.statut) && (!f.canal || p.canal === f.canal));
+    let rows = payers.filter(p => (!f.q || (p.nom + ' ' + p.eleve + ' ' + p.tel + ' ' + p.alias).toLowerCase().includes(f.q)) && (!f.classe || p.classe === f.classe) && (!f.statut || p.statut === f.statut) && (!f.canal || p.canal === f.canal));
     if (state.sortLate) { const order = { 'En retard': 0, 'Partiel': 1, 'Payé': 2 }; rows = rows.slice().sort((a, b) => order[a.statut] - order[b.statut] || a.nom.localeCompare(b.nom)); }
     return rows;
   }
@@ -540,7 +541,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
       const last = p.paiements[p.paiements.length - 1];
       return `<tr data-id="${p.id}" class="${state.selected.has(p.id) ? 'sel' : ''}">
         <td><input type="checkbox" data-sel="${p.id}" ${state.selected.has(p.id) ? 'checked' : ''} aria-label="Sélectionner ${esc(p.nom)}"></td>
-        <td><div class="main">${esc(p.nom)}</div><div class="sub">${esc(p.tel)}</div></td>
+        <td><div class="main">${esc(p.nom)}</div><div class="sub">${esc(p.tel)}${p.alias ? ' · alias ' + esc(p.alias) : ''}</div></td>
         <td><div>${esc(p.eleve)}</div><div class="sub">${esc(p.classe)}</div></td>
         <td class="r num">${fmt(p.montant)}</td>
         <td class="num">05/11/2026</td>
@@ -565,12 +566,13 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
   $('#btnExport').addEventListener('click', () => toast('Export CSV préparé (simulation).'));
   $('#btnAddPayer').addEventListener('click', () => openDialog('Ajouter un payeur', `
     <div class="field"><label for="nNom">Nom du parent</label><input id="nNom" placeholder="Prénom Nom"></div>
-    <div class="field"><label for="nTel">Téléphone (alias PI-SPI)</label><input id="nTel" placeholder="77 000 00 00"></div>
+    <div class="field"><label for="nTel">Téléphone (WhatsApp)</label><input id="nTel" placeholder="77 000 00 00"></div>
+    <div class="field"><label for="nAlias">Alias PI-SPI (facultatif, distinct du téléphone)</label><input id="nAlias" placeholder="prenom.nom"></div>
     <div class="field"><label for="nEleve">Élève</label><input id="nEleve" placeholder="Prénom Nom"></div>
     <div class="field"><label for="nClasse">Classe</label><select id="nClasse">${CLASSES.map(c => `<option>${c[0]}</option>`).join('')}</select></div>`, 'Enregistrer', () => {
       const nom = $('#nNom').value.trim(); if (!nom) { toast('Indiquez le nom du parent.'); return false; }
       const cl = CLASSES.find(c => c[0] === $('#nClasse').value) || CLASSES[3];
-      payers.push({ id: payers.length + 1, nom, tel: $('#nTel').value || '—', eleve: $('#nEleve').value || '—', classe: cl[0], montant: cl[1], canal: 'Alias PI-SPI', statut: 'En retard', hist: [...Array(5)].map((_, k) => ({ mois: MONTHS[k] + ' 2026', num: MONTH_NUM[k], attendu: 0, recu: 0, paye: '', statut: 'Non inscrit' })).concat([{ mois: 'nov. 2026', num: 11, attendu: cl[1], recu: 0, paye: '', statut: 'En retard' }]), paiements: [], relances: [], email: '', quartier: '' });
+      payers.push({ id: payers.length + 1, nom, tel: $('#nTel').value || '—', alias: $('#nAlias').value.trim(), eleve: $('#nEleve').value || '—', classe: cl[0], montant: cl[1], canal: 'Alias PI-SPI', statut: 'En retard', hist: [...Array(5)].map((_, k) => ({ mois: MONTHS[k] + ' 2026', num: MONTH_NUM[k], attendu: 0, recu: 0, paye: '', statut: 'Non inscrit' })).concat([{ mois: 'nov. 2026', num: 11, attendu: cl[1], recu: 0, paye: '', statut: 'En retard' }]), paiements: [], relances: [], email: '', quartier: '' });
       toast(`${nom} ajouté. Mensualité de novembre attendue.`); renderList(); return true;
     }));
   $('#tblPayers').addEventListener('click', e => {
@@ -595,18 +597,20 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
       <div class="facet"><div class="l">Statut novembre</div><div class="v"><span class="st ${stClass(p.statut)}">${p.statut}</span></div></div>
       <div class="facet"><div class="l">Solde dû</div><div class="v big num" style="color:${due(p) ? 'var(--negative)' : 'var(--positive)'}">${fmt(due(p))}</div></div>
       <div class="facet"><div class="l">Canal habituel</div><div class="v">${esc(p.canal)}</div></div>
-      <div class="facet"><div class="l">Alias PI-SPI du payeur</div><div class="v num">${esc(p.tel)}</div></div>
+      <div class="facet"><div class="l">Téléphone (WhatsApp)</div><div class="v num">${esc(p.tel)}</div></div>
+      <div class="facet"><div class="l">Alias PI-SPI</div><div class="v">${p.alias ? esc(p.alias) : '<span style="color:var(--muted);font-weight:400">Non renseigné</span> <button class="btn sm" id="opAlias">Renseigner</button>'}</div></div>
       <div class="facet"><div class="l">Ponctualité (6 mois)</div><div class="v">${p.hist.filter(h => h.late).length} retard${p.hist.filter(h => h.late).length > 1 ? 's' : ''}</div></div>`;
     $('#opEch').innerHTML = p.hist.slice().reverse().map(h => `<tr style="cursor:default"><td>${esc(h.mois)}</td><td class="num">05/${String(h.num).padStart(2, '0')}/2026</td><td class="r num">${h.attendu ? fmt(h.attendu) : '—'}</td><td class="r num">${h.recu ? fmt(h.recu) : '—'}</td><td class="num">${esc(h.paye) || '—'}</td><td><span class="st ${stClass(h.statut)}">${esc(h.statut)}</span>${h.late ? '<span class="sub"> · après l\'échéance</span>' : ''}</td></tr>`).join('');
     $('#opPay').innerHTML = p.paiements.length ? p.paiements.slice().reverse().map(x => `<tr style="cursor:default"><td class="num">${esc(x.date)}</td><td class="r num">${fmt(x.montant)}</td><td>${esc(x.canal)}</td><td class="num">${esc(x.ref)}</td><td><span class="pill ${x.rapp === 'Automatique' ? 'pos' : 'info'}">${esc(x.rapp)}</span></td><td><button class="btn sm" data-recu="${esc(x.ref)}">Reçu PDF</button></td></tr>`).join('') : '<tr><td colspan="6" class="empty">Aucun paiement enregistré.</td></tr>';
     $('#opRel').innerHTML = p.relances.length ? p.relances.map(r => `<div class="tl-item"><span class="pt"></span><div><div class="d">${esc(r.date)} · ${esc(r.canal)}</div><div class="m">${esc(r.msg)}</div></div></div>`).join('') : '<div class="empty">Aucune relance envoyée ce mois.</div>';
     $('#opInfo').innerHTML = `
-      <div><div class="l">Téléphone</div><div class="v num">${esc(p.tel)}</div></div>
+      <div><div class="l">Téléphone (WhatsApp)</div><div class="v num">${esc(p.tel)}</div></div>
+      <div><div class="l">Alias PI-SPI du payeur</div><div class="v">${esc(p.alias) || '—'}</div></div>
       <div><div class="l">E-mail</div><div class="v">${esc(p.email) || '—'}</div></div>
       <div><div class="l">Quartier</div><div class="v">${esc(p.quartier) || '—'}</div></div>
       <div><div class="l">Élève</div><div class="v">${esc(p.eleve)} · ${esc(p.classe)}</div></div>
       <div><div class="l">Jour d'échéance</div><div class="v">Le 5 de chaque mois</div></div>
-      <div><div class="l">Alias de l'école</div><div class="v num">${ALIAS}</div></div>`;
+      <div><div class="l">Alias PI-SPI de l'école</div><div class="v">${ALIAS}</div></div>`;
     $$('.anchorbar button').forEach(b => b.classList.toggle('on', b.dataset.anchor === 'sEch'));
   }
   $('.anchorbar').addEventListener('click', e => {
@@ -614,6 +618,14 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
     $$('.anchorbar button').forEach(x => x.classList.toggle('on', x === b));
     const el = document.getElementById(b.dataset.anchor);
     const top = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top, behavior: 'smooth' });
+  });
+  $('#opFacets').addEventListener('click', e => {
+    if (!e.target.closest('#opAlias')) return;
+    const p = payers.find(x => x.id === state.payerId);
+    openDialog('Renseigner l\'alias PI-SPI', `<div class="field"><label for="alVal">Alias PI-SPI du payeur</label><input id="alVal" placeholder="prenom.nom"></div><div style="color:var(--muted);font-size:.8125rem">L'alias est l'identifiant de paiement que le payeur a choisi auprès de sa banque ou de son opérateur. Il est distinct de son numéro de téléphone, qui sert aux relances WhatsApp.</div>`, 'Enregistrer', () => {
+      const v = $('#alVal').value.trim(); if (!v) { toast('Indiquez un alias.'); return false; }
+      p.alias = v; toast('Alias enregistré. Les prochains paiements reçus de cet alias seront rapprochés automatiquement.'); renderObject(); return true;
+    });
   });
   $('#opPay').addEventListener('click', e => { const b = e.target.closest('[data-recu]'); if (b) toast(`Reçu ${b.dataset.recu} généré et envoyé par WhatsApp (simulation).`); });
   $('#opRemind').addEventListener('click', () => { const p = payers.find(x => x.id === state.payerId); openRemind(p); });
@@ -674,7 +686,7 @@ dialog .field input, dialog .field select { min-width: 0; width: 100%; }
     $('#btnShowMatched').textContent = state.showMatched ? 'Revenir aux lignes à vérifier' : 'Voir les lignes associées automatiquement';
     const opts = p => `<option value="0">— Choisir —</option>` + payers.filter(x => x.statut !== 'Payé').map(x => `<option value="${x.id}" ${x.id === p ? 'selected' : ''}>${esc(x.nom)} · ${esc(x.eleve)}</option>`).join('');
     $('#recBody').innerHTML = rows.length ? rows.map((l, i) => `<tr style="cursor:default"><td class="num">${esc(l.date)}</td><td>${esc(l.emetteur)}</td><td class="r num">${fmt(l.montant)}</td><td>${esc(l.canal)}</td><td class="num">${esc(l.ref)}</td>
-      <td>${l.auto ? '<span class="pill pos">Alias reconnu</span>' : esc(l.motif)}</td>
+      <td>${l.auto ? `<span class="pill pos">${l.canal === 'Alias PI-SPI' ? 'Alias reconnu' : 'Numéro reconnu'}</span>` : esc(l.motif)}</td>
       <td>${l.auto ? esc(payers.find(p => p.id === l.payer).nom) : `<select class="rowsel" data-row="${i}" aria-label="Payeur à associer">${opts(l.guess)}</select>`}</td>
       <td>${l.auto ? '' : `<div style="display:flex;gap:.25rem"><button class="btn sm emph" data-assoc="${i}">Associer</button><button class="btn sm ghost" data-ignore="${i}">Ignorer</button></div>`}</td></tr>`).join('') : `<tr><td colspan="8" class="empty">${state.showMatched ? 'Aucune ligne.' : 'Tout est rapproché. Rien à vérifier.'}</td></tr>`;
   }
