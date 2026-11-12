@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} img{max-width:100%} [hidden]{display:none!important}</style>
+<title>Jotna</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: SAP Fiori 3 (Quartz) floorplans. Shell bar on top, launchpad of tiles, then List Report, Object Page and Worklist views switched by hash. */
+:root {
+  --shell: #354a5f; --shell-fg: #ffffff; --shell-hover: #283848;
+  --bg: #f7f7f7; --surface: #ffffff; --surface-2: #fafafa; --border: #d9d9d9; --field-border: #89919a;
+  --fg: #32363a; --muted: #6a6d70; --brand: #0a6ed1; --brand-hover: #085caf; --brand-fg: #ffffff;
+  --highlight: #ebf5fe; --hover: #f3f6f9;
+  --positive: #107e3e; --critical: #e9730c; --negative: #bb0000; --info: #0a6ed1; --neutral: #6a6d70;
+  --positive-bg: #f1fdf6; --critical-bg: #fef7f1; --negative-bg: #ffebeb; --info-bg: #ebf5fe;
+  --shadow: 0 0 0.125rem rgba(0,0,0,.08), 0 0.125rem 0.5rem rgba(0,0,0,.08);
+  --font: "72", "Inter", "Segoe UI", system-ui, sans-serif;
+  --radius: 0.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --shell: #1d2d3e; --shell-fg: #ffffff; --shell-hover: #2b3f55;
+  --bg: #1d232a; --surface: #29313a; --surface-2: #232a32; --border: #404a55; --field-border: #7d8793;
+  --fg: #eaecee; --muted: #a2aab3; --brand: #4db1ff; --brand-hover: #74c4ff; --brand-fg: #0b1620;
+  --highlight: #1f3650; --hover: #303a45;
+  --positive: #5dc122; --critical: #fabd64; --negative: #ff8888; --info: #4db1ff; --neutral: #a2aab3;
+  --positive-bg: #1f3222; --critical-bg: #3a2d1c; --negative-bg: #3c2222; --info-bg: #1f3650;
+  --shadow: 0 0 0.125rem rgba(0,0,0,.4), 0 0.125rem 0.5rem rgba(0,0,0,.4);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --shell: #1d2d3e; --shell-fg: #ffffff; --shell-hover: #2b3f55;
+  --bg: #1d232a; --surface: #29313a; --surface-2: #232a32; --border: #404a55; --field-border: #7d8793;
+  --fg: #eaecee; --muted: #a2aab3; --brand: #4db1ff; --brand-hover: #74c4ff; --brand-fg: #0b1620;
+  --highlight: #1f3650; --hover: #303a45;
+  --positive: #5dc122; --critical: #fabd64; --negative: #ff8888; --info: #4db1ff; --neutral: #a2aab3;
+  --positive-bg: #1f3222; --critical-bg: #3a2d1c; --negative-bg: #3c2222; --info-bg: #1f3650;
+  --shadow: 0 0 0.125rem rgba(0,0,0,.4), 0 0.125rem 0.5rem rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 0.875rem; line-height: 1.4; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--shell); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--brand); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.num { font-variant-numeric: tabular-nums; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Shell bar */
+.shell { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--shell); color: var(--shell-fg); height: 2.75rem; display: flex; align-items: center; gap: 0.5rem; padding-block: 0; }
+.shell .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9375rem; white-space: nowrap; }
+.shell .brand .mark { width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; background: var(--brand); display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: #fff; }
+.shell .crumb { color: rgba(255,255,255,.75); font-size: 0.8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.shell .spacer { flex: 1; }
+.shell .ibtn { background: transparent; border: 0; color: var(--shell-fg); width: 2.25rem; height: 2.25rem; border-radius: 0.25rem; display: grid; place-items: center; position: relative; }
+.shell .ibtn:hover { background: var(--shell-hover); }
+.shell .badge { position: absolute; top: 0.25rem; right: 0.25rem; background: #e9730c; color: #fff; font-size: 0.625rem; font-weight: 700; min-width: 1rem; height: 1rem; border-radius: 0.5rem; display: grid; place-items: center; padding: 0 0.25rem; }
+.shell .avatar { width: 2rem; height: 2rem; border-radius: 50%; background: #e3e9f0; color: #354a5f; font-weight: 600; font-size: 0.75rem; display: grid; place-items: center; }
+.shell .home { display: flex; align-items: center; gap: 0.5rem; background: transparent; border: 0; color: inherit; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+.shell .home:hover { background: var(--shell-hover); }
+.shell svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Message strip */
+.strip { display: flex; align-items: flex-start; gap: 0.5rem; background: var(--info-bg); border: 1px solid var(--info); border-radius: var(--radius); padding: 0.5rem 0.75rem; margin-block: 0.75rem 0; font-size: 0.8125rem; }
+.strip .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--info); margin-top: 0.35rem; flex: none; }
+
+/* Views */
+.view { display: none; }
+.view.active { display: block; }
+.page { max-width: 80rem; margin: 0 auto; padding-block: 0 2rem; }
+
+/* Launchpad */
+.lp-head { padding-block: 1.25rem 0.5rem; }
+.lp-head h1 { font-size: 1.375rem; font-weight: 400; margin: 0 0 0.125rem; text-wrap: balance; }
+.lp-head .sub { color: var(--muted); }
+.group { margin-top: 1.25rem; }
+.group h2 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.625rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 11rem)); gap: 0.75rem; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); height: 11rem; padding: 0.875rem 1rem; display: flex; flex-direction: column; text-align: left; color: inherit; transition: box-shadow .15s, transform .15s; }
+.tile:hover { box-shadow: 0 0 0.125rem rgba(0,0,0,.15), 0 0.5rem 1rem rgba(0,0,0,.14); }
+.tile:active { transform: translateY(1px); }
+.tile .t { font-weight: 600; font-size: 0.875rem; }
+.tile .s { color: var(--muted); font-size: 0.8125rem; margin-top: 0.125rem; }
+.tile .kpi { margin-top: auto; display: flex; align-items: baseline; gap: 0.375rem; }
+.tile .kpi .v { font-size: 2rem; font-weight: 300; line-height: 1; letter-spacing: -0.01em; }
+.tile .kpi .u { font-size: 0.75rem; color: var(--muted); }
+.tile .ft { font-size: 0.75rem; color: var(--muted); margin-top: 0.375rem; display: flex; align-items: center; gap: 0.25rem; }
+.tile.pos .v, .tile.pos .ft { color: var(--positive); }
+.tile.crit .v, .tile.crit .ft { color: var(--critical); }
+.tile.neg .v, .tile.neg .ft { color: var(--negative); }
+.tile .ico { margin-top: auto; width: 2.25rem; height: 2.25rem; color: var(--brand); }
+.tile .ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Dynamic page header */
+.dp-head { background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.04); }
+.dp-head .inner { max-width: 80rem; margin: 0 auto; padding-block: 0.75rem 0.75rem; }
+.dp-title { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.dp-title h1 { font-size: 1.25rem; font-weight: 400; margin: 0; }
+.dp-title .sub { color: var(--muted); margin-top: 0.125rem; }
+.dp-title .actions { margin-left: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.dp-title .bc { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+.dp-title .bc a { color: var(--brand); text-decoration: none; }
+
+/* Buttons */
+.btn { background: var(--surface); border: 1px solid var(--field-border); color: var(--brand); border-radius: var(--radius); height: 2.25rem; padding: 0 0.75rem; font-weight: 600; font-size: 0.875rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.375rem; }
+.btn:hover { background: var(--hover); }
+.btn.emph { background: var(--brand); border-color: var(--brand); color: var(--brand-fg); }
+.btn.emph:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.sm { height: 1.75rem; padding: 0 0.5rem; font-size: 0.8125rem; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Filter bar */
+.filterbar { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: flex-end; margin-top: 0.75rem; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.field label { font-size: 0.75rem; color: var(--muted); }
+.field input, .field select, .field textarea { height: 2.25rem; border: 1px solid var(--field-border); border-radius: var(--radius); background: var(--surface); padding: 0 0.5rem; min-width: 10rem; }
+.field textarea { height: auto; padding: 0.5rem; min-width: 0; width: 100%; resize: vertical; }
+.field input:hover, .field select:hover { border-color: var(--brand); }
+.filterbar .fb-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+
+/* Table */
+.tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 1rem; box-shadow: var(--shadow); }
+.toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.toolbar h2 { font-size: 0.9375rem; font-weight: 600; margin: 0; }
+.toolbar .spacer { flex: 1; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 48rem; }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { font-weight: 400; color: var(--muted); font-size: 0.8125rem; background: var(--surface-2); white-space: nowrap; }
+td.r, th.r { text-align: right; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--hover); }
+tbody tr.sel { background: var(--highlight); }
+tbody tr:last-child td { border-bottom: 0; }
+td .main { font-weight: 600; }
+td .sub { color: var(--muted); font-size: 0.8125rem; }
+.chev { color: var(--muted); }
+input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--brand); }
+
+/* Object status */
+.st { display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 500; white-space: nowrap; }
+.st::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
+.st.paye { color: var(--positive); }
+.st.retard { color: var(--negative); }
+.st.partiel { color: var(--critical); }
+.st.avenir { color: var(--neutral); }
+.pill { display: inline-block; padding: 0.0625rem 0.5rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 600; border: 1px solid currentColor; }
+.pill.pos { color: var(--positive); background: var(--positive-bg); }
+.pill.crit { color: var(--critical); background: var(--critical-bg); }
+.pill.neg { color: var(--negative); background: var(--negative-bg); }
+.pill.info { color: var(--info); background: var(--info-bg); }
+
+/* Footer bar */
+.footerbar { position: sticky; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--border); padding: 0.5rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: flex-end; gap: 0.5rem; align-items: center; box-shadow: 0 -0.125rem 0.5rem rgba(0,0,0,.06); }
+.footerbar .count { margin-right: auto; color: var(--muted); }
+
+/* Object page */
+.op-head { background: var(--surface); border-bottom: 1px solid var(--border); }
+.op-head .inner { max-width: 80rem; margin: 0 auto; padding-block: 0.75rem 1rem; }
+.op-title { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.op-title .av { width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--brand); color: var(--brand-fg); display: grid; place-items: center; font-size: 1.25rem; font-weight: 600; flex: none; }
+.op-title h1 { font-size: 1.375rem; font-weight: 400; margin: 0; }
+.op-title .sub { color: var(--muted); }
+.op-title .actions { margin-left: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.facets { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem 1.5rem; margin-top: 1rem; }
+.facet .l { font-size: 0.75rem; color: var(--muted); }
+.facet .v { font-size: 1rem; font-weight: 600; margin-top: 0.125rem; }
+.facet .v.big { font-size: 1.5rem; font-weight: 300; }
+.anchorbar { position: sticky; top: calc(2.75rem + env(safe-area-inset-top, 0px)); z-index: 4; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 0; overflow-x: auto; }
+.anchorbar .inner { max-width: 80rem; margin: 0 auto; display: flex; width: 100%; }
+.anchorbar button { background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 0.625rem 0.875rem; color: var(--fg); white-space: nowrap; }
+.anchorbar button.on { border-bottom-color: var(--brand); color: var(--brand); font-weight: 600; }
+.section { margin-top: 1.25rem; }
+.section h2 { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; }
+.section .tbl-wrap { margin-top: 0; }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+.form .l { font-size: 0.75rem; color: var(--muted); }
+.form .v { margin-top: 0.125rem; }
+.timeline { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 1rem; }
+.tl-item { display: grid; grid-template-columns: 1.25rem 1fr; gap: 0.5rem; padding: 0.625rem 0; border-bottom: 1px solid var(--border); }
+.tl-item:last-child { border-bottom: 0; }
+.tl-item .pt { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid var(--brand); margin-top: 0.25rem; }
+.tl-item .d { color: var(--muted); font-size: 0.75rem; }
+.tl-item .m { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem; margin-top: 0.25rem; white-space: pre-wrap; font-size: 0.8125rem; }
+
+/* KPI strip and cards */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.kcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; box-shadow: var(--shadow); }
+.kcard .l { font-size: 0.75rem; color: var(--muted); }
+.kcard .v { font-size: 1.75rem; font-weight: 300; line-height: 1.1; margin-top: 0.25rem; }
+.kcard.pos .v { color: var(--positive); }
+.kcard.crit .v { color: var(--critical); }
+.kcard.neg .v { color: var(--negative); }
+.segmented { display: inline-flex; border: 1px solid var(--field-border); border-radius: var(--radius); overflow: hidden; }
+.segmented button { background: var(--surface); border: 0; border-right: 1px solid var(--field-border); padding: 0 0.75rem; height: 2.125rem; color: var(--brand); font-weight: 600; }
+.segmented button:last-child { border-right: 0; }
+.segmented button.on { background: var(--brand); color: var(--brand-fg); }
+.upload { margin-top: 1rem; border: 1px dashed var(--field-border); border-radius: var(--radius); padding: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; background: var(--surface); }
+.upload .t { font-weight: 600; }
+.upload .s { color: var(--muted); font-size: 0.8125rem; }
+.rowsel { height: 2rem; border: 1px solid var(--field-border); border-radius: var(--radius); background: var(--surface); padding: 0 0.375rem; max-width: 14rem; }
+
+/* Worklist cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 0.875rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.card .hd { display: flex; align-items: center; gap: 0.75rem; }
+.card .hd .av { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--highlight); color: var(--brand); display: grid; place-items: center; font-weight: 600; font-size: 0.8125rem; flex: none; }
+.card .hd .n { font-weight: 600; }
+.card .hd .s { color: var(--muted); font-size: 0.8125rem; }
+.card .hd .late { margin-left: auto; }
+.card textarea { width: 100%; min-height: 6.5rem; border: 1px solid var(--field-border); border-radius: var(--radius); background: var(--surface-2); padding: 0.5rem; resize: vertical; font-size: 0.8125rem; }
+.card .ft { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+.card.sent { opacity: .6; }
+
+/* Dialog */
+dialog { border: 0; border-radius: var(--radius); box-shadow: 0 0.5rem 2rem rgba(0,0,0,.25); padding: 0; background: var(--surface); color: var(--fg); width: min(92vw, 30rem); }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+dialog .dh { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 1rem; }
+dialog .db { padding: 1rem; display: grid; gap: 0.75rem; }
+dialog .df { padding: 0.5rem 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
+dialog .field input, dialog .field select { min-width: 0; width: 100%; }
+
+/* Toast */
+.toast { position: fixed; left: 50%; bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(1rem); background: #32363a; color: #fff; padding: 0.625rem 1rem; border-radius: var(--radius); box-shadow: 0 0.25rem 1rem rgba(0,0,0,.3); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; max-width: min(90vw, 28rem); text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.empty { padding: 2rem 1rem; text-align: center; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .shell .crumb { display: none; }
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .tile { height: 9.5rem; }
+  .filterbar .field { flex: 1 1 10rem; }
+  .filterbar .field input, .filterbar .field select { min-width: 0; width: 100%; }
+  .filterbar .fb-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .dp-title .actions, .op-title .actions { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5A5 5 0 0 1 21.5 20"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v2M17 20h4M14 20v1"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+</svg>
+
+<header class="shell gutter">
+  <button class="home" id="btnHome" title="Accueil">
+    <span class="brand"><span class="mark">J</span>Jotna</span>
+  </button>
+  <span class="crumb" id="crumb">École privée Keur Xaleyi · Dakar (exemple)</span>
+  <span class="spacer"></span>
+  <button class="ibtn" id="btnSearch" title="Rechercher un payeur"><svg><use href="#i-search"/></svg></button>
+  <button class="ibtn" id="btnNotif" title="Notifications"><svg><use href="#i-bell"/></svg><span class="badge" id="notifBadge">9</span></button>
+  <span class="avatar" title="Mme Diène, gestionnaire">MD</span>
+</header>
+
+<!-- Launchpad -->
+<section class="view" id="v-accueil">
+  <div class="page gutter">
+    <div class="strip"><span class="dot"></span><span>Prototype avec des données d'exemple. Mois en cours : novembre 2026, échéance le 5. Les boutons simulent les envois ; aucun message ne part.</span></div>
+    <div class="lp-head">
+      <h1>Bonjour, Mme Diène</h1>
+      <div class="sub" id="lpSub"></div>
+    </div>
+    <div class="group">
+      <h2>Suivi du mois</h2>
+      <div class="tiles" id="tilesKpi"></div>
+    </div>
+    <div class="group">
+      <h2>Encaissement</h2>
+      <div class="tiles" id="tilesApps"></div>
+    </div>
+  </div>
+</section>
+
+<!-- List Report: Payeurs -->
+<section class="view" id="v-payeurs">
+  <div class="dp-head"><div class="inner gutter">
+    <div class="dp-title">
+      <div>
+        <div class="bc"><a href="#accueil">Accueil</a> › Payeurs</div>
+        <h1>Payeurs</h1>
+        <div class="sub">Familles inscrites et statut de la mensualité de novembre</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnAddPayer">Ajouter un payeur</button>
+        <button class="btn emph" id="btnReqAll">Demander le paiement aux retardataires</button>
+      </div>
+    </div>
+    <div class="filterbar" id="filterbar">
+      <div class="field"><label for="fSearch">Rechercher</label><input id="fSearch" type="search" placeholder="Nom, élève, téléphone"></div>
+      <div class="field"><label for="fClasse">Classe</label><select id="fClasse"><option value="">Toutes</option></select></div>
+      <div class="field"><label for="fStatut">Statut novembre</label><select id="fStatut"><option value="">Tous</option><option>Payé</option><option>Partiel</option><option>En retard</option></select></div>
+      <div class="field"><label for="fCanal">Canal habituel</label><select id="fCanal"><option value="">Tous</option><option>Alias PI-SPI</option><option>Wave</option><option>Orange Money</option><option>Virement</option><option>Espèces</option></select></div>
+      <div class="fb-actions"><button class="btn ghost" id="btnReset">Réinitialiser</button><button class="btn emph" id="btnGo">Lancer</button></div>
+    </div>
+  </div></div>
+  <div class="page gutter">
+    <div class="tbl-wrap">
+      <div class="toolbar"><h2 id="tblTitle">Payeurs</h2><span class="spacer"></span><button class="btn sm" id="btnSortDue">Trier : retard d'abord</button><button class="btn sm" id="btnExport">Exporter</button></div>
+      <div class="scroll"><table id="tblPayers">
+        <thead><tr><th style="width:2rem"><input type="checkbox" id="chkAll" aria-label="Tout sélectionner"></th><th>Payeur</th><th>Élève · classe</th><th class="r">Mensualité</th><th>Échéance</th><th>Statut</th><th>Canal habituel</th><th>Dernier paiement</th><th style="width:2rem"></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="footerbar" id="footerbar" hidden>
+    <span class="count" id="selCount"></span>
+    <button class="btn" id="btnRemindSel">Relancer</button>
+    <button class="btn emph" id="btnReqSel">Demander le paiement</button>
+  </div>
+</section>
+
+<!-- Object Page: Payeur -->
+<section class="view" id="v-payeur">
+  <div class="op-head"><div class="inner gutter">
+    <div class="bc" style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem"><a href="#accueil" style="text-decoration:none">Accueil</a> › <a href="#payeurs" style="text-decoration:none">Payeurs</a> › <span id="opCrumb"></span></div>
+    <div class="op-title">
+      <div class="av" id="opAv"></div>
+      <div><h1 id="opName"></h1><div class="sub" id="opSub"></div></div>
+      <div class="actions">
+        <button class="btn" id="opRemind"><svg><use href="#i-send"/></svg>Relancer</button>
+        <button class="btn" id="opRequest"><svg><use href="#i-qr"/></svg>Demander le paiement</button>
+        <button class="btn emph" id="opPaid"><svg><use href="#i-check"/></svg>Marquer payé</button>
+      </div>
+    </div>
+    <div class="facets" id="opFacets"></div>
+  </div></div>
+  <nav class="anchorbar gutter"><div class="inner">
+    <button class="on" data-anchor="sEch">Échéances</button>
+    <button data-anchor="sPay">Paiements</button>
+    <button data-anchor="sRel">Relances</button>
+    <button data-anchor="sInfo">Coordonnées</button>
+  </div></nav>
+  <div class="page gutter">
+    <div class="section" id="sEch"><h2>Échéances des six derniers mois</h2><div class="tbl-wrap"><div class="scroll"><table><thead><tr><th>Mois</th><th>Échéance</th><th class="r">Attendu</th><th class="r">Reçu</th><th>Payé le</th><th>Statut</th></tr></thead><tbody id="opEch"></tbody></table></div></div></div>
+    <div class="section" id="sPay"><h2>Paiements reçus</h2><div class="tbl-wrap"><div class="scroll"><table><thead><tr><th>Date</th><th class="r">Montant</th><th>Canal</th><th>Référence</th><th>Rapprochement</th><th>Reçu</th></tr></thead><tbody id="opPay"></tbody></table></div></div></div>
+    <div class="section" id="sRel"><h2>Relances envoyées</h2><div class="timeline" id="opRel"></div></div>
+    <div class="section" id="sInfo"><h2>Coordonnées</h2><div class="form" id="opInfo"></div></div>
+  </div>
+</section>
+
+<!-- Rapprochement -->
+<section class="view" id="v-rapprochement">
+  <div class="dp-head"><div class="inner gutter">
+    <div class="dp-title">
+      <div>
+        <div class="bc"><a href="#accueil">Accueil</a> › Rapprochement</div>
+        <h1>Rapprochement des encaissements</h1>
+        <div class="sub">Chaque ligne reçue sur le compte de l'école est associée à un payeur, puis la mensualité passe à « Payé ».</div>
+      </div>
+      <div class="actions"><div class="segmented" id="srcSeg"><button class="on" data-src="api">API PI-SPI (banque)</button><button data-src="csv">Relevé importé</button></div></div>
+    </div>
+  </div></div>
+  <div class="page gutter">
+    <div class="kpis" id="recKpis"></div>
+    <div class="upload" id="uploadBox" hidden>
+      <div><div class="t">Importer un relevé</div><div class="s">CSV exporté de Wave Business, Orange Money ou de la banque. Colonnes attendues : date, montant, émetteur, référence.</div></div>
+      <input type="file" id="fileCsv" accept=".csv,text/csv" aria-label="Choisir un fichier CSV">
+    </div>
+    <div class="tbl-wrap">
+      <div class="toolbar"><h2 id="recTitle">Lignes à vérifier</h2><span class="spacer"></span><button class="btn sm" id="btnShowMatched">Voir les lignes associées automatiquement</button></div>
+      <div class="scroll"><table><thead><tr><th>Reçu le</th><th>Émetteur</th><th class="r">Montant</th><th>Canal</th><th>Référence</th><th>Motif de vérification</th><th>Associer à</th><th></th></tr></thead><tbody id="recBody"></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- Relances -->
+<section class="view" id="v-relances">
+  <div class="dp-head"><div class="inner gutter">
+    <div class="dp-title">
+      <div>
+        <div class="bc"><a href="#accueil">Accueil</a> › Relances</div>
+        <h1>Relances WhatsApp</h1>
+        <div class="sub">Un message par famille en retard, avec son alias PI-SPI et le montant dû. Relisez, ajustez, envoyez.</div>
+      </div>
+      <div class="actions"><button class="btn" id="btnTemplate">Modèle de message</button><button class="btn emph" id="btnSendAll">Tout envoyer</button></div>
+    </div>
+  </div></div>
+  <div class="page gutter"><div class="cards" id="relCards"></div></div>
+</section>
+
+<dialog id="dlg">
+  <div class="dh" id="dlgTitle"></div>
+  <div class="db" id="dlgBody"></div>
+  <div class="df"><button class="btn" id="dlgCancel">Annuler</button><button class="btn emph" id="dlgOk">Envoyer</button></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  // ---------- Example data (deterministic) ----------
+  let seed = 20261112;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const NAMES = ['Aminata Diallo','Moussa Ndiaye','Fatou Sarr','Ibrahima Fall','Khady Gueye','Ousmane Sow','Mariama Ba','Cheikh Diop','Awa Faye','Mamadou Sy','Ndèye Thiam','Abdoulaye Kane','Seynabou Mbaye','Pape Dieng','Rokhaya Cissé','Modou Lô','Bineta Diouf','Lamine Camara','Astou Niang','Babacar Seck','Coumba Wade','Idrissa Diagne','Mame Diarra Sène','Alioune Mbodj','Adama Touré','Yacine Ndoye','Serigne Mbacké','Dieynaba Sall','Malick Gning','Sokhna Bousso'];
+  const KIDS = ['Alioune','Maïmouna','Pape','Sokhna','Omar','Aïda','Mouhamed','Fatima','Samba','Ndèye','Elhadji','Mariama','Abdou','Khadija','Ismaïla','Oumou','Tidiane','Rama','Baye','Adja'];
+  const CLASSES = [['Petite section',45000],['Moyenne section',45000],['Grande section',45000],['CP',55000],['CE1',55000],['CE2',55000],['CM1',55000],['CM2',55000],['6e',65000],['5e',65000],['4e',65000],['3e',65000],['2nde',75000],['1re',75000],['Terminale',75000]];
+  const CANAUX = ['Alias PI-SPI','Alias PI-SPI','Wave','Wave','Wave','Orange Money','Orange Money','Virement','Espèces'];
+  const MONTHS = ['juin','juil.','août','sept.','oct.','nov.'];
+  const MONTH_NUM = [6,7,8,9,10,11];
+
+  const payers = NAMES.map((nom, i) => {
+    const cl = pick(CLASSES);
+    const tel = '77 ' + String(100 + Math.floor(rnd() * 900)) + ' ' + String(10 + Math.floor(rnd() * 90)) + ' ' + String(10 + Math.floor(rnd() * 90));
+    const canal = pick(CANAUX);
+    const r = rnd();
+    let statut = r < 0.62 ? 'Payé' : r < 0.74 ? 'Partiel' : 'En retard';
+    const hist = MONTHS.slice(0, 5).map((m, k) => {
+      const late = rnd() < 0.25;
+      const day = late ? 6 + Math.floor(rnd() * 14) : 1 + Math.floor(rnd() * 5);
+      return { mois: m + ' 2026', num: MONTH_NUM[k], attendu: cl[1], recu: cl[1], paye: `${String(day).padStart(2,'0')}/${String(MONTH_NUM[k]).padStart(2,'0')}/2026`, statut: 'Payé', late };
+    });
+    const recuNov = statut === 'Payé' ? cl[1] : statut === 'Partiel' ? Math.round(cl[1] * pick([0.4, 0.5, 0.6]) / 1000) * 1000 : 0;
+    const dayNov = 1 + Math.floor(rnd() * 11);
+    hist.push({ mois: 'nov. 2026', num: 11, attendu: cl[1], recu: recuNov, paye: recuNov ? `${String(dayNov).padStart(2,'0')}/11/2026` : '', statut });
+    const paiements = hist.filter(h => h.recu > 0).map(h => ({ date: h.paye, montant: h.recu, canal: canal === 'Espèces' ? 'Espèces' : (rnd() < 0.8 ? canal : pick(CANAUX)), ref: refFor(h.num), rapp: canal === 'Espèces' ? 'Saisie manuelle' : 'Automatique' }));
+    const relances = statut === 'En retard' && rnd() < 0.6 ? [{ date: '07/11/2026', canal: 'WhatsApp', msg: `Bonjour ${nom.split(' ')[0]}, la mensualité de novembre (${fmt(cl[1])}) pour ${'ÉLÈVE'} est attendue depuis le 5. Vous pouvez payer depuis n'importe quel compte vers l'alias PI-SPI 33 824 11 20. Merci.` }] : [];
+    return { id: i + 1, nom, tel, eleve: pick(KIDS) + ' ' + nom.split(' ').slice(-1)[0], classe: cl[0], montant: cl[1], canal, statut, hist, paiements, relances, email: nom.toLowerCase().replace(/[^a-z ]/g, '').replace(/ /g, '.') + '@exemple.sn', quartier: pick(['Mermoz','Sacré-Cœur','Ouakam','Parcelles Assainies','Yoff','Grand Yoff','Liberté 6','HLM','Pikine','Guédiawaye']) };
+  });
+  payers.forEach(p => p.relances.forEach(r => r.msg = r.msg.replace('ÉLÈVE', p.eleve)));
+  function refFor(m) { return 'PI' + String(m).padStart(2, '0') + String(100000 + Math.floor(rnd() * 900000)); }
+  function fmt(n) { return new Intl.NumberFormat('fr-FR').format(n).replace(/ |\s/g, ' ') + ' FCFA'; }
+  function initials(n) { return n.split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase(); }
+  function stClass(s) { return s === 'Payé' ? 'paye' : s === 'Partiel' ? 'partiel' : s === 'En retard' ? 'retard' : 'avenir'; }
+  function due(p) { return p.montant - (p.hist[5].recu || 0); }
+  const ALIAS = '33 824 11 20';
+  const TODAY = { d: 12, m: 11 };
+  function daysLate() { return TODAY.d - 5; }
+
+  // Reconciliation lines
+  const recMatched = payers.filter(p => p.statut === 'Payé' && p.canal !== 'Espèces').map(p => ({ date: p.hist[5].paye, emetteur: p.nom + ' · ' + p.tel, montant: p.montant, canal: p.canal, ref: p.paiements[p.paiements.length - 1].ref, motif: '', payer: p.id, auto: true }));
+  const lateOnes = payers.filter(p => p.statut !== 'Payé');
+  const recToCheck = [
+    { date: '09/11/2026', emetteur: 'Seydou ' + lateOnes[0].nom.split(' ').slice(-1)[0] + ' · 78 455 21 09', montant: lateOnes[0].montant, canal: 'Wave', ref: 'WV1109A7F3', motif: 'Émetteur inconnu, même nom de famille qu\'un payeur en retard', guess: lateOnes[0].id },
+    { date: '10/11/2026', emetteur: lateOnes[1].nom + ' · ' + lateOnes[1].tel, montant: Math.round(lateOnes[1].montant * 0.5 / 1000) * 1000, canal: 'Alias PI-SPI', ref: 'PI11504211', motif: 'Montant inférieur à la mensualité', guess: lateOnes[1].id },
+    { date: '11/11/2026', emetteur: 'Famille ' + lateOnes[2].nom.split(' ').slice(-1)[0] + ' · 76 210 88 41', montant: lateOnes[2].montant * 2, canal: 'Orange Money', ref: 'OM2211B0C4', motif: 'Montant égal à deux mensualités (fratrie ?)', guess: lateOnes[2].id },
+    { date: '11/11/2026', emetteur: 'DIAGNE ET FRERES SARL · virement', montant: 110000, canal: 'Virement', ref: 'VIR-2026-11-0431', motif: 'Émetteur entreprise, montant sans correspondance', guess: 0 },
+    { date: '12/11/2026', emetteur: lateOnes[3].nom + ' · ' + lateOnes[3].tel, montant: lateOnes[3].montant, canal: 'Alias PI-SPI', ref: 'PI11587720', motif: 'Reçu ce matin, en attente de confirmation', guess: lateOnes[3].id },
+    { date: '12/11/2026', emetteur: '70 334 09 77 (sans nom)', montant: 55000, canal: 'Wave', ref: 'WV1112C9D1', motif: 'Numéro inconnu', guess: 0 },
+    { date: '08/11/2026', emetteur: lateOnes[4].nom + ' · ' + lateOnes[4].tel, montant: lateOnes[4].montant, canal: 'Wave', ref: 'WV1108E2A8', motif: 'Doublon possible avec la ligne du 08/11 déjà associée', guess: lateOnes[4].id },
+    { date: '06/11/2026', emetteur: 'Tante ' + lateOnes[5].nom.split(' ').slice(-1)[0] + ' · 77 902 15 63', montant: lateOnes[5].montant - 5000, canal: 'Orange Money', ref: 'OM0611F7B2', motif: 'Montant moins 5 000 (frais retenus ?)', guess: lateOnes[5].id },
+    { date: '05/11/2026', emetteur: 'Espèces caisse · reçu n° 2211', montant: 45000, canal: 'Espèces', ref: 'CAISSE-2211', motif: 'Encaissement caisse sans nom d\'élève', guess: 0 }
+  ];
+
+  // ---------- State ----------
+  const state = { view: 'accueil', payerId: null, selected: new Set(), filters: { q: '', classe: '', statut: '', canal: '' }, sortLate: false, src: 'api', showMatched: false, sent: new Set() };
+
+  // ---------- Helpers ----------
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let toastT;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+  function nav(v) { const allowed = ['accueil', 'payeurs', 'payeur', 'rapprochement', 'relances']; if (!allowed.includes(v)) v = 'accueil'; if (location.hash !== '#' + v) location.hash = v; else show(v); }
+  function show(v) {
+    state.view = v;
+    $$('.view').forEach(el => el.classList.toggle('active', el.id === 'v-' + v));
+    if (v === 'accueil') renderHome();
+    if (v === 'payeurs') renderList();
+    if (v === 'payeur') renderObject();
+    if (v === 'rapprochement') renderRec();
+    if (v === 'relances') renderRel();
+    window.scrollTo(0, 0);
+  }
+  function totals() {
+    const attendu = payers.reduce((s, p) => s + p.montant, 0);
+    const recu = payers.reduce((s, p) => s + (p.hist[5].recu || 0), 0);
+    const paye = payers.filter(p => p.statut === 'Payé').length;
+    const partiel = payers.filter(p => p.statut === 'Partiel').length;
+    const retard = payers.filter(p => p.statut === 'En retard').length;
+    return { attendu, recu, paye, partiel, retard, taux: Math.round(recu / attendu * 100) };
+  }
+
+  // ---------- Home ----------
+  function renderHome() {
+    const t = totals();
+    $('#lpSub').textContent = `Novembre 2026 · ${payers.length} familles · ${t.paye} payées, ${t.partiel} partielles, ${t.retard} en retard`;
+    $('#tilesKpi').innerHTML = `
+      <button class="tile pos" data-go="payeurs" data-statut="Payé"><span class="t">Taux de recouvrement</span><span class="s">Novembre, au ${TODAY.d} du mois</span><span class="kpi"><span class="v num">${t.taux}</span><span class="u">%</span></span><span class="ft">▲ 4 points vs octobre à date</span></button>
+      <button class="tile" data-go="payeurs"><span class="t">Encaissé</span><span class="s">Sur ${fmt(t.attendu)} attendus</span><span class="kpi"><span class="v num">${(t.recu / 1e6).toFixed(2).replace('.', ',')}</span><span class="u">M FCFA</span></span><span class="ft">${t.paye + t.partiel} paiements reçus</span></button>
+      <button class="tile neg" data-go="payeurs" data-statut="En retard"><span class="t">En retard</span><span class="s">Échéance du 5 dépassée</span><span class="kpi"><span class="v num">${t.retard}</span><span class="u">familles</span></span><span class="ft">${fmt(payers.filter(p => p.statut === 'En retard').reduce((s, p) => s + p.montant, 0))} dus</span></button>
+      <button class="tile crit" data-go="payeurs" data-statut="Partiel"><span class="t">Paiements partiels</span><span class="s">Solde à compléter</span><span class="kpi"><span class="v num">${t.partiel}</span><span class="u">familles</span></span><span class="ft">${fmt(payers.filter(p => p.statut === 'Partiel').reduce((s, p) => s + due(p), 0))} restants</span></button>
+      <button class="tile crit" data-go="rapprochement"><span class="t">Rapprochement</span><span class="s">Lignes reçues à vérifier</span><span class="kpi"><span class="v num">${recToCheck.length}</span><span class="u">lignes</span></span><span class="ft">${recMatched.length} associées automatiquement</span></button>
+      <button class="tile" data-go="relances"><span class="t">Relances à envoyer</span><span class="s">WhatsApp, modèle préparé</span><span class="kpi"><span class="v num">${payers.filter(p => p.statut !== 'Payé').length - state.sent.size}</span><span class="u">messages</span></span><span class="ft">${daysLate()} jours après l'échéance</span></button>`;
+    $('#tilesApps').innerHTML = `
+      <button class="tile" data-go="payeurs"><span class="t">Payeurs</span><span class="s">Familles et mensualités</span><span class="ico"><svg><use href="#i-users"/></svg></span></button>
+      <button class="tile" data-go="relances"><span class="t">Relances</span><span class="s">Messages WhatsApp</span><span class="ico"><svg><use href="#i-send"/></svg></span></button>
+      <button class="tile" data-go="rapprochement"><span class="t">Rapprochement</span><span class="s">API PI-SPI et relevés</span><span class="ico"><svg><use href="#i-link"/></svg></span></button>
+      <button class="tile" data-go="demande"><span class="t">Demande de paiement</span><span class="s">Alias et QR PI-SPI</span><span class="ico"><svg><use href="#i-qr"/></svg></span></button>
+      <button class="tile" data-go="recus"><span class="t">Reçus</span><span class="s">Génération et envoi</span><span class="ico"><svg><use href="#i-doc"/></svg></span></button>
+      <button class="tile" data-go="echeancier"><span class="t">Échéancier</span><span class="s">Calendrier des mensualités</span><span class="ico"><svg><use href="#i-cal"/></svg></span></button>
+      <button class="tile" data-go="parametres"><span class="t">Paramètres</span><span class="s">Établissement, alias, modèles</span><span class="ico"><svg><use href="#i-gear"/></svg></span></button>`;
+  }
+  $('#v-accueil').addEventListener('click', e => {
+    const t = e.target.closest('[data-go]'); if (!t) return;
+    const go = t.dataset.go;
+    if (['payeurs', 'relances', 'rapprochement'].includes(go)) {
+      if (go === 'payeurs') { state.filters = { q: '', classe: '', statut: t.dataset.statut || '', canal: '' }; syncFilters(); }
+      nav(go);
+    } else if (go === 'demande') { openRequest(payers.filter(p => p.statut === 'En retard')); }
+    else toast('Prototype : cet écran n\'est pas encore maquetté.');
+  });
+
+  // ---------- List Report ----------
+  const sel = $('#fClasse');
+  CLASSES.forEach(c => { const o = document.createElement('option'); o.textContent = c[0]; sel.appendChild(o); });
+  function syncFilters() { $('#fSearch').value = state.filters.q; $('#fClasse').value = state.filters.classe; $('#fStatut').value = state.filters.statut; $('#fCanal').value = state.filters.canal; }
+  function readFilters() { state.filters = { q: $('#fSearch').value.trim().toLowerCase(), classe: $('#fClasse').value, statut: $('#fStatut').value, canal: $('#fCanal').value }; }
+  function filtered() {
+    const f = state.filters;
+    let rows = payers.filter(p => (!f.q || (p.nom + ' ' + p.eleve + ' ' + p.tel).toLowerCase().includes(f.q)) && (!f.classe || p.classe === f.classe) && (!f.statut || p.statut === f.statut) && (!f.canal || p.canal === f.canal));
+    if (state.sortLate) { const order = { 'En retard': 0, 'Partiel': 1, 'Payé': 2 }; rows = rows.slice().sort((a, b) => order[a.statut] - order[b.statut] || a.nom.localeCompare(b.nom)); }
+    return rows;
+  }
+  function renderList() {
+    const rows = filtered();
+    $('#tblTitle').textContent = `Payeurs (${rows.length})`;
+    const tb = $('#tblPayers tbody');
+    tb.innerHTML = rows.length ? rows.map(p => {
+      const last = p.paiements[p.paiements.length - 1];
+      return `<tr data-id="${p.id}" class="${state.selected.has(p.id) ? 'sel' : ''}">
+        <td><input type="checkbox" data-sel="${p.id}" ${state.selected.has(p.id) ? 'checked' : ''} aria-label="Sélectionner ${esc(p.nom)}"></td>
+        <td><div class="main">${esc(p.nom)}</div><div class="sub">${esc(p.tel)}</div></td>
+        <td><div>${esc(p.eleve)}</div><div class="sub">${esc(p.classe)}</div></td>
+        <td class="r num">${fmt(p.montant)}</td>
+        <td class="num">05/11/2026</td>
+        <td><span class="st ${stClass(p.statut)}">${p.statut}</span>${p.statut === 'Partiel' ? `<div class="sub num">reste ${fmt(due(p))}</div>` : p.statut === 'En retard' ? `<div class="sub">${daysLate()} jours</div>` : ''}</td>
+        <td>${esc(p.canal)}</td>
+        <td class="num">${last ? esc(last.date) + '<div class="sub">' + fmt(last.montant) + '</div>' : '<span class="sub">Aucun</span>'}</td>
+        <td class="chev"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chev"/></svg></td></tr>`;
+    }).join('') : '<tr><td colspan="9" class="empty">Aucun payeur ne correspond aux filtres.</td></tr>';
+    $('#chkAll').checked = rows.length > 0 && rows.every(p => state.selected.has(p.id));
+    renderFooter();
+  }
+  function renderFooter() {
+    const n = state.selected.size;
+    $('#footerbar').hidden = n === 0;
+    $('#selCount').textContent = n === 1 ? '1 payeur sélectionné' : `${n} payeurs sélectionnés`;
+  }
+  $('#btnGo').addEventListener('click', () => { readFilters(); renderList(); });
+  $('#fSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { readFilters(); renderList(); } });
+  ['fClasse', 'fStatut', 'fCanal'].forEach(id => $('#' + id).addEventListener('change', () => { readFilters(); renderList(); }));
+  $('#btnReset').addEventListener('click', () => { state.filters = { q: '', classe: '', statut: '', canal: '' }; syncFilters(); renderList(); });
+  $('#btnSortDue').addEventListener('click', e => { state.sortLate = !state.sortLate; e.currentTarget.textContent = state.sortLate ? 'Trier : alphabétique' : 'Trier : retard d\'abord'; renderList(); });
+  $('#btnExport').addEventListener('click', () => toast('Export CSV préparé (simulation).'));
+  $('#btnAddPayer').addEventListener('click', () => openDialog('Ajouter un payeur', `
+    <div class="field"><label for="nNom">Nom du parent</label><input id="nNom" placeholder="Prénom Nom"></div>
+    <div class="field"><label for="nTel">Téléphone (alias PI-SPI)</label><input id="nTel" placeholder="77 000 00 00"></div>
+    <div class="field"><label for="nEleve">Élève</label><input id="nEleve" placeholder="Prénom Nom"></div>
+    <div class="field"><label for="nClasse">Classe</label><select id="nClasse">${CLASSES.map(c => `<option>${c[0]}</option>`).join('')}</select></div>`, 'Enregistrer', () => {
+      const nom = $('#nNom').value.trim(); if (!nom) { toast('Indiquez le nom du parent.'); return false; }
+      const cl = CLASSES.find(c => c[0] === $('#nClasse').value) || CLASSES[3];
+      payers.push({ id: payers.length + 1, nom, tel: $('#nTel').value || '—', eleve: $('#nEleve').value || '—', classe: cl[0], montant: cl[1], canal: 'Alias PI-SPI', statut: 'En retard', hist: [...Array(5)].map((_, k) => ({ mois: MONTHS[k] + ' 2026', num: MONTH_NUM[k], attendu: 0, recu: 0, paye: '', statut: 'Non inscrit' })).concat([{ mois: 'nov. 2026', num: 11, attendu: cl[1], recu: 0, paye: '', statut: 'En retard' }]), paiements: [], relances: [], email: '', quartier: '' });
+      toast(`${nom} ajouté. Mensualité de novembre attendue.`); renderList(); return true;
+    }));
+  $('#tblPayers').addEventListener('click', e => {
+    const cb = e.target.closest('[data-sel]');
+    if (cb) { const id = +cb.dataset.sel; cb.checked ? state.selected.add(id) : state.selected.delete(id); cb.closest('tr').classList.toggle('sel', cb.checked); $('#chkAll').checked = filtered().every(p => state.selected.has(p.id)); renderFooter(); return; }
+    const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+    state.payerId = +tr.dataset.id; nav('payeur');
+  });
+  $('#chkAll').addEventListener('change', e => { filtered().forEach(p => e.target.checked ? state.selected.add(p.id) : state.selected.delete(p.id)); renderList(); });
+  $('#btnRemindSel').addEventListener('click', () => { const n = state.selected.size; state.selected.forEach(id => state.sent.add(id)); toast(`${n} relance${n > 1 ? 's' : ''} WhatsApp envoyée${n > 1 ? 's' : ''} (simulation).`); state.selected.clear(); renderList(); });
+  $('#btnReqSel').addEventListener('click', () => openRequest(payers.filter(p => state.selected.has(p.id))));
+  $('#btnReqAll').addEventListener('click', () => openRequest(payers.filter(p => p.statut === 'En retard')));
+
+  // ---------- Object page ----------
+  function renderObject() {
+    const p = payers.find(x => x.id === state.payerId); if (!p) { nav('payeurs'); return; }
+    $('#opCrumb').textContent = p.nom; $('#opAv').textContent = initials(p.nom); $('#opName').textContent = p.nom;
+    $('#opSub').textContent = `Parent de ${p.eleve} · ${p.classe} · ${p.quartier || 'Dakar'}`;
+    $('#opPaid').disabled = p.statut === 'Payé';
+    $('#opFacets').innerHTML = `
+      <div class="facet"><div class="l">Mensualité</div><div class="v num">${fmt(p.montant)}</div></div>
+      <div class="facet"><div class="l">Statut novembre</div><div class="v"><span class="st ${stClass(p.statut)}">${p.statut}</span></div></div>
+      <div class="facet"><div class="l">Solde dû</div><div class="v big num" style="color:${due(p) ? 'var(--negative)' : 'var(--positive)'}">${fmt(due(p))}</div></div>
+      <div class="facet"><div class="l">Canal habituel</div><div class="v">${esc(p.canal)}</div></div>
+      <div class="facet"><div class="l">Alias PI-SPI du payeur</div><div class="v num">${esc(p.tel)}</div></div>
+      <div class="facet"><div class="l">Ponctualité (6 mois)</div><div class="v">${p.hist.filter(h => h.late).length} retard${p.hist.filter(h => h.late).length > 1 ? 's' : ''}</div></div>`;
+    $('#opEch').innerHTML = p.hist.slice().reverse().map(h => `<tr style="cursor:default"><td>${esc(h.mois)}</td><td class="num">05/${String(h.num).padStart(2, '0')}/2026</td><td class="r num">${h.attendu ? fmt(h.attendu) : '—'}</td><td class="r num">${h.recu ? fmt(h.recu) : '—'}</td><td class="num">${esc(h.paye) || '—'}</td><td><span class="st ${stClass(h.statut)}">${esc(h.statut)}</span>${h.late ? '<span class="sub"> · après l\'échéance</span>' : ''}</td></tr>`).join('');
+    $('#opPay').innerHTML = p.paiements.length ? p.paiements.slice().reverse().map(x => `<tr style="cursor:default"><td class="num">${esc(x.date)}</td><td class="r num">${fmt(x.montant)}</td><td>${esc(x.canal)}</td><td class="num">${esc(x.ref)}</td><td><span class="pill ${x.rapp === 'Automatique' ? 'pos' : 'info'}">${esc(x.rapp)}</span></td><td><button class="btn sm" data-recu="${esc(x.ref)}">Reçu PDF</button></td></tr>`).join('') : '<tr><td colspan="6" class="empty">Aucun paiement enregistré.</td></tr>';
+    $('#opRel').innerHTML = p.relances.length ? p.relances.map(r => `<div class="tl-item"><span class="pt"></span><div><div class="d">${esc(r.date)} · ${esc(r.canal)}</div><div class="m">${esc(r.msg)}</div></div></div>`).join('') : '<div class="empty">Aucune relance envoyée ce mois.</div>';
+    $('#opInfo').innerHTML = `
+      <div><div class="l">Téléphone</div><div class="v num">${esc(p.tel)}</div></div>
+      <div><div class="l">E-mail</div><div class="v">${esc(p.email) || '—'}</div></div>
+      <div><div class="l">Quartier</div><div class="v">${esc(p.quartier) || '—'}</div></div>
+      <div><div class="l">Élève</div><div class="v">${esc(p.eleve)} · ${esc(p.classe)}</div></div>
+      <div><div class="l">Jour d'échéance</div><div class="v">Le 5 de chaque mois</div></div>
+      <div><div class="l">Alias de l'école</div><div class="v num">${ALIAS}</div></div>`;
+    $$('.anchorbar button').forEach(b => b.classList.toggle('on', b.dataset.anchor === 'sEch'));
+  }
+  $('.anchorbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-anchor]'); if (!b) return;
+    $$('.anchorbar button').forEach(x => x.classList.toggle('on', x === b));
+    const el = document.getElementById(b.dataset.anchor);
+    const top = el.getBoundingClientRect().top + window.scrollY - 100; window.scrollTo({ top, behavior: 'smooth' });
+  });
+  $('#opPay').addEventListener('click', e => { const b = e.target.closest('[data-recu]'); if (b) toast(`Reçu ${b.dataset.recu} généré et envoyé par WhatsApp (simulation).`); });
+  $('#opRemind').addEventListener('click', () => { const p = payers.find(x => x.id === state.payerId); openRemind(p); });
+  $('#opRequest').addEventListener('click', () => { const p = payers.find(x => x.id === state.payerId); openRequest([p]); });
+  $('#opPaid').addEventListener('click', () => {
+    const p = payers.find(x => x.id === state.payerId);
+    openDialog('Marquer la mensualité de novembre payée', `
+      <div class="field"><label for="mpMontant">Montant reçu</label><input id="mpMontant" type="number" value="${due(p)}" min="0" step="1000"></div>
+      <div class="field"><label for="mpCanal">Canal</label><select id="mpCanal"><option>Espèces</option><option>Wave</option><option>Orange Money</option><option>Virement</option><option>Alias PI-SPI</option></select></div>
+      <div class="field"><label for="mpRef">Référence (facultatif)</label><input id="mpRef" placeholder="N° de reçu ou de transaction"></div>`, 'Enregistrer', () => {
+        const m = +$('#mpMontant').value || 0; if (m <= 0) { toast('Indiquez un montant.'); return false; }
+        markPaid(p, m, $('#mpCanal').value, $('#mpRef').value || ('MAN' + Date.now().toString().slice(-6)), 'Saisie manuelle');
+        toast(`${p.nom} : ${fmt(m)} enregistrés.`); renderObject(); return true;
+      });
+  });
+  function markPaid(p, montant, canal, ref, rapp) {
+    const h = p.hist[5]; h.recu = Math.min(h.attendu, (h.recu || 0) + montant); h.paye = '12/11/2026';
+    h.statut = h.recu >= h.attendu ? 'Payé' : 'Partiel'; p.statut = h.statut;
+    p.paiements.push({ date: '12/11/2026', montant, canal, ref, rapp });
+  }
+
+  // ---------- Dialogs ----------
+  let dlgOk = null;
+  function openDialog(title, body, okLabel, onOk) {
+    $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = body; $('#dlgOk').textContent = okLabel; dlgOk = onOk;
+    const d = $('#dlg'); if (!d.open) d.showModal(); const f = d.querySelector('input, select, textarea'); if (f) f.focus();
+  }
+  $('#dlgCancel').addEventListener('click', () => $('#dlg').close());
+  $('#dlgOk').addEventListener('click', () => { if (!dlgOk || dlgOk() !== false) $('#dlg').close(); });
+  function openRequest(list) {
+    if (!list.length) { toast('Aucun payeur en retard.'); return; }
+    const total = list.reduce((s, p) => s + due(p), 0);
+    openDialog('Demande de paiement PI-SPI', `
+      <div>${list.length === 1 ? `<strong>${esc(list[0].nom)}</strong> recevra une demande de paiement de <strong class="num">${fmt(due(list[0]))}</strong> dans son application bancaire ou mobile money.` : `<strong>${list.length} familles</strong> recevront une demande de paiement, soit <strong class="num">${fmt(total)}</strong> au total.`}</div>
+      <div class="field"><label for="rqAlias">Compte bénéficiaire (alias de l'école)</label><input id="rqAlias" value="${ALIAS}" readonly></div>
+      <div class="field"><label for="rqMsg">Libellé affiché au payeur</label><input id="rqMsg" value="Mensualité novembre 2026 – École Keur Xaleyi"></div>
+      <div class="sub" style="color:var(--muted);font-size:.8125rem">Le payeur valide depuis n'importe quel compte raccordé à PI-SPI. La ligne reçue sera associée automatiquement grâce à la référence.</div>`, 'Envoyer', () => { toast(`${list.length} demande${list.length > 1 ? 's' : ''} de paiement envoyée${list.length > 1 ? 's' : ''} (simulation).`); state.selected.clear(); if (state.view === 'payeurs') renderList(); return true; });
+  }
+  function message(p) { return `Bonjour ${p.nom.split(' ')[0]}, la mensualité de novembre de ${p.eleve} (${p.classe}) est attendue depuis le 5 : ${fmt(due(p))}${p.statut === 'Partiel' ? ' restants' : ''}. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI ${ALIAS}, libellé « ${p.eleve} nov. ». Merci, École Keur Xaleyi.`; }
+  function openRemind(p) {
+    openDialog('Relancer par WhatsApp', `<div class="field"><label for="rmMsg">Message</label><textarea id="rmMsg" rows="6">${esc(message(p))}</textarea></div><div class="sub" style="color:var(--muted);font-size:.8125rem">Destinataire : ${esc(p.tel)}</div>`, 'Envoyer', () => {
+      p.relances.push({ date: '12/11/2026', canal: 'WhatsApp', msg: $('#rmMsg').value }); state.sent.add(p.id); toast('Relance envoyée (simulation).'); if (state.view === 'payeur') renderObject(); return true;
+    });
+  }
+
+  // ---------- Reconciliation ----------
+  function renderRec() {
+    $('#uploadBox').hidden = state.src !== 'csv';
+    $$('#srcSeg button').forEach(b => b.classList.toggle('on', b.dataset.src === state.src));
+    const pending = recToCheck.filter(l => !l.done);
+    $('#recKpis').innerHTML = `
+      <div class="kcard"><div class="l">${state.src === 'api' ? 'Lignes reçues par l\'API depuis le 1er novembre' : 'Lignes du relevé importé'}</div><div class="v num">${recMatched.length + recToCheck.length}</div></div>
+      <div class="kcard pos"><div class="l">Associées automatiquement</div><div class="v num">${recMatched.length + recToCheck.filter(l => l.done).length}</div></div>
+      <div class="kcard ${pending.length ? 'crit' : 'pos'}"><div class="l">À vérifier</div><div class="v num">${pending.length}</div></div>
+      <div class="kcard"><div class="l">Montant en attente d'affectation</div><div class="v num">${(pending.reduce((s, l) => s + l.montant, 0) / 1000).toFixed(0)} k</div></div>`;
+    const rows = state.showMatched ? recMatched : pending;
+    $('#recTitle').textContent = state.showMatched ? `Lignes associées automatiquement (${recMatched.length})` : `Lignes à vérifier (${pending.length})`;
+    $('#btnShowMatched').textContent = state.showMatched ? 'Revenir aux lignes à vérifier' : 'Voir les lignes associées automatiquement';
+    const opts = p => `<option value="0">— Choisir —</option>` + payers.filter(x => x.statut !== 'Payé').map(x => `<option value="${x.id}" ${x.id === p ? 'selected' : ''}>${esc(x.nom)} · ${esc(x.eleve)}</option>`).join('');
+    $('#recBody').innerHTML = rows.length ? rows.map((l, i) => `<tr style="cursor:default"><td class="num">${esc(l.date)}</td><td>${esc(l.emetteur)}</td><td class="r num">${fmt(l.montant)}</td><td>${esc(l.canal)}</td><td class="num">${esc(l.ref)}</td>
+      <td>${l.auto ? '<span class="pill pos">Alias reconnu</span>' : esc(l.motif)}</td>
+      <td>${l.auto ? esc(payers.find(p => p.id === l.payer).nom) : `<select class="rowsel" data-row="${i}" aria-label="Payeur à associer">${opts(l.guess)}</select>`}</td>
+      <td>${l.auto ? '' : `<div style="display:flex;gap:.25rem"><button class="btn sm emph" data-assoc="${i}">Associer</button><button class="btn sm ghost" data-ignore="${i}">Ignorer</button></div>`}</td></tr>`).join('') : `<tr><td colspan="8" class="empty">${state.showMatched ? 'Aucune ligne.' : 'Tout est rapproché. Rien à vérifier.'}</td></tr>`;
+  }
+  $('#srcSeg').addEventListener('click', e => { const b = e.target.closest('[data-src]'); if (!b) return; state.src = b.dataset.src; renderRec(); });
+  $('#btnShowMatched').addEventListener('click', () => { state.showMatched = !state.showMatched; renderRec(); });
+  $('#fileCsv').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const n = String(r.result).split(/\r?\n/).filter(Boolean).length - 1; toast(`${f.name} : ${Math.max(n, 0)} lignes lues (simulation, non intégrées).`); }; r.readAsText(f); });
+  $('#recBody').addEventListener('click', e => {
+    const a = e.target.closest('[data-assoc]'); const ig = e.target.closest('[data-ignore]');
+    const pending = recToCheck.filter(l => !l.done);
+    if (a) {
+      const line = pending[+a.dataset.assoc]; const id = +$(`[data-row="${a.dataset.assoc}"]`).value;
+      if (!id) { toast('Choisissez le payeur à associer.'); return; }
+      const p = payers.find(x => x.id === id);
+      markPaid(p, line.montant, line.canal, line.ref, 'Rapprochement'); line.done = true; line.payer = id;
+      toast(`${fmt(line.montant)} associés à ${p.nom}. Statut : ${p.statut}.`); renderRec();
+    }
+    if (ig) { pending[+ig.dataset.ignore].done = true; toast('Ligne ignorée. Elle reste visible dans l\'historique.'); renderRec(); }
+  });
+
+  // ---------- Reminders worklist ----------
+  function renderRel() {
+    const list = payers.filter(p => p.statut !== 'Payé');
+    $('#relCards').innerHTML = list.length ? list.map(p => `<div class="card ${state.sent.has(p.id) ? 'sent' : ''}" data-card="${p.id}">
+      <div class="hd"><span class="av">${initials(p.nom)}</span><div><div class="n">${esc(p.nom)}</div><div class="s">${esc(p.eleve)} · ${esc(p.classe)} · ${esc(p.tel)}</div></div><span class="pill ${p.statut === 'Partiel' ? 'crit' : 'neg'} late">${p.statut === 'Partiel' ? 'reste ' + fmt(due(p)) : daysLate() + ' j de retard'}</span></div>
+      <textarea id="msg-${p.id}" aria-label="Message pour ${esc(p.nom)}">${esc(message(p))}</textarea>
+      <div class="ft"><button class="btn sm" data-copy="${p.id}"><svg><use href="#i-copy"/></svg>Copier</button><button class="btn sm emph" data-send="${p.id}" ${state.sent.has(p.id) ? 'disabled' : ''}><svg><use href="#i-send"/></svg>${state.sent.has(p.id) ? 'Envoyée' : 'Envoyer par WhatsApp'}</button></div>
+    </div>`).join('') : '<div class="empty">Toutes les familles sont à jour.</div>';
+  }
+  $('#relCards').addEventListener('click', e => {
+    const s = e.target.closest('[data-send]'); const c = e.target.closest('[data-copy]');
+    if (s) { const p = payers.find(x => x.id === +s.dataset.send); p.relances.push({ date: '12/11/2026', canal: 'WhatsApp', msg: $('#msg-' + p.id).value }); state.sent.add(p.id); toast(`Relance envoyée à ${p.nom} (simulation).`); renderRel(); }
+    if (c) { const ta = $('#msg-' + c.dataset.copy); const txt = ta.value; const done = () => toast('Message copié.'); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(() => { ta.select(); toast('Sélectionnez et copiez le texte.'); }); else { ta.select(); toast('Sélectionnez et copiez le texte.'); } }
+  });
+  $('#btnSendAll').addEventListener('click', () => { const list = payers.filter(p => p.statut !== 'Payé' && !state.sent.has(p.id)); list.forEach(p => { p.relances.push({ date: '12/11/2026', canal: 'WhatsApp', msg: $('#msg-' + p.id) ? $('#msg-' + p.id).value : message(p) }); state.sent.add(p.id); }); toast(`${list.length} relance${list.length > 1 ? 's' : ''} envoyée${list.length > 1 ? 's' : ''} (simulation).`); renderRel(); });
+  $('#btnTemplate').addEventListener('click', () => openDialog('Modèle de message', `<div class="field"><label for="tplMsg">Variables : {prenom} {eleve} {classe} {montant} {alias}</label><textarea id="tplMsg" rows="6">Bonjour {prenom}, la mensualité de novembre de {eleve} ({classe}) est attendue depuis le 5 : {montant}. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI {alias}, libellé « {eleve} nov. ». Merci, École Keur Xaleyi.</textarea></div>`, 'Enregistrer', () => { toast('Modèle enregistré (simulation).'); return true; }));
+
+  // ---------- Shell ----------
+  $('#btnHome').addEventListener('click', () => nav('accueil'));
+  $('#btnSearch').addEventListener('click', () => { nav('payeurs'); setTimeout(() => $('#fSearch').focus(), 50); });
+  $('#btnNotif').addEventListener('click', () => nav('rapprochement'));
+
+  // ---------- Routing ----------
+  function route() { show((location.hash || '#accueil').slice(1).replace(/[^a-z-]/g, '') || 'accueil'); }
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+
+</body>
+</html>
