@@ -54,7 +54,7 @@
       $('#crumb').textContent = `${state.tenant.name}${state.tenant.city ? ' · ' + state.tenant.city : ''}`;
       $('#monthPick').value = state.month; $('#btnUser').textContent = initials(state.me.name);
       const fn = { accueil: renderHome, payeurs: renderPayers, payeur: renderPayer, echeances: renderInstallments, encaissements: renderPayments, rapprochement: renderReconcile, relances: renderReminders, parametres: renderSettings, admin: renderAdmin }[state.view];
-      await fn();
+      state.rid = (state.rid || 0) + 1; await fn(state.rid);
     } catch (e) { fail(e); app.innerHTML = `<div class="page gutter"><div class="empty">${esc(e.message)}</div></div>`; }
   }
   const bc = (title) => `<div class="bc"><a href="#accueil">Accueil</a> › ${esc(title)}</div>`;
@@ -93,8 +93,8 @@
   function setSession(r) { state.me = r.user; state.tenant = r.tenant; state.admin = r.admin; state.dismissed = false; }
 
   // ---------- Accueil ----------
-  async function renderHome() {
-    const d = await api('GET', `/api/dashboard?month=${state.month}`);
+  async function renderHome(rid) {
+    const d = await api('GET', `/api/dashboard?month=${state.month}`); if (rid && rid !== state.rid) return;
     const v = V(); const trialDays = Math.ceil((Date.parse(d.trialEnds) - Date.now()) / 86400000);
     const strip = state.tenant.demo ? `<div class="strip"><span class="dot"></span><span>Établissement de démonstration : toutes les données sont fictives. <button class="btn sm ghost" id="btnReset">Réinitialiser la démo</button></span></div>`
       : d.plan === 'essai' ? `<div class="strip ${trialDays <= 7 ? 'warn' : ''}"><span class="dot"></span><span>Essai gratuit jusqu'au ${fdate(d.trialEnds)} (${Math.max(0, trialDays)} jours). Ensuite 25 000 FCFA par mois et par établissement.</span></div>`
@@ -128,8 +128,8 @@
 
   // ---------- Payeurs (List Report) ----------
   let payersCache = [];
-  async function renderPayers() {
-    const v = V(); payersCache = await api('GET', `/api/payers?month=${state.month}`);
+  async function renderPayers(rid) {
+    const v = V(); payersCache = await api('GET', `/api/payers?month=${state.month}`); if (rid && rid !== state.rid) return;
     const groups = [...new Set(payersCache.flatMap((p) => p.contracts.map((c) => c.group)).filter(Boolean))].sort();
     const canEdit = ['gestionnaire', 'direction'].includes(state.me.role);
     app.innerHTML = dpHead(v.payers, `${v.contracts} et statut de ${v.amount.toLowerCase()} · ${monthNote()}`,
@@ -176,9 +176,9 @@
   }
 
   // ---------- Fiche payeur (Object Page) ----------
-  async function renderPayer() {
+  async function renderPayer(rid) {
     if (!state.payerId) return route('payeurs');
-    const v = V(); const p = await api('GET', `/api/payers/${state.payerId}?month=${state.month}`);
+    const v = V(); const p = await api('GET', `/api/payers/${state.payerId}?month=${state.month}`); if (rid && rid !== state.rid) return;
     const active = p.contracts.filter((c) => c.active); const due = active.reduce((a, c) => a + Math.max(0, c.installment.amount - c.installment.paid), 0);
     const worst = active.some((c) => c.installment.status === 'retard') ? 'retard' : active.some((c) => c.installment.status === 'partiel') ? 'partiel' : active.length && active.every((c) => c.installment.status === 'paye') ? 'paye' : active.length ? 'avenir' : 'aucun';
     const canEdit = ['gestionnaire', 'direction'].includes(state.me.role); const canPay = ['gestionnaire', 'comptable'].includes(state.me.role);
@@ -216,8 +216,8 @@
   }
 
   // ---------- Échéancier ----------
-  async function renderInstallments() {
-    const v = V(); const list = await api('GET', `/api/installments?month=${state.month}`);
+  async function renderInstallments(rid) {
+    const v = V(); const list = await api('GET', `/api/installments?month=${state.month}`); if (rid && rid !== state.rid) return;
     const order = { retard: 0, partiel: 1, avenir: 2, paye: 3 }; list.sort((a, b) => order[a.status] - order[b.status] || (a.payer?.nom || '').localeCompare(b.payer?.nom || ''));
     const tot = (f) => list.filter(f).reduce((a, i) => a + i.amount, 0);
     app.innerHTML = dpHead('Échéancier', monthNote()) + `<div class="page gutter"><div class="kpis">
@@ -227,8 +227,8 @@
   }
 
   // ---------- Encaissements ----------
-  async function renderPayments() {
-    const v = V(); const all = await api('GET', '/api/payments'); const canPay = ['gestionnaire', 'comptable'].includes(state.me.role);
+  async function renderPayments(rid) {
+    const v = V(); const all = await api('GET', '/api/payments'); if (rid && rid !== state.rid) return; const canPay = ['gestionnaire', 'comptable'].includes(state.me.role);
     const tabs = [['tous', 'Tous'], ['associe', 'Associés'], ['a_verifier', 'À vérifier'], ['ignore', 'Ignorés']];
     const rows = all.filter((p) => state.encTab === 'tous' || p.status === state.encTab).sort((a, b) => b.date.localeCompare(a.date));
     app.innerHTML = dpHead('Encaissements', `${all.length} lignes reçues · ${fmt(all.filter((p) => p.status === 'associe').reduce((a, p) => a + p.amount, 0))} associés au total`,
@@ -246,9 +246,9 @@
   }
 
   // ---------- Rapprochement ----------
-  async function renderReconcile() {
+  async function renderReconcile(rid) {
     const v = V(); const [pending, payers] = await Promise.all([api('GET', '/api/payments?status=a_verifier'), api('GET', `/api/payers?month=${state.month}`)]);
-    const all = await api('GET', '/api/payments'); const auto = all.filter((p) => p.status === 'associe' && p.source !== 'manuel' && !p.motif.startsWith('Associé manuellement')).length;
+    const all = await api('GET', '/api/payments'); if (rid && rid !== state.rid) return; const auto = all.filter((p) => p.status === 'associe' && p.source !== 'manuel' && !p.motif.startsWith('Associé manuellement')).length;
     const canPay = ['gestionnaire', 'comptable'].includes(state.me.role);
     const opts = payers.flatMap((p) => p.contracts.filter((c) => c.active).map((c) => ({ id: c.id, label: `${p.nom} · ${c.label} (${c.ref}, reste ${fmt(Math.max(0, c.installment.amount - c.installment.paid))})`, unpaid: c.installment.status !== 'paye' }))).sort((a, b) => Number(b.unpaid) - Number(a.unpaid) || a.label.localeCompare(b.label));
     app.innerHTML = dpHead('Rapprochement des encaissements', `Chaque ligne reçue est associée à un ${v.contract.toLowerCase()} ; l'échéance passe alors à « Payé ». Les lignes dont la référence, l'alias ou le numéro sont reconnus sont associées sans intervention.`)
@@ -271,8 +271,8 @@
   }
 
   // ---------- Relances ----------
-  async function renderReminders() {
-    const v = V(); const list = await api('GET', `/api/reminders?month=${state.month}`); const canSend = ['gestionnaire', 'direction'].includes(state.me.role);
+  async function renderReminders(rid) {
+    const v = V(); const list = await api('GET', `/api/reminders?month=${state.month}`); if (rid && rid !== state.rid) return; const canSend = ['gestionnaire', 'direction'].includes(state.me.role);
     app.innerHTML = dpHead('Relances WhatsApp', `Un message par ${v.payer.toLowerCase()} en retard ou en paiement partiel, avec l'alias PI-SPI et le montant dû · ${monthNote()}`, canSend ? `<a class="btn" href="#parametres">Modèle de message</a><button class="btn emph" id="btnSendAll" ${!list.length ? 'disabled' : ''}>Marquer toutes comme envoyées</button>` : '')
       + `<div class="page gutter"><div class="strip"><span class="dot"></span><span>« Ouvrir WhatsApp » prépare le message dans votre WhatsApp (web ou téléphone) ; vous appuyez sur Envoyer. Jotna enregistre la relance dans l'historique du ${v.payer.toLowerCase()}. L'envoi automatique par l'API WhatsApp Business arrive avec l'abonnement.</span></div>
       <div class="cards">${list.map((r) => `<div class="card ${r.sent ? 'sent' : ''}"><div class="hd"><span class="av">${initials(r.payer.nom)}</span><div><div class="n">${esc(r.payer.nom)}</div><div class="s">${esc(r.label)}${r.group ? ' · ' + esc(r.group) : ''} · ${esc(r.payer.tel || 'sans téléphone')}</div></div><span class="pill ${r.status === 'partiel' ? 'crit' : 'neg'} late">${r.status === 'partiel' ? 'reste ' + fmt(r.amount - r.paid) : r.daysLate + ' j de retard'}</span></div>
@@ -306,8 +306,8 @@
   }
 
   // ---------- Paramètres ----------
-  async function renderSettings() {
-    const s = await api('GET', '/api/settings'); const t = s.tenant; const v = t.vocab; const canEdit = ['gestionnaire', 'direction'].includes(state.me.role); const isMgr = state.me.role === 'gestionnaire';
+  async function renderSettings(rid) {
+    const s = await api('GET', '/api/settings'); if (rid && rid !== state.rid) return; const t = s.tenant; const v = t.vocab; const canEdit = ['gestionnaire', 'direction'].includes(state.me.role); const isMgr = state.me.role === 'gestionnaire';
     const trialDays = Math.ceil((Date.parse(t.trialEnds) - Date.now()) / 86400000);
     app.innerHTML = dpHead('Paramètres', `${esc(t.name)} · ${TYPES[t.type]}`) + `<div class="page gutter">
       <div class="section"><h2>Établissement</h2><div class="panel"><form id="fSet" class="form-grid">${field('tName', 'Nom', 'text', t.name, canEdit ? '' : 'disabled')}${select('tType', 'Activité', Object.entries(TYPES), t.type)}${field('tCity', 'Ville', 'text', t.city, canEdit ? '' : 'disabled')}${field('tAlias', 'Alias PI-SPI de l\'établissement (compte qui reçoit les paiements)', 'text', t.alias, canEdit ? '' : 'disabled')}${field('tDue', 'Jour d\'échéance mensuelle', 'number', t.dueDay, `min="1" max="28" ${canEdit ? '' : 'disabled'}`)}</form>
@@ -332,8 +332,8 @@
   }
 
   // ---------- Administration Jotna ----------
-  async function renderAdmin() {
-    const list = await api('GET', '/api/admin/tenants');
+  async function renderAdmin(rid) {
+    const list = await api('GET', '/api/admin/tenants'); if (rid && rid !== state.rid) return;
     const mrr = list.filter((t) => t.plan === 'actif').length * 25000;
     app.innerHTML = dpHead('Administration Jotna', `${list.length} établissements · ${list.filter((t) => t.plan === 'actif').length} abonnés · ${list.filter((t) => t.plan === 'essai').length} en essai`) + `<div class="page gutter">
       <div class="kpis"><div class="kcard"><div class="l">Établissements</div><div class="v num">${list.length}</div></div><div class="kcard pos"><div class="l">Revenu mensuel récurrent</div><div class="v num">${fmt(mrr)}</div></div><div class="kcard"><div class="l">${'Contrats suivis'}</div><div class="v num">${list.reduce((a, t) => a + t.contracts, 0)}</div></div><div class="kcard"><div class="l">Attendu ce mois (tous)</div><div class="v num">${fmt(list.reduce((a, t) => a + t.expected, 0))}</div></div></div>
