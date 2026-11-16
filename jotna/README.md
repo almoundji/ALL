@@ -1,4 +1,4 @@
-# Jotna — suivi des mensualités sur PI-SPI
+# Jotna — suivi des mensualités, loyers et cotisations sur PI-SPI
 
 **Jotna** (wolof *jot na* : « c'est l'heure ») est un outil de recouvrement récurrent pour les
 écoles privées, les bailleurs et les salles de sport. Les parents ou locataires paient comme ils
@@ -8,7 +8,7 @@ par l'outil : il va directement sur le compte du client, ce qui permet de démar
 
 > Toutes les données du prototype sont fictives (familles, montants, numéros, références).
 
-## Ce que fait le prototype
+## Ce que fait l'application
 
 | Écran | Rôle |
 | --- | --- |
@@ -37,11 +37,39 @@ Inspirée de **SAP Fiori 3** (thème Quartz), comme les autres outils du dépôt
 - couleurs Fiori : bleu `#0a6ed1`, positif `#107e3e`, critique `#e9730c`, négatif `#bb0000`,
   fond `#f7f7f7` ; thème sombre dérivé ; police « 72 » avec repli sur Inter.
 
-## Lancer
+## Version en ligne
 
-Fichier unique, sans dépendance ni build : ouvrir `index.html` dans un navigateur, ou déployer le
-dossier sur Netlify (`netlify.toml` fourni). Les vues sont adressables par ancre :
-`#accueil`, `#payeurs`, `#payeur`, `#rapprochement`, `#relances`.
+Déployée sur Netlify : **https://jotna.netlify.app** (interface statique `public/`, API en fonction serverless
+`netlify/functions/api.mts`, état par établissement dans Netlify Blobs).
+
+| Compte de démonstration | Mot de passe | Activité |
+| --- | --- | --- |
+| `demo-ecole@jotna.sn` | `demo2026` | École (30 élèves, échéance le 5) |
+| `demo-bailleur@jotna.sn` | `demo2026` | Résidence (12 lots) |
+
+Tout visiteur peut aussi créer son établissement (essai de 30 jours). Les démos se réinitialisent depuis l'accueil.
+
+| Variable d'environnement Netlify | Rôle |
+| --- | --- |
+| `SESSION_SECRET` | clé de signature du cookie de session (obligatoire en production) |
+| `ADMIN_EMAILS` | adresses, séparées par des virgules, qui voient l'écran « Administration Jotna » (établissements, plans) |
+| `DEMO_PASSWORD` | mot de passe des comptes de démonstration (défaut `demo2026`) |
+
+Tests de scénario de l'API sans Netlify : `npm test`. Déploiement : `npm run deploy` (Netlify CLI connecté au site `jotna`).
+
+### Limites de cette version
+
+- Netlify Blobs conserve un document JSON par établissement : suffisant pour le pilote, à remplacer par une base
+  (Netlify DB ou PostgreSQL) au sprint 1 du planning, avant la montée en charge.
+- Les relances s'envoient depuis le WhatsApp du gestionnaire (lien pré-rempli) ; l'API WhatsApp Business viendra avec l'abonnement.
+- Les demandes de paiement PI-SPI partent par WhatsApp avec l'alias et la référence ; l'envoi dans l'application bancaire passe par l'API Business de la banque partenaire.
+- Le format du contenu QR est indicatif, à aligner sur la spécification du participant PI-SPI.
+
+## Lancer en local
+
+`npm install` puis `npm test` pour l'API. Pour l'interface complète, un serveur qui sert `public/` et route `/api/*`
+vers `netlify/functions/api.mts` (voir `netlify dev`, ou un petit serveur Node avec `--experimental-strip-types`).
+Le prototype statique d'origine reste dans `docs/prototype-fiori.html`.
 
 ## Prochaines étapes
 
