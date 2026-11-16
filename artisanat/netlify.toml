@@ -1,0 +1,29 @@
+# Plateforme nationale de l'Artisanat : site statique (public/) + API en fonction serverless (netlify/functions/api.mts).
+# Etat de démonstration conservé dans Netlify Blobs (document JSON unique). Voir public/docs/ARCHITECTURE.md.
+[build]
+  publish = "public"
+  command = "echo 'Aucune compilation : site statique'"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/documentation"
+  to = "/docs.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'"
