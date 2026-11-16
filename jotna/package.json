@@ -1,0 +1,17 @@
+{
+  "name": "jotna",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --experimental-strip-types --no-warnings netlify/test_api.mts",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.9"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.1.1"
+  }
+}

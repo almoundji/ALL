@@ -1,5 +1,11 @@
+# Jotna : interface statique (Fiori) + API en fonction serverless. État par établissement dans Netlify Blobs.
 [build]
-  publish = "."
+  publish = "public"
+  command = "echo 'rien à construire'"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
 
 [[headers]]
   for = "/*"
@@ -8,3 +14,4 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "same-origin"
     X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
