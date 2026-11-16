@@ -9,7 +9,8 @@ export type Role = "gestionnaire" | "direction" | "comptable";
 
 export interface Tenant {
   id: string; slug: string; name: string; type: TenantType; alias: string; dueDay: number; city: string;
-  plan: Plan; trialEnds: string; createdAt: string; demo: boolean;
+  plan: Plan; trialEnds: string; createdAt: string; demo: boolean; phone?: string;
+  onboarding?: { settings: boolean; informed: boolean; dismissed: boolean };
   templates: { relance: string; demande: string; recu: string };
 }
 export interface User { id: string; email: string; name: string; passwordHash: string; role: Role; tenantId: string; createdAt: string }
@@ -24,7 +25,7 @@ export interface Payment {
 export interface Reminder { id: string; payerId: string; contractId: string; month: string; date: string; channel: string; message: string; status: "envoye"; by: string }
 export interface AuditEntry { ts: string; user: string; action: string; details: string }
 export interface TenantState { tenant: Tenant; payers: Payer[]; contracts: Contract[]; payments: Payment[]; reminders: Reminder[]; audit: AuditEntry[] }
-export interface Index { users: User[]; tenants: { id: string; slug: string; name: string; type: TenantType; plan: Plan; createdAt: string; demo: boolean }[] }
+export interface Index { settings?: { supportWhatsapp?: string; supportEmail?: string }; users: User[]; tenants: { id: string; slug: string; name: string; type: TenantType; plan: Plan; createdAt: string; demo: boolean }[] }
 
 export type InstallmentStatus = "paye" | "partiel" | "retard" | "avenir";
 export interface Installment { contractId: string; payerId: string; month: string; due: string; amount: number; paid: number; status: InstallmentStatus; daysLate: number }

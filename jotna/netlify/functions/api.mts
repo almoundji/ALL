@@ -13,6 +13,7 @@ const SECRET = () => env("SESSION_SECRET", "jotna-dev-secret-change-me");
 const ADMIN_EMAILS = () => env("ADMIN_EMAILS", "").split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean);
 const COOKIE = "jotna_session";
 const DEMO_PASSWORD = () => env("DEMO_PASSWORD", "demo2026");
+const publicConfig = (idx: Index) => ({ supportWhatsapp: idx.settings?.supportWhatsapp || env("SUPPORT_WHATSAPP", ""), supportEmail: idx.settings?.supportEmail || env("SUPPORT_EMAIL", ""), price: 25000, trialDays: 30 });
 
 // ---------- Persistance ----------
 const memory = new Map<string, any>();
@@ -64,7 +65,10 @@ function enrich(s: TenantState, c: Contract, m: string) {
   const p = s.payers.find((x) => x.id === c.payerId); const inst = installment(s, c, m);
   return { ...c, payer: p ? { id: p.id, nom: p.nom, tel: p.tel, alias: p.alias } : null, installment: inst };
 }
-const tenantView = (s: TenantState) => ({ ...s.tenant, vocab: VOCAB[s.tenant.type] });
+const tenantView = (s: TenantState) => ({ ...s.tenant, vocab: VOCAB[s.tenant.type], onboarding: { ...(s.tenant.onboarding || {}), payers: s.payers.length > 0, first: s.payments.some((p) => p.status === "associe") } });
+
+// ---------- Public ----------
+route("GET", "/api/public/config", (c) => publicConfig(c.idx), false);
 
 // ---------- Authentification ----------
 route("POST", "/api/auth/signup", async (c) => {
@@ -76,23 +80,26 @@ route("POST", "/api/auth/signup", async (c) => {
   if (!establishment) throw new HttpError(400, "Indiquez le nom de l'établissement");
   if (c.idx.users.some((u) => u.email === email)) throw new HttpError(409, "Un compte existe déjà avec cette adresse");
   const s = createTenant({ name: establishment, type, city: str(b.city, 60), alias: normalizeAlias(str(b.alias, 60)) || undefined, dueDay: Math.min(28, Math.max(1, Number(b.dueDay) || 5)) }, c.idx.tenants.map((t) => t.slug));
+  s.tenant.phone = str(b.phone, 30); s.tenant.onboarding = { settings: Boolean(b.alias), informed: false, dismissed: false };
   const user: User = { id: uid(), email, name: name || email.split("@")[0], passwordHash: hashPassword(password), role: "gestionnaire", tenantId: s.tenant.id, createdAt: s.tenant.createdAt };
   audit(s, user.name, "tenant.create", `${establishment} (${type})`);
   c.idx.users.push(user); c.idx.tenants.push(summary(s)); await saveTenant(s); await save("index", c.idx);
-  return json({ user: pub(user), tenant: tenantView(s), admin: isAdmin(user) }, 201, { "set-cookie": setCookie(signSession(SECRET(), user.id)) });
+  return json({ user: pub(user), tenant: tenantView(s), admin: isAdmin(user), config: publicConfig(c.idx) }, 201, { "set-cookie": setCookie(signSession(SECRET(), user.id)) });
 }, false);
 route("POST", "/api/auth/login", async (c) => {
   const b = await body(c.req); const email = str(b.email).toLowerCase();
   const user = c.idx.users.find((u) => u.email === email);
   if (!user || !verifyPassword(String(b.password ?? ""), user.passwordHash)) { await new Promise((r) => setTimeout(r, 600)); throw new HttpError(401, "E-mail ou mot de passe incorrect"); }
   const s = await loadTenant(user.tenantId); if (!s) throw new HttpError(500, "Établissement introuvable");
-  return json({ user: pub(user), tenant: tenantView(s), admin: isAdmin(user) }, 200, { "set-cookie": setCookie(signSession(SECRET(), user.id)) });
+  return json({ user: pub(user), tenant: tenantView(s), admin: isAdmin(user), config: publicConfig(c.idx) }, 200, { "set-cookie": setCookie(signSession(SECRET(), user.id)) });
 }, false);
 route("DELETE", "/api/auth/session", () => json({ ok: true }, 200, { "set-cookie": setCookie("", 0) }), false);
-route("GET", "/api/auth/me", (c) => ({ user: pub(c.user), tenant: tenantView(c.s), admin: isAdmin(c.user) }));
+route("GET", "/api/auth/me", (c) => ({ user: pub(c.user), tenant: tenantView(c.s), admin: isAdmin(c.user), config: publicConfig(c.idx) }));
+route("POST", "/api/onboarding", async (c) => { const b = await body(c.req); const o = c.s.tenant.onboarding || (c.s.tenant.onboarding = { settings: false, informed: false, dismissed: false }); if (b.step === "informed") o.informed = true; if (b.step === "dismissed") o.dismissed = true; if (b.step === "settings") o.settings = true; c.dirty = true; return tenantView(c.s).onboarding; });
+route("GET", "/api/onboarding/message", (c) => { const t = c.s.tenant; const v = VOCAB[t.type]; const msg = `Bonjour, ${t.name} utilise désormais Jotna pour le suivi des ${v.amount.toLowerCase()}s. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI « ${t.alias} », en indiquant la référence de votre ${v.contract.toLowerCase()} dans le libellé (elle figure sur votre reçu et dans nos messages). L'échéance est le ${t.dueDay} de chaque mois ; un reçu vous est envoyé à chaque paiement. Merci.`; return { message: msg, alias: t.alias, dueDay: t.dueDay }; });
 
 // ---------- Tableau de bord ----------
-route("GET", "/api/dashboard", (c) => { const m = month(c.url); return { ...dashboard(c.s, m), monthLabel: monthLabel(m), trialEnds: c.s.tenant.trialEnds, plan: c.s.tenant.plan }; });
+route("GET", "/api/dashboard", (c) => { const m = month(c.url); return { ...dashboard(c.s, m), monthLabel: monthLabel(m), trialEnds: c.s.tenant.trialEnds, plan: c.s.tenant.plan, onboarding: tenantView(c.s).onboarding }; });
 
 // ---------- Payeurs et contrats ----------
 route("GET", "/api/payers", (c) => {
@@ -220,7 +227,8 @@ route("GET", "/api/settings", (c) => ({ tenant: tenantView(c.s), users: c.idx.us
 route("PUT", "/api/settings", async (c) => {
   requireRole(c.user, "gestionnaire", "direction"); const b = await body(c.req); const t = c.s.tenant;
   if (b.name !== undefined) t.name = str(b.name, 80) || t.name; if (b.alias !== undefined) t.alias = normalizeAlias(str(b.alias, 60)) || t.alias; if (b.city !== undefined) t.city = str(b.city, 60);
-  if (b.dueDay !== undefined) t.dueDay = Math.min(28, Math.max(1, Number(b.dueDay) || 5)); if (b.type && VOCAB[b.type as TenantType]) t.type = b.type;
+  if (b.dueDay !== undefined) t.dueDay = Math.min(28, Math.max(1, Number(b.dueDay) || 5)); if (b.type && VOCAB[b.type as TenantType]) t.type = b.type; if (b.phone !== undefined) t.phone = str(b.phone, 30);
+  if (!t.onboarding) t.onboarding = { settings: true, informed: false, dismissed: false }; else t.onboarding.settings = true;
   if (b.templates) for (const k of ["relance", "demande", "recu"] as const) if (typeof b.templates[k] === "string" && b.templates[k].trim()) t.templates[k] = str(b.templates[k], 1000);
   audit(c.s, c.user.name, "settings.update"); c.dirty = true; c.dirtyIndex = true; return tenantView(c.s);
 });
@@ -241,6 +249,8 @@ route("GET", "/api/export/payments.csv", (c) => {
 });
 
 // ---------- Administration du SaaS ----------
+route("GET", "/api/admin/settings", (c) => { if (!isAdmin(c.user)) throw new HttpError(403, "Réservé à l'administrateur de Jotna"); return { ...(c.idx.settings || {}), effective: publicConfig(c.idx) }; });
+route("PUT", "/api/admin/settings", async (c) => { if (!isAdmin(c.user)) throw new HttpError(403, "Réservé à l'administrateur de Jotna"); const b = await body(c.req); c.idx.settings = { ...(c.idx.settings || {}), supportWhatsapp: str(b.supportWhatsapp, 30).replace(/[^\d+ ]/g, ""), supportEmail: str(b.supportEmail, 80).toLowerCase() }; c.dirtyIndex = true; return { ...c.idx.settings, effective: publicConfig(c.idx) }; });
 route("GET", "/api/admin/tenants", async (c) => {
   if (!isAdmin(c.user)) throw new HttpError(403, "Réservé à l'administrateur de Jotna");
   const out = [] as any[];

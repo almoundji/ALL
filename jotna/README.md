@@ -39,8 +39,17 @@ Inspirée de **SAP Fiori 3** (thème Quartz), comme les autres outils du dépôt
 
 ## Version en ligne
 
-Déployée sur Netlify : **https://jotna.netlify.app** (interface statique `public/`, API en fonction serverless
-`netlify/functions/api.mts`, état par établissement dans Netlify Blobs).
+Déployée sur Netlify : **https://jotna.netlify.app** (site public et interface statique `public/`, API en fonction
+serverless `netlify/functions/api.mts`, état par établissement dans Netlify Blobs).
+
+- `/` : page publique (présentation, tarif, questions fréquentes, démo, inscription, support WhatsApp).
+- `/app/` : l'application. `#inscription` ouvre le formulaire de création, `#demo-ecole` et `#demo-bailleur` ouvrent
+  les démos directement.
+- **Autonomie de l'établissement** : après l'inscription, un assistant de démarrage en quatre étapes (vérifier l'alias
+  et l'échéance, ajouter les payeurs, informer les payeurs avec un message prêt, suivre la première échéance). Aide
+  et message aux payeurs aussi dans Paramètres.
+- **Support WhatsApp** : numéro et e-mail renseignés dans l'écran Administration (ou variables `SUPPORT_WHATSAPP`,
+  `SUPPORT_EMAIL`). Ils apparaissent sur la page publique, la page de connexion, l'assistant et un bouton flottant.
 
 | Compte de démonstration | Mot de passe | Activité |
 | --- | --- | --- |
@@ -54,6 +63,7 @@ Tout visiteur peut aussi créer son établissement (essai de 30 jours). Les dém
 | `SESSION_SECRET` | clé de signature du cookie de session (obligatoire en production) |
 | `ADMIN_EMAILS` | adresses, séparées par des virgules, qui voient l'écran « Administration Jotna » (établissements, plans) |
 | `DEMO_PASSWORD` | mot de passe des comptes de démonstration (défaut `demo2026`) |
+| `SUPPORT_WHATSAPP`, `SUPPORT_EMAIL` | support affiché aux établissements, si non renseigné dans l'administration |
 
 Tests de scénario de l'API sans Netlify : `npm test`. Déploiement : `npm run deploy` (Netlify CLI connecté au site `jotna`).
 

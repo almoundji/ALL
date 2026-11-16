@@ -3,49 +3,161 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Jotna</title>
-<meta name="description" content="Jotna : suivi des mensualités, loyers et cotisations sur PI-SPI. Pointage automatique, relances WhatsApp, reçus.">
+<title>Jotna – mensualités, loyers et cotisations sur PI-SPI</title>
+<meta name="description" content="Jotna pointe automatiquement les mensualités, loyers et cotisations reçus sur PI-SPI, Wave, Orange Money et en espèces, relance les retardataires par WhatsApp et envoie les reçus. Essai gratuit de 30 jours.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a6ed1'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' fill='white' text-anchor='middle'%3EJ%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css">
+<style>
+:root { --shell:#1d2d3e; --bg:#f6f7f9; --surface:#fff; --border:#d9d9d9; --fg:#1d2d3e; --muted:#5c6670; --brand:#0a6ed1; --brand-hover:#085caf; --orange:#e9730c; --green:#107e3e; --wa:#25d366; --font:"72","Inter","Segoe UI",system-ui,sans-serif; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1d232a; --surface:#29313a; --border:#404a55; --fg:#eaecee; --muted:#a2aab3; --brand:#4db1ff; --brand-hover:#74c4ff; --green:#5dc122; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.5; font-size: 1rem; }
+a { color: var(--brand); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 72rem; margin: 0 auto; }
+header.top { background: var(--shell); color: #fff; position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 1rem; height: 3.5rem; }
+.brand { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.125rem; color: #fff; text-decoration: none; }
+.mark { width: 1.75rem; height: 1.75rem; border-radius: .375rem; background: #0a6ed1; display: inline-grid; place-items: center; font-weight: 700; color: #fff; font-size: .875rem; }
+nav.links { margin-left: auto; display: flex; gap: .25rem; align-items: center; }
+nav.links a { color: rgba(255,255,255,.85); text-decoration: none; padding: .5rem .75rem; border-radius: .25rem; font-weight: 500; }
+nav.links a:hover { background: rgba(255,255,255,.1); }
+.btn { display: inline-flex; align-items: center; gap: .5rem; height: 2.75rem; padding: 0 1.125rem; border-radius: .375rem; border: 1px solid var(--brand); color: var(--brand); background: var(--surface); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.btn:hover { background: var(--bg); }
+.btn.emph { background: var(--brand); color: #fff; }
+.btn.emph:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.btn.wa { background: var(--wa); border-color: var(--wa); color: #0b1620; }
+.btn svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hero { padding-block: 4rem 3rem; display: grid; grid-template-columns: 1.1fr .9fr; gap: 3rem; align-items: center; }
+.eyebrow { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
+h1 { font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; margin: .5rem 0 1rem; letter-spacing: -.02em; text-wrap: balance; }
+.lead { font-size: 1.25rem; color: var(--muted); max-width: 36rem; margin: 0 0 1.5rem; }
+.cta { display: flex; gap: .75rem; flex-wrap: wrap; }
+.note { color: var(--muted); font-size: .875rem; margin-top: 1rem; }
+.hero-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: .375rem; padding: 1rem; box-shadow: 0 .125rem .5rem rgba(0,0,0,.06); min-height: 8.5rem; display: flex; flex-direction: column; }
+.tile .t { font-weight: 600; } .tile .s { color: var(--muted); font-size: .8125rem; }
+.tile .k { margin-top: auto; font-size: 2.25rem; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile .k.green { color: var(--green); } .tile .k.red { color: #bb0000; } .tile .k.orange { color: var(--orange); }
+section.block { padding-block: 3rem; border-top: 1px solid var(--border); }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 .5rem; letter-spacing: -.01em; text-wrap: balance; }
+.sub { color: var(--muted); max-width: 44rem; margin: 0 0 1.5rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; padding: 1.25rem; }
+.card h3 { margin: .25rem 0 .5rem; font-size: 1.125rem; }
+.card p { margin: 0; color: var(--muted); font-size: .9375rem; }
+.card .n { font-weight: 700; color: var(--brand); font-size: .75rem; letter-spacing: .1em; }
+.card.hl { border: 2px solid var(--brand); }
+.price { font-size: 2.25rem; font-weight: 300; margin: .5rem 0 0; }
+.price small { font-size: .875rem; color: var(--muted); font-weight: 400; }
+ul.check { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .5rem; }
+ul.check li { padding-left: 1.75rem; position: relative; color: var(--fg); }
+ul.check li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+details { border-top: 1px solid var(--border); padding: .75rem 0; }
+details summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); margin: .5rem 0 0; }
+footer { border-top: 1px solid var(--border); padding-block: 2rem; color: var(--muted); font-size: .875rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.support { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 6; display: inline-flex; align-items: center; gap: .5rem; background: var(--wa); color: #0b1620; font-weight: 600; padding: 0 1rem; height: 2.75rem; border-radius: 1.375rem; text-decoration: none; box-shadow: 0 .25rem 1rem rgba(0,0,0,.2); }
+.support svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+[hidden] { display: none !important; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-block: 2.5rem 2rem; } .grid3, .grid4 { grid-template-columns: 1fr 1fr; } nav.links a.hide-m { display: none; } }
+@media (max-width: 560px) { .grid3, .grid4, .hero-tiles { grid-template-columns: 1fr; } .support span { display: none; } .support { width: 2.75rem; padding: 0; justify-content: center; } }
+</style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
-  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
-  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5A5 5 0 0 1 21.5 20"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
-  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
-  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></symbol>
-  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v2M17 20h4M14 20v1"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
-  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
-  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></symbol>
-  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
-</svg>
+<header class="top"><div class="wrap gutter">
+  <a class="brand" href="/"><span class="mark">J</span>Jotna</a>
+  <nav class="links"><a class="hide-m" href="#comment">Comment ça marche</a><a class="hide-m" href="#tarif">Tarif</a><a class="hide-m" href="#faq">Questions</a><a href="/app/">Se connecter</a><a class="btn emph" style="height:2.25rem" href="/app/#inscription">Créer mon établissement</a></nav>
+</div></header>
 
-<header class="shell gutter" id="shell" hidden>
-  <button class="home" id="btnHome" title="Accueil"><span class="brand"><span class="mark">J</span>Jotna</span></button>
-  <span class="crumb" id="crumb"></span>
-  <span class="spacer"></span>
-  <label class="monthpick" title="Mois de référence"><svg><use href="#i-cal"/></svg><input type="month" id="monthPick" aria-label="Mois de référence"></label>
-  <button class="ibtn" id="btnSearch" title="Rechercher"><svg><use href="#i-search"/></svg></button>
-  <button class="ibtn" id="btnNotif" title="Lignes à vérifier"><svg><use href="#i-bell"/></svg><span class="badge" id="notifBadge" hidden></span></button>
-  <button class="avatar" id="btnUser" title="Mon compte"></button>
-</header>
+<main class="wrap gutter">
+<section class="hero">
+  <div>
+    <div class="eyebrow">Écoles privées · bailleurs · salles de sport</div>
+    <h1>Vos mensualités, loyers et cotisations, encaissés et pointés sans effort.</h1>
+    <p class="lead">Les parents, locataires ou adhérents paient comme ils veulent, vers l'alias PI-SPI de votre établissement. Jotna reconnaît chaque paiement, relance les retardataires par WhatsApp et envoie les reçus.</p>
+    <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn" href="/app/#demo-ecole">Voir la démo école</a><a class="btn" href="/app/#demo-bailleur">Voir la démo résidence</a></div>
+    <p class="note">Essai gratuit de 30 jours, sans carte ni engagement. Aucun fonds ne transite par Jotna : l'argent va directement sur votre compte.</p>
+  </div>
+  <div class="hero-tiles" aria-label="Aperçu du tableau de bord">
+    <div class="tile"><span class="t">Taux de recouvrement</span><span class="s">novembre, au 12 du mois</span><span class="k green">72 %</span></div>
+    <div class="tile"><span class="t">En retard</span><span class="s">échéance du 5 dépassée</span><span class="k red">8</span></div>
+    <div class="tile"><span class="t">Lignes à vérifier</span><span class="s">rapprochement</span><span class="k orange">5</span></div>
+    <div class="tile"><span class="t">Relances prêtes</span><span class="s">WhatsApp</span><span class="k">9</span></div>
+  </div>
+</section>
 
-<main id="app"></main>
+<section class="block" id="comment">
+  <h2>Comment ça marche</h2>
+  <p class="sub">Quatre étapes, aucune saisie entre le paiement et le reçu.</p>
+  <div class="grid4">
+    <div class="card"><div class="n">ÉTAPE 1</div><h3>Le payeur paie</h3><p>Depuis Wave, Orange Money ou sa banque, vers votre alias PI-SPI, avec la référence de l'élève ou du lot dans le libellé.</p></div>
+    <div class="card"><div class="n">ÉTAPE 2</div><h3>Jotna reconnaît</h3><p>Référence, alias ou numéro : l'échéance passe à « Payé ». Les cas douteux attendent une validation d'un clic.</p></div>
+    <div class="card"><div class="n">ÉTAPE 3</div><h3>Jotna relance</h3><p>Un message WhatsApp préparé pour chaque retardataire, avec le montant dû et l'alias où payer.</p></div>
+    <div class="card"><div class="n">ÉTAPE 4</div><h3>Le reçu part</h3><p>Reçu numéroté envoyé au payeur, export des encaissements pour le comptable.</p></div>
+  </div>
+</section>
 
-<dialog id="dlg">
-  <div class="dh" id="dlgTitle"></div>
-  <div class="db" id="dlgBody"></div>
-  <div class="df"><button class="btn" id="dlgCancel" type="button">Annuler</button><button class="btn emph" id="dlgOk" type="button">Enregistrer</button></div>
-</dialog>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js"></script>
+<section class="block" id="gerer">
+  <h2>Vous gérez seul, dès l'inscription</h2>
+  <p class="sub">Pas d'installation, pas de rendez-vous. L'assistant de démarrage vous guide en quatre étapes et le support répond sur WhatsApp.</p>
+  <div class="grid4">
+    <div class="card"><div class="n">10 MIN</div><h3>Créer l'établissement</h3><p>Nom, activité, alias PI-SPI, jour d'échéance. Votre compte est prêt.</p></div>
+    <div class="card"><div class="n">10 MIN</div><h3>Importer vos payeurs</h3><p>Votre liste d'élèves ou de locataires en CSV ou Excel. Jotna crée les références.</p></div>
+    <div class="card"><div class="n">10 MIN</div><h3>Informer les payeurs</h3><p>Un message prêt à diffuser avec l'alias et la référence à indiquer.</p></div>
+    <div class="card"><div class="n">LE 5</div><h3>Suivre l'échéance</h3><p>Les paiements se pointent, les retardataires sont relancés, les reçus partent.</p></div>
+  </div>
+</section>
+
+<section class="block" id="pourqui">
+  <h2>Dans les mots de votre activité</h2>
+  <div class="grid3">
+    <div class="card"><h3>Écoles privées</h3><p>Parents, élèves, classes, mensualités. Import de la liste des élèves, relances avant le conseil de classe.</p></div>
+    <div class="card"><h3>Bailleurs et résidences</h3><p>Locataires, logements, immeubles, loyers. Quittance à chaque paiement, impayés lot par lot.</p></div>
+    <div class="card"><h3>Salles de sport et clubs</h3><p>Adhérents, abonnements, formules, cotisations. Relance avant la coupure d'accès.</p></div>
+  </div>
+</section>
+
+<section class="block" id="tarif">
+  <h2>Un abonnement simple, sans commission</h2>
+  <div class="grid3">
+    <div class="card"><h3>Essai</h3><p class="price">0 FCFA <small>30 jours</small></p><ul class="check"><li>Toutes les fonctions</li><li>Données d'exemple ou vos données</li><li>Support WhatsApp</li></ul></div>
+    <div class="card hl"><h3>Établissement</h3><p class="price">25 000 FCFA <small>par mois, jusqu'à 200 payeurs</small></p><ul class="check"><li>Rapprochement automatique</li><li>Relances WhatsApp et reçus</li><li>Export comptable, trois rôles</li><li>Règlement par alias PI-SPI ou Wave</li></ul></div>
+    <div class="card"><h3>Groupe</h3><p class="price">Sur devis</p><ul class="check"><li>Plusieurs établissements</li><li>Plus de 200 payeurs</li><li>Accompagnement à la rentrée</li></ul></div>
+  </div>
+</section>
+
+<section class="block" id="faq">
+  <h2>Questions fréquentes</h2>
+  <details open><summary>Jotna touche-t-il à notre argent ?</summary><p>Non. Les paiements vont directement sur le compte de l'établissement, chez votre banque ou votre opérateur. Jotna lit les paiements reçus pour les pointer ; il n'encaisse rien et ne demande aucun agrément.</p></details>
+  <details><summary>Les parents doivent-ils installer une application ?</summary><p>Non. Ils paient depuis leur application habituelle, Wave, Orange Money ou leur banque, vers l'alias PI-SPI de l'établissement. Ils reçoivent les relances et les reçus par WhatsApp.</p></details>
+  <details><summary>Comment Jotna reconnaît-il un paiement ?</summary><p>D'abord par la référence du contrat indiquée dans le libellé, puis par l'alias PI-SPI du payeur, puis par son numéro Wave ou Orange Money. Les cas douteux sont présentés avec un motif et un contrat proposé.</p></details>
+  <details><summary>D'où viennent les paiements reçus ?</summary><p>Aujourd'hui, de l'import des relevés Wave Business, Orange Money ou bancaires, et de la saisie des espèces. L'API Business PI-SPI de votre banque, dès qu'elle est ouverte, remonte les paiements sans import.</p></details>
+  <details><summary>Et si nous arrêtons ?</summary><p>Résiliation à tout moment. Vous exportez vos encaissements et vos payeurs en CSV, puis nous supprimons vos données sur demande.</p></details>
+</section>
+
+<section class="block" id="essai">
+  <h2>Essayez avec vos propres données</h2>
+  <p class="sub">Créez votre établissement, importez votre liste et suivez la prochaine échéance. Une question : le support WhatsApp répond.</p>
+  <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn wa" id="ctaWa" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-4.6A8 8 0 1 1 21 12z"/></svg>Écrire au support</a></div>
+  <p class="note" id="supportNote"></p>
+</section>
+</main>
+
+<footer class="wrap gutter"><span>Jotna, « jot na » en wolof : c'est l'heure.</span><span>Dakar · <a href="/app/">Espace établissement</a></span></footer>
+<a class="support" id="support" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-4.6A8 8 0 1 1 21 12z"/></svg><span>Support WhatsApp</span></a>
+<script>
+(async function () {
+  try {
+    const c = await (await fetch('/api/public/config', { cache: 'no-store' })).json();
+    const d = String(c.supportWhatsapp || '').replace(/\D/g, '');
+    if (!d) return;
+    const link = 'https://wa.me/' + (d.startsWith('221') ? d : '221' + d) + '?text=' + encodeURIComponent('Bonjour Jotna, ');
+    for (const id of ['support', 'ctaWa']) { const a = document.getElementById(id); a.href = link; a.hidden = false; }
+    document.getElementById('supportNote').textContent = 'Support WhatsApp : ' + c.supportWhatsapp + (c.supportEmail ? ' · ' + c.supportEmail : '');
+  } catch (e) { /* configuration indisponible */ }
+})();
+</script>
 </body>
 </html>

@@ -11,7 +11,7 @@
   const STATUS = { paye: 'Payé', partiel: 'Partiel', retard: 'En retard', avenir: 'À venir', aucun: 'Sans contrat' };
   const TYPES = { ecole: 'École', bailleur: 'Bailleur / résidence', salle: 'Salle de sport / club', autre: 'Autre activité récurrente' };
   const app = $('#app');
-  const state = { me: null, tenant: null, admin: false, month: new Date().toISOString().slice(0, 7), view: 'accueil', payerId: null, selected: new Set(), filters: { q: '', group: '', status: '' }, encTab: 'tous', loginTab: 'login', dismissed: false };
+  const state = { me: null, tenant: null, admin: false, config: {}, month: new Date().toISOString().slice(0, 7), view: 'accueil', payerId: null, selected: new Set(), filters: { q: '', group: '', status: '' }, encTab: 'tous', loginTab: 'login', dismissed: false };
   const V = () => state.tenant.vocab;
 
   // ---------- Réseau ----------
@@ -45,7 +45,10 @@
   function route(v) { if (!VIEWS.includes(v)) v = 'accueil'; if (location.hash !== '#' + v) location.hash = v; else render(); }
   window.addEventListener('hashchange', render);
   async function render() {
-    const v = (location.hash || '#accueil').slice(1).replace(/[^a-z]/g, '') || 'accueil';
+    let v = (location.hash || '#accueil').slice(1).replace(/[^a-z-]/g, '') || 'accueil';
+    if (!state.me && (v === 'demo-ecole' || v === 'demo-bailleur')) { try { await login(v + '@jotna.sn', 'demo2026'); return; } catch (e) { fail(e); v = 'connexion'; } }
+    if (!state.me && v === 'inscription') { state.loginTab = 'signup'; v = 'connexion'; }
+    v = v.replace(/-/g, '');
     state.view = state.me ? (v === 'connexion' ? 'accueil' : v) : 'connexion';
     $('#shell').hidden = !state.me;
     window.scrollTo(0, 0);
@@ -78,19 +81,21 @@
         ${select('sType', 'Activité', Object.entries(TYPES), 'ecole')}
         ${field('sAlias', 'Alias PI-SPI de l\'établissement (facultatif, modifiable)', 'text', '', 'placeholder="ex. keur-xaleyi"')}
         ${field('sDue', 'Jour d\'échéance mensuelle', 'number', '5', 'min="1" max="28"')}
-        ${field('sName', 'Votre nom', 'text', '', 'autocomplete="name"')}${field('sEmail', 'E-mail', 'email', '', 'autocomplete="username" required')}${field('sPwd', 'Mot de passe (8 caractères minimum)', 'password', '', 'autocomplete="new-password" required minlength="8"')}
+        ${field('sPhone', 'Téléphone de l\'établissement (WhatsApp)', 'tel', '', 'placeholder="77 000 00 00"')}${field('sName', 'Votre nom', 'text', '', 'autocomplete="name"')}${field('sEmail', 'E-mail', 'email', '', 'autocomplete="username" required')}${field('sPwd', 'Mot de passe (8 caractères minimum)', 'password', '', 'autocomplete="new-password" required minlength="8"')}
         <div class="err" id="sErr"></div><button class="btn emph" type="submit">Créer et essayer 30 jours</button>
         <div class="muted" style="font-size:.8125rem">Essai gratuit. Aucun argent ne transite par Jotna : les paiements vont directement sur votre compte.</div>
       </form>
-      <div class="demo">Voir Jotna avec des données fictives :<div class="row"><button class="btn sm" data-demo="demo-ecole@jotna.sn">Démo école</button><button class="btn sm" data-demo="demo-bailleur@jotna.sn">Démo résidence</button></div></div>
+      <div class="demo">Voir Jotna avec des données fictives :<div class="row"><button class="btn sm" data-demo="demo-ecole@jotna.sn">Démo école</button><button class="btn sm" data-demo="demo-bailleur@jotna.sn">Démo résidence</button></div>${waSupport() ? `<div class="row"><a class="btn sm" href="${esc(waSupport())}" target="_blank" rel="noopener">Une question ? Support WhatsApp</a><a class="btn sm ghost" href="/">Présentation de Jotna</a></div>` : '<div class="row"><a class="btn sm ghost" href="/">Présentation de Jotna</a></div>'}</div>
     </div></div>`;
     $$('[data-tab]', app).forEach((b) => b.addEventListener('click', () => { state.loginTab = b.dataset.tab; renderLogin(); }));
     $('#loginForm').addEventListener('submit', async (e) => { e.preventDefault(); try { await login(val('lEmail'), $('#lPwd').value); } catch (er) { $('#lErr').textContent = er.message; } });
-    $('#signupForm').addEventListener('submit', async (e) => { e.preventDefault(); try { const r = await api('POST', '/api/auth/signup', { establishment: val('sEst'), type: val('sType'), alias: val('sAlias'), dueDay: Number(val('sDue')) || 5, name: val('sName'), email: val('sEmail'), password: $('#sPwd').value }); setSession(r); toast(`Bienvenue. ${r.tenant.name} est créé, essai jusqu'au ${fdate(r.tenant.trialEnds)}.`, true); route('accueil'); } catch (er) { $('#sErr').textContent = er.message; } });
+    $('#signupForm').addEventListener('submit', async (e) => { e.preventDefault(); try { const r = await api('POST', '/api/auth/signup', { establishment: val('sEst'), type: val('sType'), alias: val('sAlias'), dueDay: Number(val('sDue')) || 5, phone: val('sPhone'), name: val('sName'), email: val('sEmail'), password: $('#sPwd').value }); setSession(r); toast(`Bienvenue. ${r.tenant.name} est créé, essai jusqu'au ${fdate(r.tenant.trialEnds)}.`, true); route('accueil'); } catch (er) { $('#sErr').textContent = er.message; } });
     $$('[data-demo]', app).forEach((b) => b.addEventListener('click', async () => { try { await login(b.dataset.demo, 'demo2026'); } catch (er) { $('#lErr').textContent = er.message; } }));
   }
   async function login(email, password) { const r = await api('POST', '/api/auth/login', { email, password }); setSession(r); route('accueil'); }
-  function setSession(r) { state.me = r.user; state.tenant = r.tenant; state.admin = r.admin; state.dismissed = false; }
+  function setSession(r) { state.me = r.user; state.tenant = r.tenant; state.admin = r.admin; state.dismissed = false; if (r.config) state.config = r.config; supportButton(); }
+  const waSupport = () => { const d = String(state.config.supportWhatsapp || '').replace(/\D/g, ''); return d ? `https://wa.me/${d.startsWith('221') ? d : '221' + d}?text=${encodeURIComponent('Bonjour Jotna, ')}` : ''; };
+  function supportButton() { let b = $('#support'); if (!b) { b = document.createElement('a'); b.id = 'support'; b.className = 'support'; b.target = '_blank'; b.rel = 'noopener'; b.innerHTML = '<svg><use href="#i-chat"/></svg><span>Support WhatsApp</span>'; document.body.appendChild(b); } const l = waSupport(); b.hidden = !l; b.href = l || '#'; }
 
   // ---------- Accueil ----------
   async function renderHome(rid) {
@@ -99,8 +104,11 @@
     const strip = state.tenant.demo ? `<div class="strip"><span class="dot"></span><span>Établissement de démonstration : toutes les données sont fictives. <button class="btn sm ghost" id="btnReset">Réinitialiser la démo</button></span></div>`
       : d.plan === 'essai' ? `<div class="strip ${trialDays <= 7 ? 'warn' : ''}"><span class="dot"></span><span>Essai gratuit jusqu'au ${fdate(d.trialEnds)} (${Math.max(0, trialDays)} jours). Ensuite 25 000 FCFA par mois et par établissement.</span></div>`
       : d.plan === 'suspendu' ? `<div class="strip warn"><span class="dot"></span><span>Abonnement suspendu : lecture seule. Contactez Jotna pour réactiver.</span></div>` : '';
-    const empty = d.contracts === 0 ? `<div class="strip"><span class="dot"></span><span>Commencez par ajouter vos ${v.payers.toLowerCase()} : <a href="#payeurs">saisie ou import d'un fichier</a>.${state.me.role === 'gestionnaire' ? ` Ou <button class="btn sm ghost" id="btnLoadDemo">chargez des données d'exemple</button> pour découvrir l'outil.` : ''}</span></div>` : '';
-    app.innerHTML = `<div class="page gutter">${strip}${empty}
+    const ob = d.onboarding || state.tenant.onboarding || {}; state.tenant.onboarding = ob; const steps = [['settings', 'Vérifier l\'alias PI-SPI et le jour d\'échéance', `Alias actuel : ${state.tenant.alias} · échéance le ${state.tenant.dueDay}`, '#parametres', 'Vérifier'], ['payers', `Ajouter vos ${v.payers.toLowerCase()}`, 'Saisie un par un ou import de votre liste (CSV, Excel)', '#payeurs', 'Ajouter'], ['informed', 'Informer les payeurs', 'Message WhatsApp prêt : alias, référence, jour d\'échéance', 'informed', 'Voir le message'], ['first', 'Suivre la première échéance', 'Importer un relevé ou saisir un paiement : le statut passe à Payé', '#encaissements', 'Encaissements']];
+    const done = steps.filter(([k]) => ob[k]).length;
+    const onboarding = !state.tenant.demo && !ob.dismissed && done < steps.length ? `<div class="panel" style="margin-top:.75rem"><div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap"><h2 style="font-size:1rem;margin:0">Démarrage : ${done} / ${steps.length} étapes</h2><span class="muted">Trente minutes suffisent pour suivre votre prochaine échéance.</span><span class="spacer" style="flex:1"></span>${waSupport() ? `<a class="btn sm" href="${esc(waSupport())}" target="_blank" rel="noopener">Aide par WhatsApp</a>` : ''}<button class="btn sm ghost" id="obDismiss">Masquer</button></div><div class="steps-ob">${steps.map(([k, t, sub, href, lbl], i) => `<div class="ob ${ob[k] ? 'done' : ''}"><span class="ob-n">${ob[k] ? '✓' : i + 1}</span><div style="min-width:0"><div class="main">${t}</div><div class="sub">${sub}</div></div>${ob[k] ? '' : href === 'informed' ? `<button class="btn sm emph" id="obInformed">${lbl}</button>` : `<a class="btn sm ${i === done ? 'emph' : ''}" href="${href}">${lbl}</a>`}</div>`).join('')}</div></div>` : '';
+    const empty = d.contracts === 0 && (state.tenant.demo || ob.dismissed) ? `<div class="strip"><span class="dot"></span><span>Commencez par ajouter vos ${v.payers.toLowerCase()} : <a href="#payeurs">saisie ou import d'un fichier</a>.${state.me.role === 'gestionnaire' ? ` Ou <button class="btn sm ghost" id="btnLoadDemo">chargez des données d'exemple</button> pour découvrir l'outil.` : ''}</span></div>` : '';
+    app.innerHTML = `<div class="page gutter">${strip}${onboarding}${empty}
       <div class="lp-head"><h1>Bonjour, ${esc(state.me.name)}</h1><div class="muted">${esc(d.monthLabel)} · ${d.contracts} ${v.contracts.toLowerCase()} · ${d.paye} payés, ${d.partiel} partiels, ${d.retard} en retard, ${d.avenir} à venir · échéance le ${fdate(d.dueDate)}</div></div>
       <div class="group"><h2>Suivi du mois</h2><div class="tiles">
         <button class="tile ${d.rate >= 80 ? 'pos' : d.rate >= 50 ? 'crit' : 'neg'}" data-go="echeances"><span class="t">Taux de recouvrement</span><span class="s">${esc(d.monthLabel)}</span><span class="kpi"><span class="v num">${d.rate}</span><span class="u">%</span></span><span class="ft">${fmt(d.received)} sur ${fmt(d.expected)}</span></button>
@@ -124,6 +132,8 @@
     $$('[data-go]', app).forEach((b) => b.addEventListener('click', () => { const go = b.dataset.go; if (go === 'demande') return openRequests(); if (go === 'payeurs') { state.filters = { q: '', group: '', status: b.dataset.status || '' }; } route(go); }));
     const r = $('#btnReset'); if (r) r.addEventListener('click', () => openDialog('Réinitialiser la démo', '<p>Les données fictives seront régénérées. Vos saisies de test disparaîtront.</p>', 'Réinitialiser', async () => { await api('POST', '/api/demo/reset'); toast('Démo réinitialisée.'); render(); }));
     const l = $('#btnLoadDemo'); if (l) l.addEventListener('click', async () => { try { const r2 = await api('POST', '/api/demo/load'); toast(`${r2.payers} ${V().payers.toLowerCase()} d'exemple chargés.`); render(); } catch (e) { fail(e); } });
+    const od = $('#obDismiss'); if (od) od.addEventListener('click', async () => { state.tenant.onboarding = await api('POST', '/api/onboarding', { step: 'dismissed' }); render(); });
+    const oi = $('#obInformed'); if (oi) oi.addEventListener('click', openInformMessage);
   }
 
   // ---------- Payeurs (List Report) ----------
@@ -305,12 +315,19 @@
     state.selected.clear();
   }
 
+  async function openInformMessage() {
+    const m = await api('GET', '/api/onboarding/message');
+    openDialog('Message aux payeurs', `<div class="muted" style="font-size:.8125rem">À diffuser par WhatsApp (liste de diffusion ou groupe), SMS ou affichage. Chaque payeur retrouve sa référence sur ses reçus et dans les relances.</div><div class="field"><label for="imMsg">Message</label><textarea id="imMsg" rows="7">${esc(m.message)}</textarea></div>`, 'Marquer comme envoyé', async () => { state.tenant.onboarding = await api('POST', '/api/onboarding', { step: 'informed' }); toast('Étape validée.'); if (state.view === 'accueil') render(); }, 'Fermer');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Copier'; b.addEventListener('click', () => copy($('#imMsg').value)); $('#dlg .df').insertBefore(b, $('#dlgCancel'));
+    $('#dlg').addEventListener('close', () => b.remove(), { once: true });
+  }
+
   // ---------- Paramètres ----------
   async function renderSettings(rid) {
     const s = await api('GET', '/api/settings'); if (rid && rid !== state.rid) return; const t = s.tenant; const v = t.vocab; const canEdit = ['gestionnaire', 'direction'].includes(state.me.role); const isMgr = state.me.role === 'gestionnaire';
     const trialDays = Math.ceil((Date.parse(t.trialEnds) - Date.now()) / 86400000);
     app.innerHTML = dpHead('Paramètres', `${esc(t.name)} · ${TYPES[t.type]}`) + `<div class="page gutter">
-      <div class="section"><h2>Établissement</h2><div class="panel"><form id="fSet" class="form-grid">${field('tName', 'Nom', 'text', t.name, canEdit ? '' : 'disabled')}${select('tType', 'Activité', Object.entries(TYPES), t.type)}${field('tCity', 'Ville', 'text', t.city, canEdit ? '' : 'disabled')}${field('tAlias', 'Alias PI-SPI de l\'établissement (compte qui reçoit les paiements)', 'text', t.alias, canEdit ? '' : 'disabled')}${field('tDue', 'Jour d\'échéance mensuelle', 'number', t.dueDay, `min="1" max="28" ${canEdit ? '' : 'disabled'}`)}</form>
+      <div class="section"><h2>Établissement</h2><div class="panel"><form id="fSet" class="form-grid">${field('tName', 'Nom', 'text', t.name, canEdit ? '' : 'disabled')}${select('tType', 'Activité', Object.entries(TYPES), t.type)}${field('tCity', 'Ville', 'text', t.city, canEdit ? '' : 'disabled')}${field('tPhone', 'Téléphone de l\'établissement (WhatsApp)', 'tel', t.phone || '', canEdit ? '' : 'disabled')}${field('tAlias', 'Alias PI-SPI de l\'établissement (compte qui reçoit les paiements)', 'text', t.alias, canEdit ? '' : 'disabled')}${field('tDue', 'Jour d\'échéance mensuelle', 'number', t.dueDay, `min="1" max="28" ${canEdit ? '' : 'disabled'}`)}</form>
         <h3 style="font-size:.9375rem;margin:1.25rem 0 .5rem">Modèles de messages</h3><div class="muted" style="font-size:.8125rem;margin-bottom:.5rem">Variables : {prenom} {nom} {contrat} {groupe} {mois} {echeance} {montant} {alias} {ref} {etablissement}</div>
         <div class="field"><label for="tplRel">Relance</label><textarea id="tplRel" rows="4" ${canEdit ? '' : 'disabled'}>${esc(t.templates.relance)}</textarea></div>
         <div class="field" style="margin-top:.5rem"><label for="tplDem">Libellé de la demande de paiement</label><input id="tplDem" value="${esc(t.templates.demande)}" ${canEdit ? '' : 'disabled'}></div>
@@ -318,11 +335,13 @@
         ${canEdit ? `<div style="margin-top:.75rem;display:flex;gap:.5rem;justify-content:flex-end"><button class="btn" id="tplDefault">Modèles par défaut</button><button class="btn emph" id="saveSet">Enregistrer</button></div>` : ''}</div></div>
       <div class="section"><h2>Équipe</h2><div class="tbl-wrap"><div class="toolbar"><h2>${s.users.length} utilisateur${s.users.length > 1 ? 's' : ''}</h2><span class="spacer"></span>${isMgr ? '<button class="btn sm" id="addUser">Inviter</button>' : ''}</div><div class="scroll"><table style="min-width:0"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Depuis</th>${isMgr ? '<th></th>' : ''}</tr></thead><tbody>${s.users.map((u) => `<tr><td class="main">${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td class="num">${fdate(u.createdAt)}</td>${isMgr ? `<td>${u.id !== state.me.id ? `<button class="btn sm neg" data-deluser="${u.id}">Retirer</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div></div><div class="muted" style="font-size:.8125rem;margin-top:.5rem">Gestionnaire : tout. Direction : lecture, payeurs, relances, paramètres. Comptable : lecture, encaissements, rapprochement.</div></div>
       <div class="section"><h2>Abonnement</h2><div class="panel"><div class="kv"><div><div class="l">Statut</div><div class="v"><span class="pill ${t.plan === 'actif' ? 'pos' : t.plan === 'essai' ? 'info' : 'neg'}">${t.plan === 'actif' ? 'Actif' : t.plan === 'essai' ? 'Essai gratuit' : 'Suspendu'}</span></div></div><div><div class="l">${t.plan === 'essai' ? 'Fin de l\'essai' : 'Prochaine échéance'}</div><div class="v">${fdate(t.trialEnds)}${t.plan === 'essai' ? ` (${Math.max(0, trialDays)} jours)` : ''}</div></div><div><div class="l">Tarif</div><div class="v">25 000 FCFA par mois et par établissement, jusqu'à 200 ${v.contracts.toLowerCase()} ; au-delà, sur devis</div></div><div><div class="l">Règlement</div><div class="v">Par alias PI-SPI ou Wave, sur facture mensuelle envoyée par WhatsApp. Le règlement en ligne arrive dans une prochaine version.</div></div></div></div></div>
+      <div class="section"><h2>Aide</h2><div class="panel"><div class="kv"><div><div class="l">Message aux payeurs</div><div class="v"><button class="btn sm" id="btnInform">Voir le message (alias, référence, échéance)</button></div></div><div><div class="l">Support</div><div class="v">${waSupport() ? `<a class="btn sm" href="${esc(waSupport())}" target="_blank" rel="noopener">WhatsApp ${esc(state.config.supportWhatsapp)}</a>` : 'Support WhatsApp à configurer par Jotna'}${state.config.supportEmail ? ` · ${esc(state.config.supportEmail)}` : ''}</div></div><div><div class="l">Présentation</div><div class="v"><a href="/" target="_blank" rel="noopener">Page publique de Jotna</a></div></div></div></div></div>
       <div class="section"><h2>Journal</h2><div class="tbl-wrap"><div class="scroll"><table style="min-width:0"><thead><tr><th>Date</th><th>Par</th><th>Action</th><th>Détail</th></tr></thead><tbody>${s.audit.map((a) => `<tr><td class="num">${esc(a.ts.replace('T', ' ').slice(0, 16))}</td><td>${esc(a.user)}</td><td>${esc(a.action)}</td><td class="sub">${esc(a.details)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Aucune action.</td></tr>'}</tbody></table></div></div></div>
       <div class="section"><button class="btn" id="logout">Se déconnecter</button></div></div>`;
     $('#logout').addEventListener('click', async () => { await api('DELETE', '/api/auth/session'); state.me = null; state.tenant = null; route('connexion'); });
+    $('#btnInform').addEventListener('click', openInformMessage);
     if (canEdit) {
-      $('#saveSet').addEventListener('click', async () => { try { const tn = await api('PUT', '/api/settings', { name: val('tName'), type: val('tType'), city: val('tCity'), alias: val('tAlias'), dueDay: Number(val('tDue')), templates: { relance: $('#tplRel').value, demande: val('tplDem'), recu: val('tplRec') } }); state.tenant = tn; toast('Paramètres enregistrés.'); renderSettings(); } catch (e) { fail(e); } });
+      $('#saveSet').addEventListener('click', async () => { try { const tn = await api('PUT', '/api/settings', { name: val('tName'), type: val('tType'), city: val('tCity'), phone: val('tPhone'), alias: val('tAlias'), dueDay: Number(val('tDue')), templates: { relance: $('#tplRel').value, demande: val('tplDem'), recu: val('tplRec') } }); state.tenant = tn; toast('Paramètres enregistrés.'); renderSettings(); } catch (e) { fail(e); } });
       $('#tplDefault').addEventListener('click', () => { $('#tplRel').value = s.defaults.relance; $('#tplDem').value = s.defaults.demande; $('#tplRec').value = s.defaults.recu; });
     }
     if (isMgr) {
@@ -333,11 +352,13 @@
 
   // ---------- Administration Jotna ----------
   async function renderAdmin(rid) {
-    const list = await api('GET', '/api/admin/tenants'); if (rid && rid !== state.rid) return;
+    const [list, adm] = await Promise.all([api('GET', '/api/admin/tenants'), api('GET', '/api/admin/settings')]); if (rid && rid !== state.rid) return;
     const mrr = list.filter((t) => t.plan === 'actif').length * 25000;
     app.innerHTML = dpHead('Administration Jotna', `${list.length} établissements · ${list.filter((t) => t.plan === 'actif').length} abonnés · ${list.filter((t) => t.plan === 'essai').length} en essai`) + `<div class="page gutter">
       <div class="kpis"><div class="kcard"><div class="l">Établissements</div><div class="v num">${list.length}</div></div><div class="kcard pos"><div class="l">Revenu mensuel récurrent</div><div class="v num">${fmt(mrr)}</div></div><div class="kcard"><div class="l">${'Contrats suivis'}</div><div class="v num">${list.reduce((a, t) => a + t.contracts, 0)}</div></div><div class="kcard"><div class="l">Attendu ce mois (tous)</div><div class="v num">${fmt(list.reduce((a, t) => a + t.expected, 0))}</div></div></div>
+      <div class="panel"><h2 style="font-size:1rem;margin:0 0 .5rem">Support affiché aux établissements</h2><div class="form-grid">${field('aWa', 'Numéro WhatsApp du support (ex. 77 000 00 00)', 'tel', adm.supportWhatsapp || '')}${field('aMail', 'E-mail du support', 'email', adm.supportEmail || '')}</div><div style="margin-top:.75rem;display:flex;justify-content:flex-end"><button class="btn emph" id="aSave">Enregistrer</button></div></div>
       <div class="tbl-wrap"><div class="scroll"><table><thead><tr><th>Établissement</th><th>Activité</th><th>Créé le</th><th>Utilisateurs</th><th>Payeurs</th><th>Contrats</th><th>Taux</th><th>Plan</th><th>Jusqu'au</th><th>Dernière activité</th><th></th></tr></thead><tbody>${list.map((t) => `<tr><td class="main">${esc(t.name)}${t.demo ? ' <span class="pill neutral">démo</span>' : ''}</td><td>${TYPES[t.type]}</td><td class="num">${fdate(t.createdAt)}</td><td class="num">${t.users}</td><td class="num">${t.payers}</td><td class="num">${t.contracts}</td><td class="num">${t.rate} %</td><td><span class="pill ${t.plan === 'actif' ? 'pos' : t.plan === 'essai' ? 'info' : 'neg'}">${t.plan}</span></td><td class="num">${fdate(t.trialEnds)}</td><td class="num">${t.lastAudit ? esc(t.lastAudit.replace('T', ' ').slice(0, 16)) : '—'}</td><td><button class="btn sm" data-plan="${t.id}">Plan</button></td></tr>`).join('')}</tbody></table></div></div></div>`;
+    $('#aSave').addEventListener('click', async () => { try { const r = await api('PUT', '/api/admin/settings', { supportWhatsapp: val('aWa'), supportEmail: val('aMail') }); state.config = r.effective; supportButton(); toast('Support enregistré.'); } catch (e) { fail(e); } });
     $$('[data-plan]', app).forEach((b) => b.addEventListener('click', () => { const t = list.find((x) => x.id === b.dataset.plan); openDialog(`Abonnement · ${t.name}`, `${select('pPlan', 'Plan', [['essai', 'Essai'], ['actif', 'Actif (payé)'], ['suspendu', 'Suspendu (lecture seule)']], t.plan)}${field('pEnd', 'Valable jusqu\'au', 'date', t.trialEnds)}`, 'Enregistrer', async () => { await api('PUT', `/api/admin/tenants/${t.id}`, { plan: val('pPlan'), trialEnds: val('pEnd') }); toast('Plan mis à jour.'); renderAdmin(); }); }));
   }
 
@@ -350,5 +371,5 @@
   $('#monthPick').addEventListener('change', (e) => { if (/^\d{4}-\d{2}$/.test(e.target.value)) { state.month = e.target.value; render(); } });
 
   // ---------- Démarrage ----------
-  (async () => { try { const r = await api('GET', '/api/auth/me'); setSession(r); } catch { state.me = null; } render(); })();
+  (async () => { try { const r = await api('GET', '/api/auth/me'); setSession(r); } catch { state.me = null; try { state.config = await api('GET', '/api/public/config'); } catch { /* hors ligne */ } supportButton(); } render(); })();
 })();

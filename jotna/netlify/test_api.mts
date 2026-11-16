@@ -13,6 +13,9 @@ const call = async (method: string, path: string, data?: unknown, raw = false) =
 };
 const ok = (r: { status: number; body: any }, expected = 200) => { assert.equal(r.status, expected, JSON.stringify(r.body).slice(0, 300)); return r.body; };
 
+// Public
+const cfg = ok(await call("GET", "/api/public/config")); assert.equal(cfg.price, 25000);
+
 // Démo école
 assert.equal((await call("GET", "/api/auth/me")).status, 401);
 assert.equal((await call("POST", "/api/auth/login", { email: "demo-ecole@jotna.sn", password: "mauvais" })).status, 401);
@@ -71,7 +74,9 @@ ok(await call("GET", "/api/payers"));
 cookie = "";
 assert.equal((await call("POST", "/api/auth/signup", { email: "pas-un-mail", password: "12345678", establishment: "X" })).status, 400);
 const nb = ok(await call("POST", "/api/auth/signup", { email: "gerant@residence-test.sn", password: "motdepasse1", name: "Gérant", establishment: "Résidence Test", type: "bailleur", alias: "res-test", dueDay: 3 }), 201);
-assert.equal(nb.tenant.vocab.payer, "Locataire"); assert.equal(nb.tenant.plan, "essai");
+assert.equal(nb.tenant.vocab.payer, "Locataire"); assert.equal(nb.tenant.plan, "essai"); assert.equal(nb.tenant.onboarding.payers, false);
+const om = ok(await call("GET", "/api/onboarding/message")); assert.ok(om.message.includes("res-test"));
+ok(await call("POST", "/api/onboarding", { step: "informed" })); assert.equal((await call("GET", "/api/auth/me")).body.tenant.onboarding.informed, true);
 const impP = ok(await call("POST", "/api/payers/import", { csv: "locataire;telephone;alias;logement;immeuble;loyer\nAwa Ndiaye;77 100 20 30;awa.ndiaye;Appt 1;Bât A;250 000\nOmar Sy;77 200 30 40;;Appt 2;Bât A;300000" }));
 assert.equal(impP.created, 2); assert.equal(impP.contracts, 2);
 const d2 = ok(await call("GET", "/api/dashboard")); assert.equal(d2.expected, 550000);
