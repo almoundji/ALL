@@ -5,97 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jotna – mensualités, loyers et cotisations sur PI-SPI</title>
 <meta name="description" content="Jotna pointe automatiquement les mensualités, loyers et cotisations reçus sur PI-SPI, Wave, Orange Money et en espèces, relance les retardataires par WhatsApp et envoie les reçus. Essai gratuit de 30 jours.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a6ed1'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' fill='white' text-anchor='middle'%3EJ%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%23008f36'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' fill='white' text-anchor='middle'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-:root { --shell:#1d2d3e; --bg:#f6f7f9; --surface:#fff; --border:#d9d9d9; --fg:#1d2d3e; --muted:#5c6670; --brand:#0a6ed1; --brand-hover:#085caf; --orange:#e9730c; --green:#107e3e; --wa:#25d366; --font:"72","Inter","Segoe UI",system-ui,sans-serif; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1d232a; --surface:#29313a; --border:#404a55; --fg:#eaecee; --muted:#a2aab3; --brand:#4db1ff; --brand-hover:#74c4ff; --green:#5dc122; color-scheme: dark; } }
+/* Charte presidence.sn : fond blanc, texte anthracite, titres noirs en capitales, vert / jaune / rouge, boutons en pilule, cartes plates, bandeau tricolore. */
+:root { --bg:#ffffff; --bg-2:#f6f6f4; --line:#e1e1dd; --fg:#272727; --title:#000000; --muted:#5c5c5c; --green:#008f36; --green-dark:#006f2a; --green-bg:#e6f3ea; --yellow:#ffeb00; --red:#e1001a; --red-bg:#fbe9eb; --ink:#1a171b; --wa:#25d366;
+  --sans:"Proxima Nova","Montserrat","Segoe UI",Arial,sans-serif; --mono:"JetBrains Mono",Consolas,monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#121413; --bg-2:#1a1d1b; --line:#2c312e; --fg:#e4e6e2; --title:#ffffff; --muted:#a0a59f; --green:#3dbb6a; --green-dark:#2f9c57; --green-bg:#163522; --red:#ff5a6a; --red-bg:#3a1a1f; --ink:#0c0d0c; color-scheme: dark; } }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.5; font-size: 1rem; }
-a { color: var(--brand); }
+body { margin: 0; font-family: var(--sans); color: var(--fg); background: var(--bg); line-height: 1.55; font-size: 15px; }
+a { color: var(--green); }
 .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.wrap { max-width: 72rem; margin: 0 auto; }
-header.top { background: var(--shell); color: #fff; position: sticky; top: 0; z-index: 5; }
-header.top .wrap { display: flex; align-items: center; gap: 1rem; height: 3.5rem; }
-.brand { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.125rem; color: #fff; text-decoration: none; }
-.mark { width: 1.75rem; height: 1.75rem; border-radius: .375rem; background: #0a6ed1; display: inline-grid; place-items: center; font-weight: 700; color: #fff; font-size: .875rem; }
-nav.links { margin-left: auto; display: flex; gap: .25rem; align-items: center; }
-nav.links a { color: rgba(255,255,255,.85); text-decoration: none; padding: .5rem .75rem; border-radius: .25rem; font-weight: 500; }
-nav.links a:hover { background: rgba(255,255,255,.1); }
-.btn { display: inline-flex; align-items: center; gap: .5rem; height: 2.75rem; padding: 0 1.125rem; border-radius: .375rem; border: 1px solid var(--brand); color: var(--brand); background: var(--surface); font-weight: 600; text-decoration: none; white-space: nowrap; }
-.btn:hover { background: var(--bg); }
-.btn.emph { background: var(--brand); color: #fff; }
-.btn.emph:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.tricolor { height: 6px; background: linear-gradient(90deg, var(--green) 0 33.33%, var(--yellow) 33.33% 66.66%, var(--red) 66.66% 100%); }
+header.top { background: var(--bg); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 1.25rem; height: 4.25rem; }
+.brand { display: flex; align-items: center; gap: .75rem; text-decoration: none; color: var(--title); }
+.brand .emb { width: 40px; height: 40px; flex: none; }
+.brand .k1 { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; line-height: 1.1; }
+.brand .k2 { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+nav.links { margin-left: auto; display: flex; gap: .125rem; align-items: center; }
+nav.links a { color: var(--title); text-decoration: none; padding: .5rem .75rem; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; border-bottom: 2px solid transparent; }
+nav.links a:hover { border-bottom-color: var(--green); }
+.btn { display: inline-flex; align-items: center; gap: .5rem; height: 2.75rem; padding: 0 1.375rem; border-radius: 1.375rem; border: 2px solid var(--title); color: var(--title); background: transparent; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; text-decoration: none; white-space: nowrap; }
+.btn:hover { background: var(--bg-2); }
+.btn.emph { background: var(--green); border-color: var(--green); color: #fff; }
+.btn.emph:hover { background: var(--green-dark); border-color: var(--green-dark); }
 .btn.wa { background: var(--wa); border-color: var(--wa); color: #0b1620; }
+.btn.sm { height: 2.25rem; padding: 0 1rem; font-size: 12px; }
+nav.links a.btn { border-bottom: 2px solid var(--green); }
 .btn svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.hero { padding-block: 4rem 3rem; display: grid; grid-template-columns: 1.1fr .9fr; gap: 3rem; align-items: center; }
-.eyebrow { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
-h1 { font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; margin: .5rem 0 1rem; letter-spacing: -.02em; text-wrap: balance; }
-.lead { font-size: 1.25rem; color: var(--muted); max-width: 36rem; margin: 0 0 1.5rem; }
-.cta { display: flex; gap: .75rem; flex-wrap: wrap; }
-.note { color: var(--muted); font-size: .875rem; margin-top: 1rem; }
-.hero-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-.tile { background: var(--surface); border: 1px solid var(--border); border-radius: .375rem; padding: 1rem; box-shadow: 0 .125rem .5rem rgba(0,0,0,.06); min-height: 8.5rem; display: flex; flex-direction: column; }
-.tile .t { font-weight: 600; } .tile .s { color: var(--muted); font-size: .8125rem; }
-.tile .k { margin-top: auto; font-size: 2.25rem; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
-.tile .k.green { color: var(--green); } .tile .k.red { color: #bb0000; } .tile .k.orange { color: var(--orange); }
-section.block { padding-block: 3rem; border-top: 1px solid var(--border); }
-h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 .5rem; letter-spacing: -.01em; text-wrap: balance; }
-.sub { color: var(--muted); max-width: 44rem; margin: 0 0 1.5rem; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--green); }
+.hero { padding-block: 3.5rem 3rem; display: grid; grid-template-columns: 1.15fr .85fr; gap: 3rem; align-items: center; }
+h1 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.08; margin: .625rem 0 1rem; font-weight: 800; text-transform: uppercase; color: var(--title); letter-spacing: .01em; text-wrap: balance; }
+.lead { font-size: 17px; color: var(--muted); max-width: 38rem; margin: 0 0 1.5rem; }
+.cta { display: flex; gap: .625rem; flex-wrap: wrap; }
+.note { color: var(--muted); font-size: 13px; margin-top: 1.125rem; }
+.hero-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+.tile { border: 1px solid var(--line); border-top: 3px solid var(--green); background: var(--bg); padding: 1rem 1.125rem; min-height: 8.75rem; display: flex; flex-direction: column; }
+.tile.red { border-top-color: var(--red); } .tile.yellow { border-top-color: var(--yellow); } .tile.ink { border-top-color: var(--ink); }
+.tile .t { font-weight: 700; font-size: 14px; color: var(--title); } .tile .s { color: var(--muted); font-size: 12px; font-family: var(--mono); margin-top: .125rem; }
+.tile .k { margin-top: auto; font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--title); font-variant-numeric: tabular-nums; }
+.tile .k.green { color: var(--green); } .tile .k.red { color: var(--red); }
+section.block { padding-block: 3rem; border-top: 1px solid var(--line); }
+h2 { font-size: clamp(20px, 2.6vw, 26px); margin: 0 0 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--title); padding-bottom: .75rem; position: relative; }
+h2::after { content: ""; position: absolute; left: 0; bottom: 0; width: 48px; height: 4px; background: var(--green); }
+.sub { color: var(--muted); max-width: 46rem; margin: 0 0 1.5rem; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; padding: 1.25rem; }
-.card h3 { margin: .25rem 0 .5rem; font-size: 1.125rem; }
-.card p { margin: 0; color: var(--muted); font-size: .9375rem; }
-.card .n { font-weight: 700; color: var(--brand); font-size: .75rem; letter-spacing: .1em; }
-.card.hl { border: 2px solid var(--brand); }
-.price { font-size: 2.25rem; font-weight: 300; margin: .5rem 0 0; }
-.price small { font-size: .875rem; color: var(--muted); font-weight: 400; }
-ul.check { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .5rem; }
-ul.check li { padding-left: 1.75rem; position: relative; color: var(--fg); }
-ul.check li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
-details { border-top: 1px solid var(--border); padding: .75rem 0; }
-details summary { cursor: pointer; font-weight: 600; }
-details p { color: var(--muted); margin: .5rem 0 0; }
-footer { border-top: 1px solid var(--border); padding-block: 2rem; color: var(--muted); font-size: .875rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
-.support { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 6; display: inline-flex; align-items: center; gap: .5rem; background: var(--wa); color: #0b1620; font-weight: 600; padding: 0 1rem; height: 2.75rem; border-radius: 1.375rem; text-decoration: none; box-shadow: 0 .25rem 1rem rgba(0,0,0,.2); }
+.card { background: var(--bg); border: 1px solid var(--line); padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.card h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--title); text-transform: uppercase; letter-spacing: .02em; }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.card .n { font-family: var(--mono); font-weight: 600; color: var(--green); font-size: 11px; letter-spacing: .08em; }
+.card.strip-green { border-top: 4px solid var(--green); } .card.strip-yellow { border-top: 4px solid var(--yellow); } .card.strip-red { border-top: 4px solid var(--red); }
+.card.hl { border: 2px solid var(--green); }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); }
+.steps .card { border: 0; border-right: 1px solid var(--line); }
+.steps .card:last-child { border-right: 0; }
+.steps .num { font-size: 2.75rem; font-weight: 800; line-height: 1; color: var(--line); }
+.price { font-size: 2rem; font-weight: 800; margin: .25rem 0 0; color: var(--title); letter-spacing: -.01em; }
+.price small { font-size: 12px; color: var(--muted); font-weight: 500; font-family: var(--mono); }
+ul.check { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .5rem; }
+ul.check li { padding-left: 1.5rem; position: relative; font-size: 14px; }
+ul.check li::before { content: ""; position: absolute; left: 0; top: .5em; width: 10px; height: 10px; background: var(--green); }
+.faq details { border-top: 1px solid var(--line); padding: .875rem 0; }
+.faq details:last-child { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; font-weight: 700; color: var(--title); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.faq summary::after { content: "+"; color: var(--green); font-weight: 800; }
+.faq details[open] summary::after { content: "−"; }
+.faq p { color: var(--muted); margin: .625rem 0 0; max-width: 60rem; }
+.band { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: 2.5rem; }
+.band .wrap { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.band h2 { margin: 0; padding-bottom: 0; } .band h2::after { display: none; }
+.band .cta { margin-left: auto; }
+footer { background: var(--ink); color: #d9d9d9; padding-block: 2.5rem 1.5rem; font-size: 13px; }
+footer .cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2rem; }
+footer h4 { margin: 0 0 .625rem; color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
+footer a { color: #d9d9d9; text-decoration: none; display: block; padding: .2rem 0; }
+footer a:hover { color: #fff; text-decoration: underline; }
+footer .addr { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #333; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: #a9a9a9; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.support { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 6; display: inline-flex; align-items: center; gap: .5rem; background: var(--wa); color: #0b1620; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 0 1.125rem; height: 2.75rem; border-radius: 1.375rem; text-decoration: none; box-shadow: 0 .25rem 1rem rgba(0,0,0,.2); }
 .support svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 [hidden] { display: none !important; }
-@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-block: 2.5rem 2rem; } .grid3, .grid4 { grid-template-columns: 1fr 1fr; } nav.links a.hide-m { display: none; } }
-@media (max-width: 560px) { .grid3, .grid4, .hero-tiles { grid-template-columns: 1fr; } .support span { display: none; } .support { width: 2.75rem; padding: 0; justify-content: center; } }
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding-block: 2.25rem 2rem; } .grid3, .grid4, .steps { grid-template-columns: 1fr 1fr; } .steps .card:nth-child(2) { border-right: 0; } .steps .card:nth-child(-n+2) { border-bottom: 1px solid var(--line); } nav.links a.hide-m { display: none; } footer .cols { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { nav.links a.btn { padding: 0 .75rem; font-size: 11px; height: 2.125rem; } .brand .emb { width: 34px; height: 34px; } .brand .k1 { font-size: 14px; } .grid3, .grid4, .hero-tiles, .steps { grid-template-columns: 1fr; } .steps .card { border-right: 0; border-bottom: 1px solid var(--line); } .steps .card:last-child { border-bottom: 0; } .support span { display: none; } .support { width: 2.75rem; padding: 0; justify-content: center; } header.top .wrap { height: 3.75rem; } .brand .k2 { display: none; } nav.links a.hide-s { display: none; } footer .cols { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
+<div class="tricolor"></div>
 <header class="top"><div class="wrap gutter">
-  <a class="brand" href="/"><span class="mark">J</span>Jotna</a>
-  <nav class="links"><a class="hide-m" href="#comment">Comment ça marche</a><a class="hide-m" href="#tarif">Tarif</a><a class="hide-m" href="#faq">Questions</a><a href="/app/">Se connecter</a><a class="btn emph" style="height:2.25rem" href="/app/#inscription">Créer mon établissement</a></nav>
+  <a class="brand" href="/"><svg class="emb" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#fff" stroke="#008f36" stroke-width="3"/><circle cx="32" cy="32" r="22" fill="none" stroke="#ffeb00" stroke-width="2.5"/><polygon points="32,14 36.5,26.5 50,26.5 39,34.5 43,47 32,39.5 21,47 25,34.5 14,26.5 27.5,26.5" fill="#008f36"/><circle cx="32" cy="32" r="3.2" fill="#e1001a"/></svg><span><span class="k1">Jotna</span><br><span class="k2">Suivi des échéances sur PI-SPI</span></span></a>
+  <nav class="links"><a class="hide-m" href="#comment">Comment ça marche</a><a class="hide-m" href="#tarif">Tarif</a><a class="hide-m" href="#faq">Questions</a><a class="hide-s" href="/app/">Se connecter</a><a class="btn emph sm" href="/app/#inscription">Créer mon établissement</a></nav>
 </div></header>
 
 <main class="wrap gutter">
 <section class="hero">
   <div>
-    <div class="eyebrow">Écoles privées · bailleurs · salles de sport</div>
-    <h1>Vos mensualités, loyers et cotisations, encaissés et pointés sans effort.</h1>
+    <div class="eyebrow">Écoles privées · Bailleurs · Salles de sport</div>
+    <h1>Vos mensualités, loyers et cotisations, encaissés et pointés sans effort</h1>
     <p class="lead">Les parents, locataires ou adhérents paient comme ils veulent, vers l'alias PI-SPI de votre établissement. Jotna reconnaît chaque paiement, relance les retardataires par WhatsApp et envoie les reçus.</p>
-    <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn" href="/app/#demo-ecole">Voir la démo école</a><a class="btn" href="/app/#demo-bailleur">Voir la démo résidence</a></div>
+    <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn" href="/app/#demo-ecole">Démo école</a><a class="btn" href="/app/#demo-bailleur">Démo résidence</a></div>
     <p class="note">Essai gratuit de 30 jours, sans carte ni engagement. Aucun fonds ne transite par Jotna : l'argent va directement sur votre compte.</p>
   </div>
   <div class="hero-tiles" aria-label="Aperçu du tableau de bord">
-    <div class="tile"><span class="t">Taux de recouvrement</span><span class="s">novembre, au 12 du mois</span><span class="k green">72 %</span></div>
-    <div class="tile"><span class="t">En retard</span><span class="s">échéance du 5 dépassée</span><span class="k red">8</span></div>
-    <div class="tile"><span class="t">Lignes à vérifier</span><span class="s">rapprochement</span><span class="k orange">5</span></div>
-    <div class="tile"><span class="t">Relances prêtes</span><span class="s">WhatsApp</span><span class="k">9</span></div>
+    <div class="tile"><span class="t">Taux de recouvrement</span><span class="s">NOVEMBRE · AU 12</span><span class="k green">72 %</span></div>
+    <div class="tile red"><span class="t">En retard</span><span class="s">ÉCHÉANCE DU 5</span><span class="k red">8</span></div>
+    <div class="tile yellow"><span class="t">Lignes à vérifier</span><span class="s">RAPPROCHEMENT</span><span class="k">5</span></div>
+    <div class="tile ink"><span class="t">Relances prêtes</span><span class="s">WHATSAPP</span><span class="k">9</span></div>
   </div>
 </section>
 
 <section class="block" id="comment">
   <h2>Comment ça marche</h2>
   <p class="sub">Quatre étapes, aucune saisie entre le paiement et le reçu.</p>
-  <div class="grid4">
-    <div class="card"><div class="n">ÉTAPE 1</div><h3>Le payeur paie</h3><p>Depuis Wave, Orange Money ou sa banque, vers votre alias PI-SPI, avec la référence de l'élève ou du lot dans le libellé.</p></div>
-    <div class="card"><div class="n">ÉTAPE 2</div><h3>Jotna reconnaît</h3><p>Référence, alias ou numéro : l'échéance passe à « Payé ». Les cas douteux attendent une validation d'un clic.</p></div>
-    <div class="card"><div class="n">ÉTAPE 3</div><h3>Jotna relance</h3><p>Un message WhatsApp préparé pour chaque retardataire, avec le montant dû et l'alias où payer.</p></div>
-    <div class="card"><div class="n">ÉTAPE 4</div><h3>Le reçu part</h3><p>Reçu numéroté envoyé au payeur, export des encaissements pour le comptable.</p></div>
+  <div class="steps">
+    <div class="card"><span class="num">01</span><div class="n">LE PAYEUR PAIE</div><h3>Vers votre alias</h3><p>Depuis Wave, Orange Money ou sa banque, vers l'alias PI-SPI de l'établissement, avec la référence de l'élève ou du lot dans le libellé.</p></div>
+    <div class="card"><span class="num">02</span><div class="n">JOTNA RECONNAÎT</div><h3>L'échéance passe à payé</h3><p>Référence, alias ou numéro : le paiement est associé. Les cas douteux attendent une validation d'un clic.</p></div>
+    <div class="card"><span class="num">03</span><div class="n">JOTNA RELANCE</div><h3>Message WhatsApp prêt</h3><p>Un message préparé pour chaque retardataire, avec le montant dû et l'alias où payer.</p></div>
+    <div class="card"><span class="num">04</span><div class="n">LE REÇU PART</div><h3>Reçu et export</h3><p>Reçu numéroté envoyé au payeur, export des encaissements pour le comptable.</p></div>
   </div>
 </section>
 
@@ -103,32 +130,32 @@ footer { border-top: 1px solid var(--border); padding-block: 2rem; color: var(--
   <h2>Vous gérez seul, dès l'inscription</h2>
   <p class="sub">Pas d'installation, pas de rendez-vous. L'assistant de démarrage vous guide en quatre étapes et le support répond sur WhatsApp.</p>
   <div class="grid4">
-    <div class="card"><div class="n">10 MIN</div><h3>Créer l'établissement</h3><p>Nom, activité, alias PI-SPI, jour d'échéance. Votre compte est prêt.</p></div>
-    <div class="card"><div class="n">10 MIN</div><h3>Importer vos payeurs</h3><p>Votre liste d'élèves ou de locataires en CSV ou Excel. Jotna crée les références.</p></div>
-    <div class="card"><div class="n">10 MIN</div><h3>Informer les payeurs</h3><p>Un message prêt à diffuser avec l'alias et la référence à indiquer.</p></div>
-    <div class="card"><div class="n">LE 5</div><h3>Suivre l'échéance</h3><p>Les paiements se pointent, les retardataires sont relancés, les reçus partent.</p></div>
+    <div class="card strip-green"><div class="n">10 MIN</div><h3>Créer l'établissement</h3><p>Nom, activité, alias PI-SPI, jour d'échéance. Votre compte est prêt.</p></div>
+    <div class="card strip-green"><div class="n">10 MIN</div><h3>Importer vos payeurs</h3><p>Votre liste d'élèves ou de locataires en CSV ou Excel. Jotna crée les références.</p></div>
+    <div class="card strip-green"><div class="n">10 MIN</div><h3>Informer les payeurs</h3><p>Un message prêt à diffuser avec l'alias et la référence à indiquer.</p></div>
+    <div class="card strip-green"><div class="n">LE 5 DU MOIS</div><h3>Suivre l'échéance</h3><p>Les paiements se pointent, les retardataires sont relancés, les reçus partent.</p></div>
   </div>
 </section>
 
 <section class="block" id="pourqui">
   <h2>Dans les mots de votre activité</h2>
   <div class="grid3">
-    <div class="card"><h3>Écoles privées</h3><p>Parents, élèves, classes, mensualités. Import de la liste des élèves, relances avant le conseil de classe.</p></div>
-    <div class="card"><h3>Bailleurs et résidences</h3><p>Locataires, logements, immeubles, loyers. Quittance à chaque paiement, impayés lot par lot.</p></div>
-    <div class="card"><h3>Salles de sport et clubs</h3><p>Adhérents, abonnements, formules, cotisations. Relance avant la coupure d'accès.</p></div>
+    <div class="card strip-green"><div class="n">ÉCOLES PRIVÉES</div><h3>Parents, élèves, classes</h3><p>Mensualités, import de la liste des élèves, relances avant le conseil de classe, reçus pour les familles.</p></div>
+    <div class="card strip-yellow"><div class="n">BAILLEURS ET RÉSIDENCES</div><h3>Locataires, logements, immeubles</h3><p>Loyers, quittance à chaque paiement, impayés suivis lot par lot.</p></div>
+    <div class="card strip-red"><div class="n">SALLES DE SPORT ET CLUBS</div><h3>Adhérents, abonnements, formules</h3><p>Cotisations, relance avant la coupure d'accès, historique par adhérent.</p></div>
   </div>
 </section>
 
 <section class="block" id="tarif">
   <h2>Un abonnement simple, sans commission</h2>
   <div class="grid3">
-    <div class="card"><h3>Essai</h3><p class="price">0 FCFA <small>30 jours</small></p><ul class="check"><li>Toutes les fonctions</li><li>Données d'exemple ou vos données</li><li>Support WhatsApp</li></ul></div>
-    <div class="card hl"><h3>Établissement</h3><p class="price">25 000 FCFA <small>par mois, jusqu'à 200 payeurs</small></p><ul class="check"><li>Rapprochement automatique</li><li>Relances WhatsApp et reçus</li><li>Export comptable, trois rôles</li><li>Règlement par alias PI-SPI ou Wave</li></ul></div>
-    <div class="card"><h3>Groupe</h3><p class="price">Sur devis</p><ul class="check"><li>Plusieurs établissements</li><li>Plus de 200 payeurs</li><li>Accompagnement à la rentrée</li></ul></div>
+    <div class="card"><div class="n">ESSAI</div><p class="price">0 FCFA <small>30 JOURS</small></p><ul class="check"><li>Toutes les fonctions</li><li>Données d'exemple ou vos données</li><li>Support WhatsApp</li></ul></div>
+    <div class="card hl"><div class="n">ÉTABLISSEMENT</div><p class="price">25 000 FCFA <small>PAR MOIS · JUSQU'À 200 PAYEURS</small></p><ul class="check"><li>Rapprochement automatique</li><li>Relances WhatsApp et reçus</li><li>Export comptable, trois rôles</li><li>Règlement par alias PI-SPI ou Wave</li></ul></div>
+    <div class="card"><div class="n">GROUPE</div><p class="price">Sur devis</p><ul class="check"><li>Plusieurs établissements</li><li>Plus de 200 payeurs</li><li>Accompagnement à la rentrée</li></ul></div>
   </div>
 </section>
 
-<section class="block" id="faq">
+<section class="block faq" id="faq">
   <h2>Questions fréquentes</h2>
   <details open><summary>Jotna touche-t-il à notre argent ?</summary><p>Non. Les paiements vont directement sur le compte de l'établissement, chez votre banque ou votre opérateur. Jotna lit les paiements reçus pour les pointer ; il n'encaisse rien et ne demande aucun agrément.</p></details>
   <details><summary>Les parents doivent-ils installer une application ?</summary><p>Non. Ils paient depuis leur application habituelle, Wave, Orange Money ou leur banque, vers l'alias PI-SPI de l'établissement. Ils reçoivent les relances et les reçus par WhatsApp.</p></details>
@@ -136,26 +163,35 @@ footer { border-top: 1px solid var(--border); padding-block: 2rem; color: var(--
   <details><summary>D'où viennent les paiements reçus ?</summary><p>Aujourd'hui, de l'import des relevés Wave Business, Orange Money ou bancaires, et de la saisie des espèces. L'API Business PI-SPI de votre banque, dès qu'elle est ouverte, remonte les paiements sans import.</p></details>
   <details><summary>Et si nous arrêtons ?</summary><p>Résiliation à tout moment. Vous exportez vos encaissements et vos payeurs en CSV, puis nous supprimons vos données sur demande.</p></details>
 </section>
-
-<section class="block" id="essai">
-  <h2>Essayez avec vos propres données</h2>
-  <p class="sub">Créez votre établissement, importez votre liste et suivez la prochaine échéance. Une question : le support WhatsApp répond.</p>
-  <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn wa" id="ctaWa" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-4.6A8 8 0 1 1 21 12z"/></svg>Écrire au support</a></div>
-  <p class="note" id="supportNote"></p>
-</section>
 </main>
 
-<footer class="wrap gutter"><span>Jotna, « jot na » en wolof : c'est l'heure.</span><span>Dakar · <a href="/app/">Espace établissement</a></span></footer>
+<section class="band"><div class="wrap gutter">
+  <div><h2>Essayez avec vos propres données</h2><p class="sub" style="margin:.5rem 0 0">Créez votre établissement, importez votre liste et suivez la prochaine échéance.</p></div>
+  <div class="cta"><a class="btn emph" href="/app/#inscription">Créer mon établissement</a><a class="btn wa" id="ctaWa" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-4.6A8 8 0 1 1 21 12z"/></svg>Écrire au support</a></div>
+</div></section>
+
+<footer><div class="wrap gutter">
+  <div class="cols">
+    <div><h4>Jotna</h4><p style="margin:0;color:#a9a9a9">« Jot na », en wolof : c'est l'heure. Suivi des mensualités, loyers et cotisations sur PI-SPI, pour les écoles privées, les bailleurs et les salles de sport.</p></div>
+    <div><h4>Produit</h4><a href="#comment">Comment ça marche</a><a href="#gerer">Démarrer seul</a><a href="#tarif">Tarif</a><a href="#faq">Questions fréquentes</a></div>
+    <div><h4>Espace établissement</h4><a href="/app/#inscription">Créer mon établissement</a><a href="/app/">Se connecter</a><a href="/app/#demo-ecole">Démo école</a><a href="/app/#demo-bailleur">Démo résidence</a></div>
+    <div><h4>Support</h4><a id="footWa" href="#" target="_blank" rel="noopener" hidden>WhatsApp</a><a id="footMail" href="#" hidden>E-mail</a><span id="footNone" style="color:#a9a9a9">Support WhatsApp pendant l'essai et l'abonnement.</span></div>
+  </div>
+  <div class="addr"><span>Jotna · Dakar, Sénégal</span><span id="supportNote"></span></div>
+</div></footer>
+<div class="tricolor"></div>
 <a class="support" id="support" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-4.6A8 8 0 1 1 21 12z"/></svg><span>Support WhatsApp</span></a>
 <script>
 (async function () {
   try {
     const c = await (await fetch('/api/public/config', { cache: 'no-store' })).json();
     const d = String(c.supportWhatsapp || '').replace(/\D/g, '');
+    if (c.supportEmail) { const m = document.getElementById('footMail'); m.textContent = c.supportEmail; m.hidden = false; }
     if (!d) return;
     const link = 'https://wa.me/' + (d.startsWith('221') ? d : '221' + d) + '?text=' + encodeURIComponent('Bonjour Jotna, ');
     for (const id of ['support', 'ctaWa']) { const a = document.getElementById(id); a.href = link; a.hidden = false; }
-    document.getElementById('supportNote').textContent = 'Support WhatsApp : ' + c.supportWhatsapp + (c.supportEmail ? ' · ' + c.supportEmail : '');
+    const f = document.getElementById('footWa'); f.href = link; f.textContent = 'WhatsApp ' + c.supportWhatsapp; f.hidden = false; document.getElementById('footNone').hidden = true;
+    document.getElementById('supportNote').textContent = 'Support WhatsApp ' + c.supportWhatsapp;
   } catch (e) { /* configuration indisponible */ }
 })();
 </script>
