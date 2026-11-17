@@ -65,8 +65,11 @@ const exp = await call("GET", "/api/export/payments.csv", undefined, true); asse
 assert.equal((await call("GET", "/api/admin/tenants")).status, 403);
 ok(await call("POST", "/api/demo/reset"));
 
+assert.equal((await call("POST", "/api/auth/password", { current: "faux", password: "nouveau123" })).status, 401);
+
 // Comptable : lecture oui, modification des payeurs non
 cookie = ""; ok(await call("POST", "/api/auth/login", { email: "compta@exemple.sn", password: "compta2026" }));
+ok(await call("POST", "/api/auth/password", { current: "compta2026", password: "compta2027x" })); cookie = ""; ok(await call("POST", "/api/auth/login", { email: "compta@exemple.sn", password: "compta2027x" }));
 assert.equal((await call("POST", "/api/payers", { nom: "X" })).status, 403);
 ok(await call("GET", "/api/payers"));
 
