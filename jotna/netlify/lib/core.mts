@@ -14,13 +14,13 @@ export interface Tenant {
   templates: { relance: string; demande: string; recu: string };
 }
 export interface User { id: string; email: string; name: string; passwordHash: string; role: Role; tenantId: string; createdAt: string }
-export interface Payer { id: string; nom: string; tel: string; alias: string; email: string; note: string; createdAt: string }
+export interface Payer { id: string; nom: string; tel: string; alias: string; email: string; note: string; createdAt: string; code?: string; token?: string }
 export interface Contract { id: string; payerId: string; ref: string; label: string; group: string; amount: number; startMonth: string; endMonth: string | null; active: boolean }
 export type PaymentStatus = "associe" | "a_verifier" | "ignore";
 export interface Payment {
   id: string; date: string; amount: number; channel: string; ref: string; sender: string; label: string;
   contractId: string | null; month: string | null; status: PaymentStatus; motif: string; suggestedContractId: string | null;
-  source: "manuel" | "import" | "api"; createdBy: string; createdAt: string;
+  source: "manuel" | "import" | "api" | "parent"; createdBy: string; createdAt: string;
 }
 export interface Reminder { id: string; payerId: string; contractId: string; month: string; date: string; channel: string; message: string; status: "envoye"; by: string }
 export interface AuditEntry { ts: string; user: string; action: string; details: string }
@@ -52,7 +52,7 @@ export const VOCAB: Record<TenantType, { payer: string; payers: string; contract
 };
 
 export const DEFAULT_TEMPLATES = {
-  relance: "Bonjour {prenom}, l'échéance de {mois} pour {contrat} ({groupe}) est attendue depuis le {echeance} : {montant}. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI {alias}, libellé « {ref} ». Merci, {etablissement}.",
+  relance: "Bonjour {prenom}, l'échéance de {mois} pour {contrat} ({groupe}) est attendue depuis le {echeance} : {montant}. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI {alias}, libellé « {ref} ». Votre espace : {lien}. Merci, {etablissement}.",
   demande: "{etablissement} – {contrat} – {mois} – réf. {ref}",
   recu: "Reçu pour {montant} – {contrat} – {mois}. Merci de votre confiance, {etablissement}.",
 };

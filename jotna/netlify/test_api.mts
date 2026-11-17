@@ -31,6 +31,20 @@ const late = payers.find((p: any) => p.status === "retard") || payers[0];
 const fiche = ok(await call("GET", `/api/payers/${late.id}`)); assert.ok(fiche.history.length >= 6 && fiche.payments.length >= 5);
 const receipt = await call("GET", `/api/receipts/${fiche.payments[0].id}`, undefined, true); assert.equal(receipt.status, 200); assert.ok(receipt.body.includes("Reçu n°"));
 
+// Espace parent : accès par code, déclaration, reçu
+assert.ok(fiche.access.code.length === 6 && fiche.access.link.includes("/parent/#t="));
+const tenantCookie = cookie; cookie = "";
+assert.equal((await call("POST", "/api/parent/login", { phone: late.tel, code: "000000" })).status, 401);
+const pv = ok(await call("POST", "/api/parent/login", { phone: late.tel, code: fiche.access.code }));
+assert.equal(pv.payer.nom, late.nom); assert.ok(pv.contracts.length >= 1 && pv.contracts[0].months.length === 6);
+const decl = ok(await call("POST", "/api/parent/declare", { contractId: pv.contracts[0].id, month: pv.month, amount: 20000, channel: "Wave", ref: "PARENT-1" }), 201);
+assert.equal(decl.pending.status, "a_verifier");
+const pv2 = ok(await call("GET", "/api/parent/me")); assert.equal(pv2.pending.length, 1);
+if (pv2.payments.length) assert.equal((await call("GET", pv2.payments[0].receipt, undefined, true)).status, 200);
+cookie = ""; const tk = ok(await call("POST", "/api/parent/token", { token: fiche.access.link.split("#t=")[1] })); assert.equal(tk.payer.nom, late.nom);
+cookie = tenantCookie;
+const declared = ok(await call("GET", "/api/payments?status=a_verifier")).find((p: any) => p.ref === "PARENT-1"); assert.ok(declared && declared.source === "parent" && declared.suggested);
+
 // Saisie manuelle → statut
 const k = late.contracts[0]; const before = k.installment.status;
 const pay = ok(await call("POST", "/api/payments", { contractId: k.id, month: dash.month, amount: k.amount, channel: "Espèces" }), 201); assert.equal(pay.status, "associe");

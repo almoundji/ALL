@@ -48,6 +48,10 @@ serverless `netlify/functions/api.mts`, état par établissement dans Netlify Bl
 - **Autonomie de l'établissement** : après l'inscription, un assistant de démarrage en quatre étapes (vérifier l'alias
   et l'échéance, ajouter les payeurs, informer les payeurs avec un message prêt, suivre la première échéance). Aide
   et message aux payeurs aussi dans Paramètres.
+- `/parent/` : **espace du payeur** (parent, locataire, adhérent). Accès par lien personnel ou par numéro de téléphone et
+  code à 6 chiffres, tous deux visibles sur la fiche du payeur et envoyables par WhatsApp. Le payeur voit ses échéances,
+  l'alias PI-SPI, la référence et le montant à payer, déclare un paiement (il arrive dans Rapprochement avec le motif
+  « déclaré par le parent », à confirmer sur le relevé) et télécharge ses reçus. Variable `{lien}` dans les modèles.
 - **Support WhatsApp** : numéro et e-mail renseignés dans l'écran Administration (ou variables `SUPPORT_WHATSAPP`,
   `SUPPORT_EMAIL`). Ils apparaissent sur la page publique, la page de connexion, l'assistant et un bouton flottant.
 

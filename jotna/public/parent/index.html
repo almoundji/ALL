@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jotna – espace parent</title>
+<meta name="description" content="Espace personnel du payeur : échéances, mode de paiement vers l'alias PI-SPI, déclaration de paiement, reçus.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%23008f36'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' fill='white' text-anchor='middle'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="/style.css">
+<style>
+.pwrap { max-width: 40rem; margin: 0 auto; padding-block: 1rem 3rem; }
+.phead { display: flex; align-items: center; gap: .75rem; padding: .875rem 0; border-bottom: 1px solid var(--border); }
+.phead .mark { width: 2rem; height: 2rem; font-size: .875rem; }
+.phead .t { font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: .8125rem; color: var(--title); }
+.phead .s { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.phead .spacer { flex: 1; }
+.hello { padding: 1.25rem 0 .5rem; }
+.hello h1 { font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--title); margin: 0 0 .25rem; }
+.due { border: 1px solid var(--border); border-top: 4px solid var(--negative); padding: 1rem; margin-top: .75rem; }
+.due.ok { border-top-color: var(--positive); }
+.due .l { font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.due .v { font-size: 2rem; font-weight: 800; color: var(--title); line-height: 1.1; }
+.ctr { border: 1px solid var(--border); margin-top: 1rem; }
+.ctr .hd { padding: .875rem 1rem; display: flex; align-items: center; gap: .75rem; border-bottom: 1px solid var(--border); }
+.ctr .hd .n { font-weight: 800; color: var(--title); }
+.ctr .hd .g { font-size: .75rem; color: var(--muted); font-family: var(--mono); }
+.ctr .hd .right { margin-left: auto; text-align: right; }
+.ctr .hd .amt { font-weight: 800; color: var(--title); }
+.pay { padding: 1rem; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.pay h3 { margin: 0 0 .5rem; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--title); }
+.kvs { display: grid; grid-template-columns: 1fr; gap: .5rem; }
+.kv2 { display: flex; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); padding: .5rem .75rem; }
+.kv2 .l { font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); width: 6.5rem; flex: none; }
+.kv2 .v { font-family: var(--mono); font-weight: 600; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pay .how { font-size: .8125rem; color: var(--muted); margin: .625rem 0 0; }
+.pay .acts { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+.months { padding: .5rem 1rem 1rem; }
+.months table { min-width: 0; }
+.months th, .months td { padding: .4rem .5rem; }
+.hist { margin-top: 1.25rem; }
+.hist h2, .pending h2 { font-size: .8125rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--title); margin: 0 0 .5rem; }
+.pending { margin-top: 1.25rem; }
+.pend { border: 1px solid var(--critical); background: var(--critical-bg); padding: .625rem .75rem; margin-top: .5rem; font-size: .8125rem; }
+.login-p .box { width: min(100%, 24rem); }
+.foot-p { margin-top: 2rem; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<div style="height:6px;background:linear-gradient(90deg,#008f36 0 33.33%,#ffeb00 33.33% 66.66%,#e1001a 66.66% 100%)"></div>
+<main id="app" class="gutter"></main>
+<dialog id="dlg">
+  <div class="dh" id="dlgTitle"></div>
+  <div class="db" id="dlgBody"></div>
+  <div class="df"><button class="btn" id="dlgCancel" type="button">Annuler</button><button class="btn emph" id="dlgOk" type="button">Enregistrer</button></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/parent.js"></script>
+</body>
+</html>

@@ -3,8 +3,8 @@
 import type { Config, Context } from "@netlify/functions";
 import {
   audit, createTenant, currentMonth, dashboard, DEFAULT_TEMPLATES, fmtAmount, hashPassword, installment, installments, linesFromCSV,
-  monthLabel, nextRef, normalizeAlias, normalizePhone, payersFromCSV, readSession, recordPayment, renderTemplate, signSession, todayISO, uid,
-  VOCAB, verifyPassword, waLink, type Contract, type Index, type Payer, type Role, type TenantState, type TenantType, type User,
+  monthLabel, nextRef, normalizeAlias, normalizePhone, now, payersFromCSV, readSession, recordPayment, renderTemplate, signSession, todayISO, uid,
+  VOCAB, verifyPassword, waLink, type Contract, type Index, type Payer, type Payment, type Role, type TenantState, type TenantType, type User,
 } from "../lib/core.mts";
 import { demoLandlord, demoSchool } from "../lib/seed.mts";
 
@@ -97,7 +97,7 @@ route("DELETE", "/api/auth/session", () => json({ ok: true }, 200, { "set-cookie
 route("GET", "/api/auth/me", (c) => ({ user: pub(c.user), tenant: tenantView(c.s), admin: isAdmin(c.user), config: publicConfig(c.idx) }));
 route("POST", "/api/auth/password", async (c) => { const b = await body(c.req); if (!verifyPassword(String(b.current ?? ""), c.user.passwordHash)) throw new HttpError(401, "Mot de passe actuel incorrect"); if (String(b.password ?? "").length < 8) throw new HttpError(400, "Nouveau mot de passe : 8 caractères au minimum"); c.user.passwordHash = hashPassword(String(b.password)); c.dirtyIndex = true; audit(c.s, c.user.name, "user.password"); c.dirty = true; return { ok: true }; });
 route("POST", "/api/onboarding", async (c) => { const b = await body(c.req); const o = c.s.tenant.onboarding || (c.s.tenant.onboarding = { settings: false, informed: false, dismissed: false }); if (b.step === "informed") o.informed = true; if (b.step === "dismissed") o.dismissed = true; if (b.step === "settings") o.settings = true; c.dirty = true; return tenantView(c.s).onboarding; });
-route("GET", "/api/onboarding/message", (c) => { const t = c.s.tenant; const v = VOCAB[t.type]; const msg = `Bonjour, ${t.name} utilise désormais Jotna pour le suivi des ${v.amount.toLowerCase()}s. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI « ${t.alias} », en indiquant la référence de votre ${v.contract.toLowerCase()} dans le libellé (elle figure sur votre reçu et dans nos messages). L'échéance est le ${t.dueDay} de chaque mois ; un reçu vous est envoyé à chaque paiement. Merci.`; return { message: msg, alias: t.alias, dueDay: t.dueDay }; });
+route("GET", "/api/onboarding/message", (c) => { const t = c.s.tenant; const v = VOCAB[t.type]; const msg = `Bonjour, ${t.name} utilise désormais Jotna pour le suivi des ${v.amount.toLowerCase()}s. Vous pouvez payer depuis Wave, Orange Money ou votre banque vers l'alias PI-SPI « ${t.alias} », en indiquant la référence de votre ${v.contract.toLowerCase()} dans le libellé (elle figure sur votre reçu et dans nos messages). L'échéance est le ${t.dueDay} de chaque mois ; un reçu vous est envoyé à chaque paiement. Chacun recevra aussi un lien personnel vers son espace Jotna (échéances, reçus, déclaration de paiement). Merci.`; return { message: msg, alias: t.alias, dueDay: t.dueDay }; });
 
 // ---------- Tableau de bord ----------
 route("GET", "/api/dashboard", (c) => { const m = month(c.url); return { ...dashboard(c.s, m), monthLabel: monthLabel(m), trialEnds: c.s.tenant.trialEnds, plan: c.s.tenant.plan, onboarding: tenantView(c.s).onboarding }; });
@@ -139,7 +139,8 @@ route("GET", "/api/payers/:id", (c, { id }) => {
   const m = month(c.url); const cs = c.s.contracts.filter((x) => x.payerId === id);
   const months = [-5, -4, -3, -2, -1, 0].map((n) => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo - 1 + n, 1)).toISOString().slice(0, 7); });
   const history = cs.flatMap((x) => months.filter((mm) => x.startMonth <= mm && (!x.endMonth || x.endMonth >= mm)).map((mm) => ({ contractId: x.id, label: x.label, ...installment(c.s, x, mm), monthLabel: monthLabel(mm), paidOn: c.s.payments.filter((pay) => pay.status === "associe" && pay.contractId === x.id && pay.month === mm).map((pay) => pay.date).sort().pop() || null })));
-  return { ...p, contracts: cs.map((x) => enrich(c.s, x, m)), history: history.sort((a, b) => b.month.localeCompare(a.month) || a.label.localeCompare(b.label)), payments: c.s.payments.filter((pay) => pay.status === "associe" && cs.some((x) => x.id === pay.contractId)).sort((a, b) => b.date.localeCompare(a.date)), reminders: c.s.reminders.filter((r) => r.payerId === id).sort((a, b) => b.date.localeCompare(a.date)) };
+  if (ensureAccess(p)) c.dirty = true;
+  return { ...p, access: { code: p.code, link: parentLink(c.req, c.s, p), message: accessMessage(c.req, c.s, p), waLink: waLink(p.tel, accessMessage(c.req, c.s, p)) }, contracts: cs.map((x) => enrich(c.s, x, m)), history: history.sort((a, b) => b.month.localeCompare(a.month) || a.label.localeCompare(b.label)), payments: c.s.payments.filter((pay) => pay.status === "associe" && cs.some((x) => x.id === pay.contractId)).sort((a, b) => b.date.localeCompare(a.date)), reminders: c.s.reminders.filter((r) => r.payerId === id).sort((a, b) => b.date.localeCompare(a.date)) };
 });
 route("POST", "/api/payers/import", async (c) => {
   requireRole(c.user, "gestionnaire", "direction"); const b = await body(c.req); const rows = payersFromCSV(String(b.csv ?? ""), c.s);
@@ -201,12 +202,12 @@ route("DELETE", "/api/payments/:id", (c, { id }) => { requireRole(c.user, "gesti
 // ---------- Relances et demandes de paiement ----------
 route("GET", "/api/reminders", (c) => {
   const m = month(c.url);
-  return installments(c.s, m).filter((i) => i.status === "retard" || i.status === "partiel").map((i) => { const k = c.s.contracts.find((x) => x.id === i.contractId)!; const p = c.s.payers.find((x) => x.id === i.payerId)!; const msg = renderTemplate(c.s.tenant.templates.relance, c.s, k, p, m); return { ...i, ref: k.ref, label: k.label, group: k.group, payer: { id: p.id, nom: p.nom, tel: p.tel, alias: p.alias }, message: msg, waLink: waLink(p.tel, msg), sent: c.s.reminders.filter((r) => r.contractId === k.id && r.month === m).length }; });
+  return installments(c.s, m).filter((i) => i.status === "retard" || i.status === "partiel").map((i) => { const k = c.s.contracts.find((x) => x.id === i.contractId)!; const p = c.s.payers.find((x) => x.id === i.payerId)!; if (ensureAccess(p)) c.dirty = true; const msg = renderTemplate(c.s.tenant.templates.relance, c.s, k, p, m, { lien: parentLink(c.req, c.s, p) }); return { ...i, ref: k.ref, label: k.label, group: k.group, payer: { id: p.id, nom: p.nom, tel: p.tel, alias: p.alias }, message: msg, waLink: waLink(p.tel, msg), sent: c.s.reminders.filter((r) => r.contractId === k.id && r.month === m).length }; });
 });
 route("POST", "/api/reminders", async (c) => {
   requireRole(c.user, "gestionnaire", "direction"); const b = await body(c.req); const m = /^\d{4}-\d{2}$/.test(b.month) ? b.month : currentMonth();
   const items: { contractId: string; message?: string }[] = Array.isArray(b.items) ? b.items : [];
-  const out = items.map(({ contractId, message }) => { const k = c.s.contracts.find((x) => x.id === contractId); if (!k) return null; const p = c.s.payers.find((x) => x.id === k.payerId)!; const msg = str(message, 1000) || renderTemplate(c.s.tenant.templates.relance, c.s, k, p, m); const r = { id: uid(), payerId: p.id, contractId: k.id, month: m, date: todayISO(), channel: str(b.channel, 20) || "WhatsApp", message: msg, status: "envoye" as const, by: c.user.name }; c.s.reminders.unshift(r); return { ...r, waLink: waLink(p.tel, msg), payer: p.nom }; }).filter(Boolean);
+  const out = items.map(({ contractId, message }) => { const k = c.s.contracts.find((x) => x.id === contractId); if (!k) return null; const p = c.s.payers.find((x) => x.id === k.payerId)!; if (ensureAccess(p)) c.dirty = true; const msg = str(message, 1000) || renderTemplate(c.s.tenant.templates.relance, c.s, k, p, m, { lien: parentLink(c.req, c.s, p) }); const r = { id: uid(), payerId: p.id, contractId: k.id, month: m, date: todayISO(), channel: str(b.channel, 20) || "WhatsApp", message: msg, status: "envoye" as const, by: c.user.name }; c.s.reminders.unshift(r); return { ...r, waLink: waLink(p.tel, msg), payer: p.nom }; }).filter(Boolean);
   audit(c.s, c.user.name, "reminder.send", `${out.length} relances ${m}`); c.dirty = true; return out;
 });
 route("POST", "/api/requests", async (c) => {
@@ -216,12 +217,54 @@ route("POST", "/api/requests", async (c) => {
 });
 
 // ---------- Reçus ----------
-route("GET", "/api/receipts/:id", (c, { id }) => {
-  const p = c.s.payments.find((x) => x.id === id && x.status === "associe"); if (!p) throw new HttpError(404, "Reçu introuvable"); const k = c.s.contracts.find((x) => x.id === p.contractId)!; const payer = c.s.payers.find((x) => x.id === k.payerId)!;
+function receiptResponse(s: TenantState, id: string): Response {
+  const p = s.payments.find((x) => x.id === id && x.status === "associe"); if (!p) throw new HttpError(404, "Reçu introuvable"); const k = s.contracts.find((x) => x.id === p.contractId)!; const payer = s.payers.find((x) => x.id === k.payerId)!;
   const esc = (v: unknown) => String(v).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reçu ${esc(p.ref)}</title><style>body{font-family:"72",Inter,"Segoe UI",system-ui,sans-serif;color:#32363a;max-width:38rem;margin:2rem auto;padding:0 1rem}h1{font-weight:400;font-size:1.25rem;border-bottom:3px solid #0a6ed1;padding-bottom:.5rem}table{width:100%;border-collapse:collapse;margin:1rem 0}td{padding:.5rem 0;border-bottom:1px solid #d9d9d9}td:first-child{color:#6a6d70;width:40%}.amt{font-size:1.75rem;font-weight:300}.foot{color:#6a6d70;font-size:.8125rem;margin-top:2rem}@media print{.noprint{display:none}}</style></head><body><h1>${esc(c.s.tenant.name)} · Reçu n° ${esc(p.ref)}</h1><p class="amt">${esc(fmtAmount(p.amount))}</p><table><tr><td>Reçu de</td><td>${esc(payer.nom)}</td></tr><tr><td>${esc(VOCAB[c.s.tenant.type].contract)}</td><td>${esc(k.label)}${k.group ? " · " + esc(k.group) : ""} (réf. ${esc(k.ref)})</td></tr><tr><td>Période</td><td>${esc(monthLabel(p.month!))}</td></tr><tr><td>Date du paiement</td><td>${esc(p.date.split("-").reverse().join("/"))}</td></tr><tr><td>Canal</td><td>${esc(p.channel)}</td></tr><tr><td>Référence de transaction</td><td>${esc(p.ref)}</td></tr><tr><td>Reste dû sur la période</td><td>${esc(fmtAmount(Math.max(0, k.amount - c.s.payments.filter((x) => x.status === "associe" && x.contractId === k.id && x.month === p.month).reduce((a, x) => a + x.amount, 0))))}</td></tr></table><p>${esc(renderTemplate(c.s.tenant.templates.recu, c.s, k, payer, p.month!, { montant: fmtAmount(p.amount) }))}</p><p class="foot">Émis par Jotna le ${esc(todayISO().split("-").reverse().join("/"))}. Alias PI-SPI de l'établissement : ${esc(c.s.tenant.alias)}.</p><p class="noprint"><button onclick="window.print()">Imprimer ou enregistrer en PDF</button></p></body></html>`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reçu ${esc(p.ref)}</title><style>body{font-family:"Proxima Nova",Montserrat,"Segoe UI",Arial,sans-serif;color:#272727;max-width:38rem;margin:2rem auto;padding:0 1rem}.band{height:6px;background:linear-gradient(90deg,#008f36 0 33.33%,#ffeb00 33.33% 66.66%,#e1001a 66.66% 100%)}h1{font-weight:800;text-transform:uppercase;font-size:1.125rem;color:#000;letter-spacing:.02em;margin-top:1rem}table{width:100%;border-collapse:collapse;margin:1rem 0}td{padding:.5rem 0;border-bottom:1px solid #e1e1dd}td:first-child{color:#5c5c5c;width:40%;font-size:.8125rem;text-transform:uppercase;letter-spacing:.06em}.amt{font-size:2rem;font-weight:800;color:#008f36}.foot{color:#5c5c5c;font-size:.8125rem;margin-top:2rem}button{border:2px solid #000;background:#fff;border-radius:1.25rem;padding:.5rem 1rem;font-weight:700;text-transform:uppercase;font-size:.75rem;letter-spacing:.06em}@media print{.noprint{display:none}}</style></head><body><div class="band"></div><h1>${esc(s.tenant.name)} · Reçu n° ${esc(p.ref)}</h1><p class="amt">${esc(fmtAmount(p.amount))}</p><table><tr><td>Reçu de</td><td>${esc(payer.nom)}</td></tr><tr><td>${esc(VOCAB[s.tenant.type].contract)}</td><td>${esc(k.label)}${k.group ? " · " + esc(k.group) : ""} (réf. ${esc(k.ref)})</td></tr><tr><td>Période</td><td>${esc(monthLabel(p.month!))}</td></tr><tr><td>Date du paiement</td><td>${esc(p.date.split("-").reverse().join("/"))}</td></tr><tr><td>Canal</td><td>${esc(p.channel)}</td></tr><tr><td>Référence de transaction</td><td>${esc(p.ref)}</td></tr><tr><td>Reste dû sur la période</td><td>${esc(fmtAmount(Math.max(0, k.amount - s.payments.filter((x) => x.status === "associe" && x.contractId === k.id && x.month === p.month).reduce((a, x) => a + x.amount, 0))))}</td></tr></table><p>${esc(renderTemplate(s.tenant.templates.recu, s, k, payer, p.month!, { montant: fmtAmount(p.amount) }))}</p><p class="foot">Émis par Jotna le ${esc(todayISO().split("-").reverse().join("/"))}. Alias PI-SPI de l'établissement : ${esc(s.tenant.alias)}.</p><p class="noprint"><button onclick="window.print()">Imprimer ou enregistrer en PDF</button></p></body></html>`;
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
-});
+}
+route("GET", "/api/receipts/:id", (c, { id }) => receiptResponse(c.s, id));
+
+// ---------- Espace parent ----------
+const PCOOKIE = "jotna_parent";
+const pcookieOf = (req: Request) => req.headers.get("cookie")?.split(/;\s*/).find((x) => x.startsWith(`${PCOOKIE}=`))?.slice(PCOOKIE.length + 1);
+const setPCookie = (token: string, maxAge = 90 * 86400) => `${PCOOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+function ensureAccess(p: Payer): boolean { let changed = false; if (!p.code) { p.code = String(100000 + Math.floor(Math.random() * 900000)); changed = true; } if (!p.token) { p.token = uid() + uid(); changed = true; } return changed; }
+const parentLink = (req: Request, s: TenantState, p: Payer) => `${new URL(req.url).origin}/parent/#t=${s.tenant.id}.${p.token}`;
+const accessMessage = (req: Request, s: TenantState, p: Payer) => `Bonjour ${p.nom.split(" ")[0]}, ${s.tenant.name} vous ouvre votre espace Jotna : échéances, mode de paiement vers l'alias PI-SPI « ${s.tenant.alias} », reçus. Lien : ${parentLink(req, s, p)} — ou connexion avec votre numéro ${p.tel} et le code ${p.code}.`;
+async function parentSession(c: Ctx): Promise<{ s: TenantState; p: Payer }> {
+  const v = readSession(SECRET(), pcookieOf(c.req)); const [tenantId, payerId] = (v || "").split(":"); if (!tenantId || !payerId) throw new HttpError(401, "Connectez-vous avec votre numéro et votre code");
+  const s = await loadTenant(tenantId); const p = s?.payers.find((x) => x.id === payerId); if (!s || !p) throw new HttpError(401, "Accès expiré, reconnectez-vous"); return { s, p };
+}
+function parentView(c: Ctx, s: TenantState, p: Payer) {
+  const m = currentMonth(); const months = [-5, -4, -3, -2, -1, 0].map((n) => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo - 1 + n, 1)).toISOString().slice(0, 7); });
+  const contracts = s.contracts.filter((x) => x.payerId === p.id && x.active).map((k) => { const inst = installment(s, k, m); return { id: k.id, ref: k.ref, label: k.label, group: k.group, amount: k.amount, current: { ...inst, monthLabel: monthLabel(m) }, rest: Math.max(0, inst.amount - inst.paid), label_paiement: renderTemplate(s.tenant.templates.demande, s, k, p, m), months: months.filter((mm) => k.startMonth <= mm && (!k.endMonth || k.endMonth >= mm)).map((mm) => ({ ...installment(s, k, mm), monthLabel: monthLabel(mm) })).reverse() }; });
+  const ids = new Set(contracts.map((k) => k.id));
+  return { payer: { nom: p.nom, tel: p.tel, alias: p.alias }, tenant: { name: s.tenant.name, alias: s.tenant.alias, dueDay: s.tenant.dueDay, phone: s.tenant.phone || "", type: s.tenant.type, vocab: VOCAB[s.tenant.type], city: s.tenant.city }, month: m, monthLabel: monthLabel(m), contracts, due: contracts.reduce((a, k) => a + k.rest, 0),
+    payments: s.payments.filter((x) => x.status === "associe" && x.contractId && ids.has(x.contractId)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 24).map((x) => ({ id: x.id, date: x.date, amount: x.amount, channel: x.channel, ref: x.ref, month: x.month, monthLabel: monthLabel(x.month!), contract: s.contracts.find((k) => k.id === x.contractId)?.label, receipt: `/api/parent/receipts/${x.id}` })),
+    pending: s.payments.filter((x) => x.status === "a_verifier" && x.source === "parent" && x.suggestedContractId && ids.has(x.suggestedContractId)).map((x) => ({ id: x.id, date: x.date, amount: x.amount, channel: x.channel, ref: x.ref, contract: s.contracts.find((k) => k.id === x.suggestedContractId)?.label })),
+    config: publicConfig(c.idx) };
+}
+route("POST", "/api/parent/token", async (c) => {
+  const b = await body(c.req); const [tenantId, rand] = String(b.token ?? "").split("."); const s = tenantId && rand ? await loadTenant(tenantId) : null; const p = s?.payers.find((x) => x.token && x.token === rand);
+  if (!s || !p) throw new HttpError(401, "Lien invalide ou expiré : connectez-vous avec votre numéro et votre code");
+  return json(parentView(c, s, p), 200, { "set-cookie": setPCookie(signSession(SECRET(), `${s.tenant.id}:${p.id}`, 90)) });
+}, false);
+route("POST", "/api/parent/login", async (c) => {
+  const b = await body(c.req); const phone = normalizePhone(str(b.phone, 30)); const code = str(b.code, 10).replace(/\D/g, "");
+  if (phone.length < 9 || code.length !== 6) { await new Promise((r) => setTimeout(r, 600)); throw new HttpError(401, "Numéro ou code incorrect"); }
+  for (const t of c.idx.tenants) { const s = await loadTenant(t.id); const p = s?.payers.find((x) => x.code === code && normalizePhone(x.tel) === phone); if (s && p) return json(parentView(c, s, p), 200, { "set-cookie": setPCookie(signSession(SECRET(), `${s.tenant.id}:${p.id}`, 90)) }); }
+  await new Promise((r) => setTimeout(r, 600)); throw new HttpError(401, "Numéro ou code incorrect");
+}, false);
+route("GET", "/api/parent/me", async (c) => { const { s, p } = await parentSession(c); return parentView(c, s, p); }, false);
+route("DELETE", "/api/parent/session", () => json({ ok: true }, 200, { "set-cookie": setPCookie("", 0) }), false);
+route("GET", "/api/parent/receipts/:id", async (c, { id }) => { const { s, p } = await parentSession(c); const pay = s.payments.find((x) => x.id === id); const k = pay?.contractId ? s.contracts.find((x) => x.id === pay.contractId) : null; if (!pay || !k || k.payerId !== p.id) throw new HttpError(404, "Reçu introuvable"); return receiptResponse(s, id); }, false);
+route("POST", "/api/parent/declare", async (c) => {
+  const { s, p } = await parentSession(c); const b = await body(c.req); const k = s.contracts.find((x) => x.id === b.contractId && x.payerId === p.id && x.active); if (!k) throw new HttpError(404, "Contrat introuvable");
+  const amount = Number(b.amount) || 0; if (amount <= 0) throw new HttpError(400, "Indiquez le montant payé"); const m = /^\d{4}-\d{2}$/.test(b.month) ? b.month : currentMonth();
+  const pay: Payment = { id: uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(b.date) ? b.date : todayISO(), amount, channel: str(b.channel, 30) || "Wave", ref: str(b.ref, 60) || `DECL${Date.now().toString(36).toUpperCase()}`, sender: `${p.nom} (déclaré par le parent)`, label: `${k.ref} ${m}`, contractId: null, month: null, status: "a_verifier", motif: `Paiement déclaré par ${p.nom} depuis l'espace parent, à confirmer sur le relevé`, suggestedContractId: k.id, source: "parent", createdBy: p.nom, createdAt: now() };
+  s.payments.unshift(pay); audit(s, p.nom, "payment.declared", `${fmtAmount(amount)} ${k.ref} ${m}`); await saveTenant(s); return json({ ok: true, pending: pay }, 201);
+}, false);
 
 // ---------- Paramètres, utilisateurs, abonnement ----------
 route("GET", "/api/settings", (c) => ({ tenant: tenantView(c.s), users: c.idx.users.filter((u) => u.tenantId === c.s.tenant.id).map(pub), defaults: DEFAULT_TEMPLATES, audit: c.s.audit.slice(0, 50) }));
